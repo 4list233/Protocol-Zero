@@ -1,14 +1,7 @@
 name: Sync Scraped Products
 
 on:
-  schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
-  workflow_dispatch:  # Allow manual trigger
-  push:
-    paths:
-      - 'scraper/taobao_links.txt'
-      - 'shared/data/scrape_queue.json'
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
   scrape-and-sync:
