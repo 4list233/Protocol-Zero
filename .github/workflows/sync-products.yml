@@ -1,0 +1,92 @@
+name: Sync Scraped Products
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+  push:
+    paths:
+      - 'scraper/taobao_links.txt'
+      - 'shared/data/scrape_queue.json'
+
+jobs:
+  scrape-and-sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+      
+      - name: Install Python dependencies
+        run: |
+          cd scraper
+          pip install -r requirements.txt
+      
+      - name: Run scraper
+        run: |
+          cd scraper
+          # Use Selenium Manager (no need for manual chromedriver)
+          python scraper.py
+        env:
+          # Add any required environment variables
+          HEADLESS: true
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install sync script dependencies
+        run: |
+          cd shared/scripts
+          npm install
+      
+      - name: Sync media files
+        run: |
+          cd shared/scripts
+          npm run sync-media
+      
+      - name: Generate products TypeScript
+        run: |
+          cd shared/scripts
+          npm run generate-products
+      
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --quiet || echo "changes=true" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push if changes
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add shop/lib/products.generated.ts shop/public/images/ shared/data/
+          git commit -m "chore: sync scraped products [skip ci]"
+          git push
+      
+      - name: Summary
+        run: |
+          echo "### Scraper Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Scraper completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Media synced to shop/public/images/" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Generated shop/lib/products.generated.ts" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.git-check.outputs.changes }}" == "true" ]; then
+            echo "✅ Changes committed and pushed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ No changes detected" >> $GITHUB_STEP_SUMMARY
+          fi

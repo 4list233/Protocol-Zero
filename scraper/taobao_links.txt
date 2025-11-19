@@ -1,0 +1,3 @@
+# Paste your Taobao product links here, one link per line.
+# For example:
+https://item.taobao.com/item.htm?id=969220337986&last_time=1763006142&mi_id=0000ZGBYesTQpeAQnYUD44pBJ7f2WiKrvcxuIvD1wj8_XzA&scm=1007.13982.82927.0&upStreamPrice=21500

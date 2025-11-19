@@ -1,0 +1,30 @@
+{
+  "last_updated": "2025-11-18T19:58:19Z",
+  "products": [
+    {
+      "id": "wosport-l4g24--",
+      "title": "WOSPORT L4G24 夜视仪支架 铝合金版",
+      "title_en": "WOSPORT L4G24 夜视仪支架 铝合金版",
+      "title_original": "WOSPORT L4G24 夜视仪支架（铝合金版）",
+      "url": "https://item.taobao.com/item.htm?id=969220337986&last_time=1763006142&mi_id=0000ZGBYesTQpeAQnYUD44pBJ7f2WiKrvcxuIvD1wj8_XzA&scm=1007.13982.82927.0&upStreamPrice=21500",
+      "images": [
+        "/images/wosport-l4g24--Main.jpg"
+      ],
+      "detailLongImage": "/images/wosport-l4g24--Details_Long.jpg",
+      "price_cny": "215.0",
+      "price_cad": "43.43",
+      "variants": [
+        {
+          "option": "HL-ACC-73-T",
+          "price_cny": "215.0",
+          "price_cad": "43.43"
+        },
+        {
+          "option": "HL-ACC-73-BK",
+          "price_cny": "215.0",
+          "price_cad": "43.43"
+        }
+      ]
+    }
+  ]
+}

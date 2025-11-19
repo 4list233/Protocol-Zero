@@ -1,0 +1,41 @@
+# Chrome profile and cache files
+chrome_profile/
+
+# Media and screenshots (too large for git)
+media/
+screenshots/
+
+# macOS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables and API keys
+.env
+
+# Translation cache
+translation_cache.json
+*.so
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log

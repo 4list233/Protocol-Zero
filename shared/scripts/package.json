@@ -1,0 +1,15 @@
+{
+  "name": "protocol-zero-shared-scripts",
+  "version": "1.0.0",
+  "description": "Sync scripts for Protocol Zero scraper and shop integration",
+  "private": true,
+  "scripts": {
+    "sync-media": "node sync-media.js",
+    "generate-products": "node generate-products.js",
+    "promote-reviewed": "node promote-reviewed-media.js",
+    "sync-all": "npm run promote-reviewed && npm run sync-media && npm run generate-products"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0"
+  }
+}
