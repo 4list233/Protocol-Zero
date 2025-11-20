@@ -1,23 +1,35 @@
 "use client"
 
 import Link from "next/link"
-import { products } from "@/lib/products"
-import { getProductPrice } from "@/lib/pricing"
-import { getProductTitle, getProductImage } from "@/lib/display-helpers"
+import { useEffect, useState } from "react"
 import { addToCart } from "@/lib/cart"
 import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
-import type { Product } from "@/lib/products"
+import type { RuntimeProduct } from "@/lib/products"
 import Image from "next/image"
 import { ShoppingCart, ArrowLeft, Check } from "lucide-react"
 
 export default function ShopPage() {
   const { addToast } = useToast()
+  const [products, setProducts] = useState<RuntimeProduct[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleAddToCart = (product: Product) => {
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to fetch products:', err)
+        setLoading(false)
+      })
+  }, [])
+
+  const handleAddToCart = (product: RuntimeProduct) => {
     addToCart(product, 1)
     
-    // Show toast notification
     addToast({
       title: "Added to cart!",
       description: product.title,
@@ -64,6 +76,13 @@ export default function ShopPage() {
           Back to home
         </Link>
 
+        {loading ? (
+          <div className="text-center py-12 text-[#A1A1A1]">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3D9A6C]"></div>
+            <p className="mt-4">Loading products...</p>
+          </div>
+        ) : (
+          <>
         <div className="mb-8 space-y-2">
           <div className="inline-block">
             <h1 className="text-3xl font-heading font-bold tracking-wide uppercase md:text-4xl relative">
@@ -81,7 +100,7 @@ export default function ShopPage() {
               <Link href={`/shop/${product.id}`} className="block">
                 <div className="aspect-square relative bg-[#0D0D0D] overflow-hidden">
                   <Image
-                    src={getProductImage(product)}
+                    src={product.primaryImage || product.images?.[0] || '/images/placeholder.png'}
                     alt={product.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -92,10 +111,10 @@ export default function ShopPage() {
               <div className="p-4 space-y-3">
                 <div>
                   <Link href={`/shop/${product.id}`} className="hover:opacity-90">
-                    <h3 className="font-semibold font-body text-lg line-clamp-2 text-[#F5F5F5] group-hover:text-[#3D9A6C] transition-colors">{getProductTitle(product)}</h3>
+                    <h3 className="font-semibold font-body text-lg line-clamp-2 text-[#F5F5F5] group-hover:text-[#3D9A6C] transition-colors">{product.title}</h3>
                   </Link>
-                  {product.options && product.options.length > 0 && (
-                    <p className="text-xs text-[#3D9A6C] font-semibold mt-1">Multiple colour options available</p>
+                  {product.variants && product.variants.length > 1 && (
+                    <p className="text-xs text-[#3D9A6C] font-semibold mt-1">Multiple variants available</p>
                   )}
                   {product.category && (
                     <span className="inline-block mt-2 text-xs px-3 py-1 bg-[#3D9A6C]/10 text-[#3D9A6C] rounded-full font-medium font-heading uppercase tracking-wide">
@@ -104,7 +123,7 @@ export default function ShopPage() {
                   )}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-[#2C2C2C]">
-                  <span className="text-2xl font-bold text-[#3D9A6C] font-mono">${getProductPrice(product).toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-[#3D9A6C] font-mono">${product.price_cad.toFixed(2)}</span>
                   <span className="text-xs text-[#A1A1A1] font-mono uppercase">CAD</span>
                 </div>
                 <button
@@ -123,6 +142,8 @@ export default function ShopPage() {
           <div className="text-center py-12">
             <p className="text-[#A1A1A1] font-body">No products available at this time.</p>
           </div>
+        )}
+          </>
         )}
       </main>
     </div>
