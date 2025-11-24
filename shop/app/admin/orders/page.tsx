@@ -1,24 +1,59 @@
+"use client"
+
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { StatusBadge } from '@/components/admin/status-badge'
 
-async function fetchOrders(status?: string) {
-  const qs = status ? `?status=${encodeURIComponent(status)}` : ''
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/admin/orders${qs}`, {
-    cache: 'no-store',
-  })
-  if (!res.ok) {
-    // Try relative in dev
-    const rel = await fetch(`/api/admin/orders${qs}`, { cache: 'no-store' })
-    if (!rel.ok) throw new Error('Failed to fetch orders')
-    return rel.json()
-  }
-  return res.json()
-}
+export default function OrdersPage() {
+  const { user, loading: authLoading } = useAuth()
+  const searchParams = useSearchParams()
+  const status = searchParams.get('status') || undefined
+  const [orders, setOrders] = useState<any[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
 
-export default async function OrdersPage({ searchParams }: { searchParams: { status?: string } }) {
-  const status = searchParams?.status
-  const data = await fetchOrders(status)
-  const orders = data.orders as any[]
+  useEffect(() => {
+    if (user) {
+      user.getIdToken().then((idToken: string) => {
+        const qs = status ? `?status=${encodeURIComponent(status)}` : ''
+        fetch(`/api/admin/orders${qs}`, {
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'x-user-email': user.email || '',
+            'x-user-id': user.uid,
+          },
+          cache: 'no-store',
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch orders')
+            return res.json()
+          })
+          .then(data => {
+            setOrders(data.orders || [])
+            setOrdersLoading(false)
+          })
+          .catch(err => {
+            console.error('Error fetching orders:', err)
+            setOrdersLoading(false)
+          })
+      }).catch(err => {
+        console.error('Error getting ID token:', err)
+        setOrdersLoading(false)
+      })
+    } else if (!authLoading) {
+      setOrdersLoading(false)
+    }
+  }, [user, status, authLoading])
+
+  if (authLoading || ordersLoading) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-xl font-semibold">Orders</h1>
+        <div className="text-neutral-400">Loading orders...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -53,7 +88,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: { sta
                 <td className="p-3">
                   <div>{o.customerName || o.userEmail || o.userId}</div>
                 </td>
-                <td className="p-3">${'{'}o.totalCad?.toFixed?.(2) || o.totalCad{'}'}</td>
+                <td className="p-3">${(o.totalCad?.toFixed?.(2) || o.totalCad)}</td>
                 <td className="p-3"><StatusBadge status={o.status} /></td>
                 <td className="p-3">{typeof o.createdAt === 'string' ? new Date(o.createdAt).toLocaleString() : (o.createdAt?.toDate?.() ? o.createdAt.toDate().toLocaleString() : '')}</td>
                 <td className="p-3 text-right">

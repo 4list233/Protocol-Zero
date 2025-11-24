@@ -1,24 +1,54 @@
 "use client"
 
 import useSWR from 'swr'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import { StatusBadge } from '@/components/admin/status-badge'
 import Link from 'next/link'
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
-
 export default function AdminOrderDetail({ params }: { params: { id: string } }) {
-  const { data, mutate } = useSWR(`/api/admin/orders/${params.id}`, fetcher)
+  const { user } = useAuth()
+  const [idToken, setIdToken] = useState<string | null>(null)
+  
+  useEffect(() => {
+    if (user) {
+      user.getIdToken().then(setIdToken).catch(console.error)
+    }
+  }, [user])
+
+  const fetcher = async (url: string) => {
+    if (!idToken || !user) throw new Error('Not authenticated')
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'x-user-email': user.email || '',
+        'x-user-id': user.uid,
+      },
+    })
+    if (!res.ok) throw new Error('Failed to fetch')
+    return res.json()
+  }
+
+  const { data, mutate } = useSWR(idToken && user ? `/api/admin/orders/${params.id}` : null, fetcher)
   const order = data?.order
   const [loading, setLoading] = useState<string | null>(null)
   const [note, setNote] = useState('')
 
   async function act(action: string, payload: any = {}) {
+    if (!idToken || !user) {
+      alert('Not authenticated')
+      return
+    }
     setLoading(action)
     try {
       const res = await fetch(`/api/admin/orders/${params.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+          'x-user-email': user.email || '',
+          'x-user-id': user.uid,
+        },
         body: JSON.stringify({ action, payload }),
       })
       if (!res.ok) throw new Error('Action failed')

@@ -6,14 +6,14 @@ import { ADMIN_EMAILS } from '@/lib/constants'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default function AdminProductsLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!loading) {
       if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
-        router.push('/auth/signin?callbackUrl=/admin')
+        router.push('/auth/signin?callbackUrl=/admin/products')
       }
     }
   }, [user, loading, router])

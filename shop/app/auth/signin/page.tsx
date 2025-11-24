@@ -4,19 +4,21 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Instagram } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
 export default function SignInPage() {
   const { user, signInWithGoogle, signInWithInstagram } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
 
   useEffect(() => {
     if (user) {
-      router.push("/")
+      router.push(callbackUrl)
     }
-  }, [user, router])
+  }, [user, router, callbackUrl])
 
   const handleGoogleSignIn = async () => {
     try {
