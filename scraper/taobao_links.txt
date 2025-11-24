@@ -1,3 +1,31 @@
 # Paste your Taobao product links here, one link per line.
 # For example:
 https://item.taobao.com/item.htm?id=969220337986&last_time=1763006142&mi_id=0000ZGBYesTQpeAQnYUD44pBJ7f2WiKrvcxuIvD1wj8_XzA&scm=1007.13982.82927.0&upStreamPrice=21500
+https://item.taobao.com/item.htm?from=cart&id=911159245418&mi_id=0000DamQMBEF6SyVICsEt2DG6Og9Pw3bSp_zFH2LgajJo4Y&skuId=5940060162282&spm=a1z0d.6639537%2F202410.item.d911159245418.5b4b74841fAyC5&upStreamPrice=3190
+https://item.taobao.com/item.htm?from=cart&id=914138043076&mi_id=0000LZZAyY7y9rcY9bYKwnCZN9MsPefkkGQs-qxIJfgCs30&skuId=5779984244599&spm=a1z0d.6639537%2F202410.item.d914138043076.5b4b74841fAyC5&upStreamPrice=2380
+https://item.taobao.com/item.htm?from=cart&id=714880739091&mi_id=0000hoTpbsgpY237-QJJrAACfjf8_zElBv0WGGMlqhXoPOw&skuId=5054582116620&spm=a1z0d.6639537%2F202410.item.d714880739091.5b4b74841fAyC5&upStreamPrice=9800
+https://item.taobao.com/item.htm?from=cart&id=708088774060&mi_id=00000Dl6Yto0A-QIVlqXsg56sBv96wXXlL80VCMH2b_Um5U&skuId=5000133305622&spm=a1z0d.6639537%2F202410.item.d708088774060.5b4b74841fAyC5&upStreamPrice=5900
+https://item.taobao.com/item.htm?from=cart&id=678305010387&mi_id=00007lVgcAfxAaLtMw5QoeOnvyoHNYPZquvJBGBUuBuGqaA&skuId=5042246591190&spm=a1z0d.6639537%2F202410.item.d678305010387.6c8b7484YUvCoG&upStreamPrice=6900
+https://item.taobao.com/item.htm?from=cart&id=756814464555&mi_id=0000PSKDmhaXtwRwa3bz-nhnQHIk1my1x03orEdGQUgLi48&skuId=5392008155717&spm=a1z0d.6639537%2F202410.item.d756814464555.6c8b7484YUvCoG&upStreamPrice=5600
+https://item.taobao.com/item.htm?from=cart&id=853328243320&mi_id=0000DYqd-9XBoSgJTlcVA9tuUrcP89JSTiVIRBTpInbF4MI&skuId=5820993846238&spm=a1z0d.6639537%2F202410.item.d853328243320.6c8b7484YUvCoG&upStreamPrice=12800
+https://item.taobao.com/item.htm?id=855477818032&mi_id=0000x0WNEqQ_265ogowy3YTtSmwWN6Kh587odYbbcAzXv6k&pvid=509f90ac-ddaa-4b45-98c7-9173eebe4188&scm=1007.62513.464295.0&skuId=5901632650844&spm=a1z0d.6639537%2F202410.201876.d5.6c8b7484YUvCoG&utparam=%7B%22x_object_type%22%3A%22item%22%2C%22matchType%22%3A%22dm_interest%22%2C%22item_price%22%3A%2258%22%2C%22umpCalled%22%3Atrue%2C%22pc_scene%22%3A%2220001%22%2C%22userId%22%3A2211254930049%2C%22ab_info%22%3A%2252513%23464295%23-1%23%22%2C%22tpp_buckets%22%3A%2252513%23464295%23module%22%2C%22aplus_abtest%22%3A%22c95fd935250b814ea01fa2f7b7e734b2%22%2C%22isLogin%22%3Atrue%2C%22abid%22%3A1%2C%22pc_pvid%22%3A%22509f90ac-ddaa-4b45-98c7-9173eebe4188%22%2C%22isWeekLogin%22%3Afalse%2C%22rn%22%3A4%2C%22ump_price%22%3A%2258%22%2C%22isXClose%22%3Afalse%2C%22x_object_id%22%3A855477818032%7D&xxc=home_recommend
+https://item.taobao.com/item.htm?id=899190435089&mi_id=0000CAX6-BX7lO5klGg-XSpNcl_c6_xsYFCK45ZkV-_twa4&pvid=509f90ac-ddaa-4b45-98c7-9173eebe4188&scm=1007.62513.464295.0&skuId=5756235789548&spm=a1z0d.6639537%2F202410.201876.d1.6c8b7484YUvCoG&utparam=%7B%22x_object_type%22%3A%22item%22%2C%22matchType%22%3A%22nann_base%22%2C%22item_price%22%3A%22158%22%2C%22umpCalled%22%3Atrue%2C%22pc_scene%22%3A%2220001%22%2C%22userId%22%3A2211254930049%2C%22ab_info%22%3A%2252513%23464295%23-1%23%22%2C%22tpp_buckets%22%3A%2252513%23464295%23module%22%2C%22aplus_abtest%22%3A%2222ec64065a667b0bd1a1214b6f6d4c62%22%2C%22isLogin%22%3Atrue%2C%22abid%22%3A1%2C%22pc_pvid%22%3A%22509f90ac-ddaa-4b45-98c7-9173eebe4188%22%2C%22isWeekLogin%22%3Afalse%2C%22rn%22%3A0%2C%22ump_price%22%3A%22158%22%2C%22isXClose%22%3Afalse%2C%22x_object_id%22%3A899190435089%7D&xxc=home_recommend
+https://item.taobao.com/item.htm?_u=o20bch12k121bd&id=818533365136&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k13bf4&id=646929225114&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k19b89&id=846296600859&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k1cb20&id=709022174805&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k10156&id=890198613762&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k17acc&id=940910394002&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k1157a&id=643256207245&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k131fe&id=678253192936&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k1a6e1&id=815037864475&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k15a90&id=586117181099&spm=a1z09.2.0.0.60532e8ddrfDyH
+https://item.taobao.com/item.htm?_u=o20bch12k1bff3&id=723563903640
+https://item.taobao.com/item.htm?_u=o20bch12k1a0f4&id=859285997780
+https://detail.tmall.com/item.htm?_u=o20bch12k17773&id=823946437927
+https://item.taobao.com/item.htm?spm=a1z0d.6639537/202410.item.d728771048041.bb3974849IjuHR&id=728771048041&from=cart&skuId=5223926462203&mi_id=0000pOk7hL4MthxY3VaigRyS1CmmVzfZ4Ve-mexzzbf0Hn0&upStreamPrice=2500
+https://item.taobao.com/item.htm?from=cart&id=898356105062&mi_id=0000pezqgr1m5PmIjLH91XMFVxMGXEtJFD9SBkxvHC5hHz8&skuId=5919927911176&spm=a1z0d.6639537%2F202410.item.d898356105062.bb3974849IjuHR&upStreamPrice=2300
+https://item.taobao.com/item.htm?from=cart&id=713575933395&mi_id=0000Ioctrdmpsm2YWVx9qguSAWyBxZk7-bl7BaZP1cDmo7o&skuId=5165586446648&spm=a1z0d.6639537%2F202410.item.d713575933395.bb3974849IjuHR&upStreamPrice=5500
+https://item.taobao.com/item.htm?from=cart&id=814126590282&mi_id=0000CBdlZtYyOupJplHdOyzW6aDVL6nCFH1Cy7k-WZuyzb4&skuId=5676963518403&spm=a1z0d.6639537%2F202410.item.d814126590282.bb3974849IjuHR&upStreamPrice=4500
+https://item.taobao.com/item.htm?from=cart&id=725254573496&mi_id=00008_G9zU23OO5RO7biwKlybJoUGMav0M5RZxxqG0CZHTI&skuId=5718228164171&spm=a1z0d.6639537%2F202410.item.d725254573496.bb3974849IjuHR&upStreamPrice=16300
+https://item.taobao.com/item.htm?from=cart&id=654310678238&mi_id=00004nese5LBflJgCkv9DZ1tUt3AsMV1Gq-Nvco1K0j5vE4&skuId=4721897821415&spm=a1z0d.6639537%2F202410.item.d654310678238.bb3974849IjuHR&upStreamPrice=4990
