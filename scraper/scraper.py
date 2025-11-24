@@ -15,104 +15,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import json
 from typing import List, Dict
 
-# --- Optional OCR (pytesseract) Support ---
-# We enable screenshot+OCR fallback for titles/prices when DOM text is unreliable.
-_TESSERACT_READY = None  # lazy init flag
-
-def _setup_tesseract_if_available():
-    """Best-effort tesseract discovery. Returns True if pytesseract + binary usable."""
-    global _TESSERACT_READY
-    if _TESSERACT_READY is not None:
-        return _TESSERACT_READY
-    try:
-        import pytesseract  # type: ignore
-    except Exception:
-        _TESSERACT_READY = False
-        return False
-    # Prefer explicit env var
-    tcmd = os.environ.get('TESSERACT_CMD')
-    common_paths = [
-        tcmd,
-        '/opt/homebrew/bin/tesseract',  # Apple Silicon Homebrew
-        '/usr/local/bin/tesseract',     # Intel Homebrew
-        '/usr/bin/tesseract',
-    ]
-    for p in common_paths:
-        if p and os.path.exists(p):
-            pytesseract.pytesseract.tesseract_cmd = p
-            try:
-                _ = pytesseract.get_tesseract_version()
-                _TESSERACT_READY = True
-                return True
-            except Exception:
-                pass
-    # If not found, still try default resolution; pytesseract may find it in PATH
-    try:
-        _ = pytesseract.get_tesseract_version()
-        _TESSERACT_READY = True
-        return True
-    except Exception:
-        _TESSERACT_READY = False
-        return False
-
-def _seems_mojibake(s: str) -> bool:
-    """Heuristic: detect common mojibake artifacts (e.g., 'Â', '¬•', odd symbol soup)."""
-    if not s:
-        return False
-    weird_chars = 'Â¬•‰™∂ºËßØÈÎÊÁàãÃåÅéÉôÔ'
-    if any(ch in s for ch in weird_chars):
-        return True
-    # Too many non-alnum symbols relative to letters/digits
-    import string as _string
-    letters_digits = sum(c.isalnum() for c in s)
-    symbols = sum(c in _string.punctuation for c in s)
-    return letters_digits > 0 and symbols > letters_digits
-
-def _ocr_text_from_element(driver, element, *, lang_primary='eng', include_chi=True, psm=6) -> str:
-    """Screenshot an element and OCR its text. Uses PIL-only preprocessing.
-    Returns stripped text or empty string.
-    """
-    if not _setup_tesseract_if_available():
-        return ''
-    try:
-        import io
-        from PIL import Image, ImageOps, ImageFilter, ImageEnhance
-        import pytesseract  # type: ignore
-
-        png = element.screenshot_as_png
-        img = Image.open(io.BytesIO(png))
-        # Upscale for better OCR
-        scale = 2
-        img = img.convert('L')  # grayscale
-        img = img.resize((max(1, img.width * scale), max(1, img.height * scale)), Image.Resampling.LANCZOS)
-        img = ImageOps.autocontrast(img)
-        img = ImageEnhance.Sharpness(img).enhance(1.5)
-
-        lang = lang_primary
-        if include_chi:
-            # Prefer eng+chi_sim if installed; fall back to eng silently
-            try:
-                lang = f"{lang_primary}+chi_sim"
-                _ = pytesseract.image_to_string(img, lang=lang, config=f"--oem 3 --psm {psm}")
-            except Exception:
-                lang = lang_primary
-
-        text = pytesseract.image_to_string(img, lang=lang, config=f"--oem 3 --psm {psm}")
-        return (text or '').strip()
-    except Exception:
-        return ''
-
-def _ocr_price_from_element(driver, element) -> float:
-    """OCR a price-like element and parse a CNY numeric value."""
-    txt = _ocr_text_from_element(driver, element, lang_primary='eng', include_chi=False, psm=7)
-    if not txt:
-        return None
-    # Normalize common OCR confusions
-    txt = txt.replace(',', '').replace('O', '0').replace('o', '0').replace('S', '5').replace('¥', '')
-    val = parse_cny_price(txt)
-    return val
-
-# --- Dynamic Configuration ---
+## --- Removed all OCR and price extraction logic ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LINK_FILE = os.path.join(SCRIPT_DIR, 'taobao_links.txt')
 CSV_OUTPUT_FILE = os.path.join(SCRIPT_DIR, 'protocol_zero_variants.csv')
@@ -133,293 +36,42 @@ DETAIL_SECTION_SELECTOR = 'div[class*="description"], div[class*="detail"]'  # D
 DETAIL_IMAGES_SELECTOR = 'img[src*="desc"], img[src*="detail"]'  # Detail images in description
 # --- End Configuration ---
 
-# --- Currency Conversion ---
-# CNY->CAD rate with small markup for processing fees
-CNY_TO_CAD_RATE = 0.202
-FLAT_SHIPPING_CAD = 15.0
+## --- Currency conversion and shipping removed; prices will be manually input ---
 
 # --- LLM Translation Configuration ---
  # Removed heavy external translators; we'll use lightweight rule-based translations
 
-def parse_cny_price(raw_text: str):
-    """Parse a Taobao/Tmall price string like '¥88.00', '￥88-120', '88-120元' -> return float (use lower bound on ranges)."""
-    if not raw_text:
-        return None
-    try:
-        s = raw_text.replace(',', '')
-        # Extract all numbers
-        import re as _re
-        nums = [_re.sub(r"[^0-9\.]", "", m) for m in _re.findall(r"[0-9]+(?:\.[0-9]+)?", s)]
-        nums = [float(n) for n in nums if n]
-        if not nums:
-            return None
-        return min(nums)  # choose lower bound for ranges
-    except Exception:
-        return None
+## --- Removed parse_cny_price and to_cad; prices will be manually input ---
 
-def to_cad(amount_cny: float):
-    return round(amount_cny * CNY_TO_CAD_RATE, 2) if amount_cny is not None else None
+## --- _element_text retained only for title/option extraction ---
+## --- get_price_cny and all price extraction logic removed ---
 
-def get_price_cny(driver, debug=False):
-    """Robustly get current product price in CNY as float from the page."""
-    
-    if debug:
-        print(f"        [DEBUG] === Starting price extraction ===")
-    
-    # CRITICAL: Scope search to product info area ONLY (not sidebar recommendations)
-    product_area = None
-    try:
-        # Try to find the main product info container
-        product_area_selectors = [
-            'div[class*="BasicInfo"]',  # Taobao product info block
-            'div[class*="itemInfo"]',
-            'div[class*="productInfo"]',
-            'div[class*="priceView"]',
-        ]
-        for sel in product_area_selectors:
-            try:
-                product_area = driver.find_element(By.CSS_SELECTOR, sel)
-                if debug:
-                    print(f"        [DEBUG] Using product area: {sel}")
-                break
-            except:
-                continue
-    except:
-        pass
-    
-    search_scope = product_area if product_area else driver
-    
-    # PRIORITY 1: Look for 优惠前 (original price) or 券后 (coupon price)
-    # Example: "券后 ¥ 215 优惠前 ¥ 235 · 已售 5"
-    # Strategy: Find label elements, then get parent container with full price text
-    try:
-        import re
-        # Find label elements (券后 or 优惠前)
-        label_elements = search_scope.find_elements(By.XPATH, ".//*[contains(text(),'券后') or contains(text(),'优惠前')]")
-        
-        for label_el in label_elements:
-            # Get parent container that should have the full price block
-            try:
-                parent = label_el.find_element(By.XPATH, './parent::*')
-                txt = (parent.text or '').strip()
-            except:
-                txt = (label_el.text or '').strip()
-            
-            # Skip if text is too long (likely not the price block)
-            if len(txt) > 500 or len(txt) < 3:
-                continue
-            
-            if debug:
-                print(f"        [DEBUG] Price container text: '{txt[:200]}'")
-            
-            # BEST: Look for 优惠前 (original price before discount)
-            match_original = re.search(r'优惠前[^¥]*¥\s*(\d+(?:\.\d+)?)', txt)
-            if match_original:
-                val = float(match_original.group(1))
-                if 1 <= val <= 10000:
-                    if debug:
-                        print(f"        [DEBUG] ✓ Found 优惠前 (original price): {val} CNY")
-                    return val
-            
-            # FALLBACK: Use 券后 (coupon price)
-            match_coupon = re.search(r'券后[^¥]*¥\s*(\d+(?:\.\d+)?)', txt)
-            if match_coupon:
-                val = float(match_coupon.group(1))
-                if 1 <= val <= 10000:
-                    if debug:
-                        print(f"        [DEBUG] ✓ Found 券后 (coupon price): {val} CNY")
-                    return val
-    except Exception as e:
-        if debug:
-            print(f"        [DEBUG] Price search error: {e}")
-    
-    # PRIORITY 2: Try preferred selector (within product area)
-    try:
-        el = search_scope.find_element(By.CSS_SELECTOR, PRICE_SELECTOR)
-        txt = el.text.strip()
-        if debug:
-            print(f"        [DEBUG] PRICE_SELECTOR: '{txt}'")
-        val = parse_cny_price(txt)
-        if val is not None and val > 0:
-            if debug:
-                print(f"        [DEBUG] ✓ Found price via PRICE_SELECTOR: {val} CNY")
-            return val
-    except Exception:
-        pass
-    
-    # Try to find actual product price (not shipping/promo)
-    # Look for elements with specific price-related classes that typically show product price
-    priority_selectors = [
-        'span[class*="mainPrice"]',  # Main product price
-        'span[class*="originalPrice"]',  # Original price before discount
-        'span[class*="realPrice"]',  # Real/actual price
-        'div[class*="priceView"] span[class*="price"]',  # Price view container
-        'strong[class*="price"]',  # Bold price text
-    ]
-    
-    for sel in priority_selectors:
-        try:
-            els = driver.find_elements(By.CSS_SELECTOR, sel)
-            for el in els:
-                txt = (el.text or '').strip()
-                # Skip if it contains "免费" (free) or other non-price text
-                if '免费' in txt or '运费' in txt or '邮费' in txt:
-                    continue
-                if '¥' in txt or '￥' in txt or any(ch.isdigit() for ch in txt):
-                    val = parse_cny_price(txt)
-                    if val is not None and val > 0:  # Must be positive
-                        if debug:
-                            print(f"        [DEBUG] Found price via priority selector '{sel}': {val} CNY (text: '{txt}')")
-                        return val
-        except Exception:
-            continue
-    
-    # PRIORITY 3: Common alternative selectors (within product area) - collect and pick reasonable price
-    alt_selectors = [
-        'span[class*="mainPrice"]',  # Main product price
-        'span[class*="Price"]',  # Capital P for newer Taobao
-        'span[class*="price"]', 'div[class*="price"]',
-        'span[class*="tm-price"]', 'span[class*="tm-promo-price"]',
-        'span[class*="price-now"]', 'span[class*="real"]',
-        'span.price-original', 'span.price-current'
-    ]
-    
-    found_prices = []
-    for sel in alt_selectors:
-        try:
-            els = search_scope.find_elements(By.CSS_SELECTOR, sel)
-            for el in els:
-                txt = (el.text or '').strip()
-                # Skip free shipping labels, zero prices, and people count (人购买/人付款)
-                if '免费' in txt or '运费' in txt or '邮费' in txt or '人购买' in txt or '人付款' in txt:
-                    continue
-                if '¥' in txt or '￥' in txt or any(ch.isdigit() for ch in txt):
-                    val = parse_cny_price(txt)
-                    # Filter unrealistic prices (too high suggests sidebar recommendation)
-                    if val is not None and 1 < val < 10000:  # Reasonable product range
-                        found_prices.append((val, txt, sel))
-                        if debug:
-                            print(f"        [DEBUG] Found price via '{sel}': {val} CNY (text: '{txt[:50]}')")
-        except Exception:
-            continue
-    
-    # Pick highest reasonable price (main price, not deep discount)
-    if found_prices:
-        found_prices.sort(reverse=True)  # Sort by value descending
-        # Take first that's not absurdly high
-        for price_val, txt, sel in found_prices:
-            if price_val < 5000:  # Exclude extremely high sidebar prices
-                if debug:
-                    print(f"        [DEBUG] ✓ Selected price: {price_val} CNY from {len(found_prices)} candidates")
-                return price_val
-        # If all are high, take highest anyway
-        best_price = found_prices[0][0]
-        if debug:
-            print(f"        [DEBUG] ✓ Selected highest: {best_price} CNY")
-        return best_price
-    
-    # PRIORITY 4: Fallback - any element containing yuan symbol (collect all, pick highest)
-    try:
-        candidates = driver.find_elements(By.XPATH, "//*[contains(text(),'¥') or contains(text(),'￥')]")
-        xpath_prices = []
-        for el in candidates:
-            txt = (el.text or '').strip()
-            if '免费' in txt or '运费' in txt or '邮费' in txt or '券' in txt:
-                continue
-            val = parse_cny_price(txt)
-            if val is not None and val > 0:
-                xpath_prices.append((val, txt))
-                if debug:
-                    print(f"        [DEBUG] XPath yuan symbol: {val} CNY (text: '{txt}')")
-        
-        if xpath_prices:
-            xpath_prices.sort(reverse=True)
-            best_price = xpath_prices[0][0]
-            if debug:
-                print(f"        [DEBUG] ✓ Selected highest XPath price: {best_price} CNY")
-            return best_price
-    except Exception:
-        pass
-    # OCR fallback: try visible price-like elements
-    try:
-        candidates_css = [PRICE_SELECTOR,
-                          'span[class*="mainPrice"]',
-                          'span[class*="Price"]',
-                          'span[class*="price"]',
-                          'div[class*="price"]']
-        seen = set()
-        for sel in candidates_css:
-            try:
-                els = driver.find_elements(By.CSS_SELECTOR, sel)
-                for el in els:
-                    if el._id in seen:
-                        continue
-                    seen.add(el._id)
-                    # Must be displayed and reasonably sized
-                    try:
-                        if not el.is_displayed():
-                            continue
-                        sz = el.size
-                        if (sz.get('width', 0) < 40) or (sz.get('height', 0) < 12):
-                            continue
-                    except Exception:
-                        pass
-                    val = _ocr_price_from_element(driver, el)
-                    if val is not None and val > 0:
-                        if debug:
-                            print(f"        [DEBUG] OCR price: {val} CNY")
-                        return val
-            except Exception:
-                continue
-    except Exception:
-        pass
-    if debug:
-        print(f"        [DEBUG] No price found after trying selectors and OCR")
-    return None
+# Price extraction removed - prices will be manually input via admin panel
 
-def get_price_cny_with_wait(driver, timeout_sec: float = 6.0, poll: float = 0.5, debug=False):
-    """Poll the page for a price in CNY for up to timeout_sec seconds."""
-    end = time.time() + timeout_sec
-    last_val = None
-    attempts = 0
-    while time.time() < end:
-        val = get_price_cny(driver, debug=debug)
-        attempts += 1
-        if val is not None and val > 0:  # Must be positive price
-            # If a price actually appears and is stable for two polls, accept
-            if last_val is not None and abs(val - last_val) < 0.001:
-                if debug:
-                    print(f"        [DEBUG] Price stabilized at {val} CNY after {attempts} attempts")
-                return val
-            last_val = val
-        time.sleep(poll)
-    
-    # If no price found via DOM, try to extract from page data/script tags as last resort
-    if last_val is None and debug:
-        try:
-            # Look for price data in script tags or data attributes
-            scripts = driver.find_elements(By.TAG_NAME, 'script')
-            for script in scripts[:10]:  # Check first 10 scripts only
-                content = script.get_attribute('innerHTML') or ''
-                if 'price' in content.lower() and ('¥' in content or '"price"' in content):
-                    # Try to extract numeric price from JSON-like structures
-                    import re
-                    matches = re.findall(r'"price[^"]*":\s*"?(\d+\.?\d*)"?', content, re.IGNORECASE)
-                    if matches:
-                        try:
-                            price_val = float(matches[0])
-                            if price_val > 0:
-                                print(f"        [DEBUG] Found price in page data: {price_val} CNY")
-                                return price_val
-                        except:
-                            pass
-        except Exception as e:
-            if debug:
-                print(f"        [DEBUG] Failed to parse page data: {e}")
-    
-    if debug and last_val is None:
-        print(f"        [DEBUG] No price found after {attempts} attempts over {timeout_sec}s")
-    return last_val
+def scroll_page_to_top(driver):
+    """Ensure we are at the top of the product page before capturing media/prices."""
+    try:
+        driver.execute_script("window.scrollTo(0, 0);")
+        time.sleep(0.4)
+    except Exception:
+        pass
+
+def apply_media_counts(row: Dict, media_files: List[Dict]):
+    """Populate media count fields for a scraped variant row."""
+    main_count = sum(1 for m in media_files if m.get('type') == 'Main')
+    detail_count = sum(1 for m in media_files if m.get('type') == 'Details')
+    catalogue_count = sum(1 for m in media_files if m.get('type') == 'Catalogue')
+    row['Main Images'] = main_count
+    row['Detail Images'] = detail_count
+    row['Catalogue Images'] = catalogue_count
+
+def populate_price_fields(row: Dict):
+    """Initialize price fields to empty/0 - prices will be manually input via admin panel."""
+    row['Price'] = ''
+    row['Price CNY'] = 0
+    row['Price CAD'] = 0
+    row['Shipping CAD'] = 0
+    row['Final CAD'] = 0
 
 # Naming convention:
 # {product-slug}_main_{index}.jpg - Main product photos (front page)
@@ -787,6 +439,61 @@ def scrape_product_variants(driver, url, product_index):
         # Collect all media URLs with deduplication
         media_files = []
         downloaded_urls = set()  # Track URLs to avoid duplicates
+
+        variant_rows: List[Dict] = []
+
+        def build_variant_row(option_label: str) -> Dict:
+            return {
+                'URL': url,
+                'Product Title': product_title,
+                'Product Title ZH': product_title if contains_chinese(product_title) else product_title,
+                'Option Name': option_label,
+                'Option Name ZH': option_label,
+                'Media Folder': os.path.basename(product_media_dir)
+            }
+
+        option_buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
+
+        if not option_buttons:
+            print(" -> No option buttons found.")
+            row = build_variant_row('Default')
+            populate_price_fields(row)
+            variant_rows.append(row)
+        else:
+            print(f" -> Found {len(option_buttons)} options.")
+            for i in range(len(option_buttons)):
+                buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
+                if i >= len(buttons):
+                    break
+                button = buttons[i]
+
+                option_name = button.text.strip()
+                if not option_name:
+                    continue
+
+                print(f"    -> Recording variant: {option_name}")
+                try:
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+                except Exception:
+                    pass
+
+                try:
+                    button.click()
+                except Exception as e:
+                    print(f"      -> Failed to click variant '{option_name}': {e}")
+                    continue
+
+                time.sleep(0.6)
+
+                row = build_variant_row(option_name)
+                populate_price_fields(row)
+                variant_rows.append(row)
+
+        if not variant_rows:
+            print(" -> No variants recorded after scanning; adding default entry.")
+            fallback_row = build_variant_row('Default')
+            populate_price_fields(fallback_row)
+            variant_rows.append(fallback_row)
         
         # STEP 1 (M2): Get HERO image - first image unless it's a video (then second)
         print("    -> Collecting hero image...")
@@ -1251,82 +958,10 @@ def scrape_product_variants(driver, url, product_index):
         else:
             print(f"    -> Skipping catalogue (found {detail_count} detail images)")
 
-        # 3. Process variants (for CSV data only, no more image capture)
-        option_buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
-        if not option_buttons:
-            print(" -> No option buttons found.")
-            # Create a default entry
-            row = {
-                'URL': url,
-                'Product Title': product_title,
-                'Product Title ZH': product_title if contains_chinese(product_title) else product_title,
-                'Option Name': 'Default',
-                'Option Name ZH': '默认',
-                'Price': 'N/A',
-                'Media Folder': os.path.basename(product_media_dir),
-                'Main Images': len([m for m in media_files if m['type'] == 'Main']),
-                'Detail Images': len([m for m in media_files if m['type'] == 'Details']),
-                'Catalogue Images': len([m for m in media_files if m['type'] == 'Catalogue'])
-            }
-            # Try to compute pricing for default if available on page
-            price_cny_val = get_price_cny(driver)
-            row['Price'] = f"¥{price_cny_val:.2f}" if price_cny_val is not None else ''
-            row['Price CNY'] = round(price_cny_val, 2) if price_cny_val is not None else ''
-            row['Price CAD'] = to_cad(price_cny_val) if price_cny_val is not None else ''
-            row['Shipping CAD'] = FLAT_SHIPPING_CAD if price_cny_val is not None else ''
-            row['Final CAD'] = round((row['Price CAD'] or 0) + (row['Shipping CAD'] or 0), 2) if price_cny_val is not None else ''
-
+        # Finalize variant rows with the media counts gathered above
+        for row in variant_rows:
+            apply_media_counts(row, media_files)
             product_variants.append(row)
-            return product_variants
-
-        print(f" -> Found {len(option_buttons)} options.")
-
-        for i in range(len(option_buttons)):
-            buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
-            if i >= len(buttons):
-                break
-            button = buttons[i]
-
-            option_name = button.text.strip()
-            if not option_name:
-                continue
-
-            print(f"    -> Recording variant: {option_name}")
-            try:
-                # Click the variant and wait for price to update
-                button.click()
-                time.sleep(0.6)
-                # Enable debug for ALL variants to diagnose price issues
-                debug_price = True
-                price_cny_val = get_price_cny_with_wait(driver, timeout_sec=6.0, debug=debug_price)
-                current_price = f"¥{price_cny_val:.2f}" if price_cny_val is not None else ''
-                if price_cny_val is None:
-                    print(f"        ⚠️  No price found for variant: {option_name}")
-                else:
-                    print(f"        💰 Price: ¥{price_cny_val:.2f}")
-
-
-                row = {
-                    'URL': url,
-                    'Product Title': product_title,
-                    'Product Title ZH': product_title if contains_chinese(product_title) else product_title,
-                    'Option Name': option_name,  # keep readable (translated later)
-                    'Option Name ZH': option_name,  # raw option label (often Chinese)
-                    'Price': current_price,
-                    'Media Folder': os.path.basename(product_media_dir),
-                    'Main Images': len([m for m in media_files if m['type'] == 'Main']),
-                    'Detail Images': len([m for m in media_files if m['type'] == 'Details']),
-                    'Catalogue Images': len([m for m in media_files if m['type'] == 'Catalogue'])
-                }
-                # Add computed pricing columns
-                row['Price CNY'] = round(price_cny_val, 2) if price_cny_val is not None else ''
-                row['Price CAD'] = to_cad(price_cny_val) if price_cny_val is not None else ''
-                row['Shipping CAD'] = FLAT_SHIPPING_CAD if price_cny_val is not None else ''
-                row['Final CAD'] = round((row['Price CAD'] or 0) + (row['Shipping CAD'] or 0), 2) if price_cny_val is not None else ''
-
-                product_variants.append(row)
-            except Exception as e:
-                print(f"      -> Error processing variant '{option_name}': {e}")
                 
     except NoSuchElementException:
         print(f" -> Error: A key selector was not found. Please re-check them.")
@@ -1369,8 +1004,8 @@ def export_products_manifest(all_scraped_data):
                     "url": url,
                     "images": [],
                     "detailLongImage": None,
-                    "price_cny": row.get('Price CNY'),
-                    "price_cad": row.get('Price CAD'),
+                    "price_cny": row.get('Price CNY') or 0,
+                    "price_cad": row.get('Price CAD') or 0,
                     "variants": []
                 }
                 
@@ -1391,8 +1026,8 @@ def export_products_manifest(all_scraped_data):
             
             # Add variant
             option = row.get('Option Name', '')
-            price_cny = row.get('Price CNY')
-            price_cad = row.get('Price CAD')
+            price_cny = row.get('Price CNY') or 0
+            price_cad = row.get('Price CAD') or 0
             
             if option:
                 products_map[url]["variants"].append({

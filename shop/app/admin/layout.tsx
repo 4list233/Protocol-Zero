@@ -18,6 +18,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <Link href="/" className="text-sm text-neutral-300 hover:text-white">← Back to shop</Link>
             <nav className="flex items-center gap-4 text-sm">
               <Link href="/admin/orders" className="hover:text-white text-neutral-300">Orders</Link>
+              <Link href="/admin/products" className="hover:text-white text-neutral-300">Products</Link>
             </nav>
           </div>
           <div className="text-xs text-neutral-400">Admin: {session.user.email}</div>
