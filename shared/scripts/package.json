@@ -7,9 +7,14 @@
     "sync-media": "node sync-media.js",
     "generate-products": "node generate-products.js",
     "promote-reviewed": "node promote-reviewed-media.js",
-    "sync-all": "npm run promote-reviewed && npm run sync-media && npm run generate-products"
+    "sync-all": "npm run promote-reviewed && npm run sync-media && npm run generate-products",
+    "verify-notion": "node verify-notion.js",
+    "seed-notion": "node json-to-notion.js",
+    "snapshot:products": "node snapshot-products.js"
   },
   "dependencies": {
-    "fs-extra": "^11.2.0"
+     "@notionhq/client": "^2.2.15",
+     "dotenv": "^16.4.5",
+     "fs-extra": "^11.2.0"
   }
 }
