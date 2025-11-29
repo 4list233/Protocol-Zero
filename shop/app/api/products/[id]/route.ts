@@ -1,21 +1,24 @@
 import { NextResponse } from 'next/server'
-import { fetchProductById } from '@/lib/notion-client'
+import { fetchProductById, type ProductRuntime } from '@/lib/notion-client'
 import { getCached, setCache } from '@/lib/notion-cache'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const cacheKey = `product:${id}`
 
-    const cached = getCached<any>(cacheKey)
+    const cached = getCached<ProductRuntime>(cacheKey)
     if (cached) {
       return NextResponse.json(cached, {
-        headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' },
+        headers: { 
+          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+          'X-Cache': 'HIT'
+        },
       })
     }
 
@@ -27,7 +30,10 @@ export async function GET(
     setCache(cacheKey, product)
 
     return NextResponse.json(product, {
-      headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' },
+      headers: { 
+        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'X-Cache': 'MISS'
+      },
     })
   } catch (error) {
     console.error('Error fetching product:', error)

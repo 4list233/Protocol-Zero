@@ -2,7 +2,10 @@ import type { Product } from "./products"
 import { getProductPrice } from "./pricing"
 
 export type CartItem = {
-  product: Product
+  product: Product & {
+    selectedVariantId?: string
+    selectedVariantTitle?: string
+  }
   quantity: number
 }
 
@@ -26,7 +29,13 @@ function saveCart(cart: CartItem[]): void {
 // Add item to cart
 export function addToCart(product: Product, quantity: number = 1): void {
   const cart = getCart()
-  const existingItem = cart.find(item => item.product.id === product.id)
+  // Find existing item - match by product ID and variant ID (if variant is selected)
+  // Different variants of the same product should be separate cart items
+  const existingItem = cart.find(item => {
+    const sameProduct = item.product.id === product.id
+    const sameVariant = (item.product.selectedVariantId || '') === ((product as any).selectedVariantId || '')
+    return sameProduct && sameVariant
+  })
 
   if (existingItem) {
     existingItem.quantity += quantity

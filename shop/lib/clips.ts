@@ -1,4 +1,18 @@
-// Firebase operations for clips functionality
+// Support both Firestore and Knack backends
+// Set USE_KNACK_DATABASE=true to use Knack, otherwise uses Firestore
+import { isKnackConfigured } from './knack-client'
+import * as knackClips from './knack-clips'
+
+// Lazy check - only evaluate on server-side
+function shouldUseKnack(): boolean {
+  // Only check on server-side where process.env is available
+  if (typeof window !== 'undefined') {
+    return false
+  }
+  return process.env.USE_KNACK_DATABASE === 'true' && isKnackConfigured()
+}
+
+// Firestore imports (only used if not using Knack)
 import {
   collection,
   addDoc,
@@ -51,6 +65,10 @@ function requireDb() {
 export async function addClip(
   clipData: Omit<ClipData, 'likes' | 'likedBy' | 'comments' | 'timestamp'>
 ): Promise<string> {
+  if (shouldUseKnack()) {
+    return await knackClips.addClip(clipData)
+  }
+
   const docRef = await addDoc(collection(requireDb(), 'clips'), {
     ...clipData,
     likes: 0,
@@ -63,6 +81,10 @@ export async function addClip(
 
 // Get all clips
 export async function getClips(tags?: ClipTag[]): Promise<Clip[]> {
+  if (shouldUseKnack()) {
+    return await knackClips.getClips(tags)
+  }
+
   const q = query(collection(requireDb(), 'clips'), orderBy('timestamp', 'desc'))
   const querySnapshot = await getDocs(q)
   const clips: Clip[] = []
@@ -84,6 +106,10 @@ export async function getClips(tags?: ClipTag[]): Promise<Clip[]> {
 
 // Get clips by user
 export async function getUserClips(userId: string): Promise<Clip[]> {
+  if (shouldUseKnack()) {
+    return await knackClips.getUserClips(userId)
+  }
+
   const q = query(collection(requireDb(), 'clips'), where('userId', '==', userId), orderBy('timestamp', 'desc'))
   const querySnapshot = await getDocs(q)
   const clips: Clip[] = []
@@ -100,6 +126,10 @@ export async function getUserClips(userId: string): Promise<Clip[]> {
 
 // Get clips by date
 export async function getClipsByDate(date: string): Promise<Clip[]> {
+  if (shouldUseKnack()) {
+    return await knackClips.getClipsByDate(date)
+  }
+
   const q = query(
     collection(requireDb(), 'clips'),
     where('date', '==', date),
@@ -120,12 +150,20 @@ export async function getClipsByDate(date: string): Promise<Clip[]> {
 
 // Update a clip
 export async function updateClip(clipId: string, updates: Partial<ClipData>): Promise<void> {
+  if (shouldUseKnack()) {
+    return await knackClips.updateClip(clipId, updates)
+  }
+
   const clipRef = doc(requireDb(), 'clips', clipId)
   await updateDoc(clipRef, updates)
 }
 
 // Delete a clip
 export async function deleteClip(clipId: string): Promise<void> {
+  if (shouldUseKnack()) {
+    return await knackClips.deleteClip(clipId)
+  }
+
   await deleteDoc(doc(requireDb(), 'clips', clipId))
 }
 
@@ -134,6 +172,10 @@ export async function toggleLike(
   clipId: string,
   userId: string
 ): Promise<{ liked: boolean; newLikeCount: number }> {
+  if (shouldUseKnack()) {
+    return await knackClips.toggleLike(clipId, userId)
+  }
+
   const clipRef = doc(requireDb(), 'clips', clipId)
   // Get current clip doc via query by id
   const clipDoc = await getDocs(query(collection(requireDb(), 'clips'), where('__name__', '==', clipId)))

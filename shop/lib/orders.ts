@@ -1,3 +1,19 @@
+// Support both Firestore and Knack backends
+// Set USE_KNACK_DATABASE=true to use Knack, otherwise uses Firestore
+
+import { isKnackConfigured } from './knack-client'
+import * as knackOrders from './knack-orders'
+
+// Lazy check - only evaluate on server-side
+function shouldUseKnack(): boolean {
+  // Only check on server-side where process.env is available
+  if (typeof window !== 'undefined') {
+    return false
+  }
+  return process.env.USE_KNACK_DATABASE === 'true' && isKnackConfigured()
+}
+
+// Firestore imports (only used if not using Knack)
 import { db } from '@/lib/firebase'
 import {
   addDoc,
@@ -13,6 +29,7 @@ import {
   where,
   limit,
   startAfter,
+  type QueryConstraint,
 } from 'firebase/firestore'
 
 function requireDb() {
@@ -109,6 +126,10 @@ export type Order = {
 // =============== CRUD Helpers ===============
 
 export async function createOrder(data: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'statusHistory'>) {
+  if (shouldUseKnack()) {
+    return await knackOrders.createOrder(data)
+  }
+
   const now = serverTimestamp()
   const statusHistory: StatusHistoryEntry[] = [
     { status: data.status, at: new Date() },
@@ -127,7 +148,15 @@ export async function getOrders(opts?: {
   pageSize?: number
   afterCreatedAt?: Date | Timestamp
 }): Promise<Order[]> {
-  const constraints: any[] = []
+  if (shouldUseKnack()) {
+    return await knackOrders.getOrders({
+      status: opts?.status,
+      pageSize: opts?.pageSize,
+      afterCreatedAt: opts?.afterCreatedAt instanceof Date ? opts.afterCreatedAt : opts?.afterCreatedAt?.toDate(),
+    })
+  }
+
+  const constraints: QueryConstraint[] = []
   if (opts?.status) constraints.push(where('status', '==', opts.status))
   constraints.push(orderBy('createdAt', 'desc'))
   if (opts?.afterCreatedAt) constraints.push(startAfter(opts.afterCreatedAt))
@@ -137,17 +166,21 @@ export async function getOrders(opts?: {
   const snap = await getDocs(q)
   const orders: Order[] = []
   snap.forEach((d) => {
-    const data = d.data() as any
+    const data = d.data() as Order
     orders.push({ id: d.id, ...data })
   })
   return orders
 }
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
+  if (shouldUseKnack()) {
+    return await knackOrders.getOrderById(orderId)
+  }
+
   const ref = doc(requireDb(), 'orders', orderId)
   const snap = await getDoc(ref)
   if (!snap.exists()) return null
-  const data = snap.data() as any
+  const data = snap.data() as Order
   return { id: snap.id, ...data }
 }
 
@@ -161,7 +194,12 @@ export type AdminAction =
   | { type: 'complete'; payload?: { note?: string; actorId?: string } }
   | { type: 'cancel'; payload?: { note?: string; actorId?: string } }
 
-export async function applyAdminAction(orderId: string, action: AdminAction) {
+export async function applyAdminAction(orderId: string, action: AdminAction): Promise<{ ok: boolean; status: OrderStatus }> {
+  if (shouldUseKnack()) {
+    return await knackOrders.applyAdminAction(orderId, action)
+  }
+
+  // Firestore implementation continues below...
   const ref = doc(requireDb(), 'orders', orderId)
   const snap = await getDoc(ref)
   if (!snap.exists()) throw new Error('Order not found')

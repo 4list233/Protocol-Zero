@@ -1,0 +1,21 @@
+User ID,Username,Display Name,Email,Is Guest,Sponsor User ID,Sponsor Name,Sponsor Email,Date,Timestamp,Created At
+user_abc123,JohnDoe,John Doe,john.doe@example.com,false,,,,11/25/2025,11/20/2025 10:00,11/20/2025 10:00
+user_def456,JaneSmith,Jane Smith,jane.smith@example.com,false,,,,11/25/2025,11/20/2025 10:05,11/20/2025 10:05
+user_ghi789,BobWilson,Bob Wilson,bob.wilson@example.com,false,,,,11/25/2025,11/20/2025 10:10,11/20/2025 10:10
+,Tom Guest,Tom Guest,,true,user_abc123,John Doe,john.doe@example.com,11/25/2025,11/20/2025 10:15,11/20/2025 10:15
+,Sam Guest,Sam Guest,,true,user_abc123,John Doe,john.doe@example.com,11/25/2025,11/20/2025 10:20,11/20/2025 10:20
+user_jkl012,AliceBrown,Alice Brown,alice.brown@example.com,false,,,,11/25/2025,11/20/2025 11:00,11/20/2025 11:00
+user_mno345,CharlieDavis,Charlie Davis,charlie.davis@example.com,false,,,,11/25/2025,11/20/2025 11:30,11/20/2025 11:30
+,Alex Guest,Alex Guest,,true,user_def456,Jane Smith,jane.smith@example.com,11/25/2025,11/20/2025 12:00,11/20/2025 12:00
+user_abc123,JohnDoe,John Doe,john.doe@example.com,false,,,,11/26/2025,11/21/2025 09:00,11/21/2025 09:00
+user_def456,JaneSmith,Jane Smith,jane.smith@example.com,false,,,,11/26/2025,11/21/2025 09:05,11/21/2025 09:05
+user_ghi789,BobWilson,Bob Wilson,bob.wilson@example.com,false,,,,11/26/2025,11/21/2025 09:10,11/21/2025 09:10
+user_jkl012,AliceBrown,Alice Brown,alice.brown@example.com,false,,,,11/26/2025,11/21/2025 09:15,11/21/2025 09:15
+,Pat Guest,Pat Guest,,true,user_ghi789,Bob Wilson,bob.wilson@example.com,11/26/2025,11/21/2025 09:20,11/21/2025 09:20
+user_mno345,CharlieDavis,Charlie Davis,charlie.davis@example.com,false,,,,11/26/2025,11/21/2025 10:00,11/21/2025 10:00
+user_abc123,JohnDoe,John Doe,john.doe@example.com,false,,,,11/27/2025,11/22/2025 08:00,11/22/2025 08:00
+user_def456,JaneSmith,Jane Smith,jane.smith@example.com,false,,,,11/27/2025,11/22/2025 08:05,11/22/2025 08:05
+,Chris Guest,Chris Guest,,true,user_jkl012,Alice Brown,alice.brown@example.com,11/27/2025,11/22/2025 08:10,11/22/2025 08:10
+,Dan Guest,Dan Guest,,true,user_jkl012,Alice Brown,alice.brown@example.com,11/27/2025,11/22/2025 08:15,11/22/2025 08:15
+user_ghi789,BobWilson,Bob Wilson,bob.wilson@example.com,false,,,,11/27/2025,11/22/2025 09:00,11/22/2025 09:00
+user_jkl012,AliceBrown,Alice Brown,alice.brown@example.com,false,,,,11/27/2025,11/22/2025 09:05,11/22/2025 09:05

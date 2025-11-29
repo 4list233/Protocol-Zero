@@ -118,6 +118,11 @@ export default function CartPage() {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">{getProductTitle(item.product)}</h3>
+                          {item.product.selectedVariantTitle && (
+                            <p className="text-sm font-medium text-primary/80 mb-1">
+                              Variant: {item.product.selectedVariantTitle}
+                            </p>
+                          )}
                           {item.product.category && (
                             <p className="text-sm text-muted-foreground mb-2">{item.product.category}</p>
                           )}

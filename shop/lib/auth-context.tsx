@@ -5,6 +5,9 @@ import {
   User, 
   onAuthStateChanged,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   GoogleAuthProvider,
   FacebookAuthProvider,
   signOut as firebaseSignOut
@@ -16,6 +19,9 @@ type AuthContextType = {
   loading: boolean
   signInWithGoogle: () => Promise<void>
   signInWithInstagram: () => Promise<void>
+  signInWithEmail: (email: string, password: string) => Promise<User>
+  registerWithEmail: (email: string, password: string) => Promise<User>
+  resetPassword: (email: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -24,6 +30,9 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signInWithGoogle: async () => {},
   signInWithInstagram: async () => {},
+  signInWithEmail: async () => { throw new Error('Not implemented') },
+  registerWithEmail: async () => { throw new Error('Not implemented') },
+  resetPassword: async () => {},
   signOut: async () => {},
 })
 
@@ -74,6 +83,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithEmail = async (email: string, password: string): Promise<User> => {
+    try {
+      if (!auth) throw new Error('Authentication is not available. Please try again later.')
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      return userCredential.user
+    } catch (error) {
+      console.error('Error signing in with email:', error)
+      throw error
+    }
+  }
+
+  const registerWithEmail = async (email: string, password: string): Promise<User> => {
+    try {
+      if (!auth) throw new Error('Authentication is not available. Please try again later.')
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      return userCredential.user
+    } catch (error) {
+      console.error('Error registering with email:', error)
+      throw error
+    }
+  }
+
+  const resetPassword = async (email: string): Promise<void> => {
+    try {
+      if (!auth) throw new Error('Authentication is not available. Please try again later.')
+      await sendPasswordResetEmail(auth, email)
+    } catch (error) {
+      console.error('Error sending password reset email:', error)
+      throw error
+    }
+  }
+
   const signOut = async () => {
     try {
       if (!auth) return
@@ -85,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithInstagram, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithInstagram, signInWithEmail, registerWithEmail, resetPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   )

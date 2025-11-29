@@ -4,3 +4,4 @@ Pillow>=10.1.0
 pytesseract>=0.3.10
 google-generativeai>=0.3.0
 python-dotenv>=1.0.0
+pyautogui>=0.9.54  # For Comet Browser auto-continue scripts

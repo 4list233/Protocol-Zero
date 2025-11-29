@@ -1,9 +1,27 @@
-// Firestore functions for player sign-ups
+// Support both Firestore and Knack backends
+// Set USE_KNACK_DATABASE=true to use Knack, otherwise uses Firestore
+import { isKnackConfigured } from './knack-client'
+import * as knackSignups from './knack-signups'
+
+// Lazy check - only evaluate on server-side
+function shouldUseKnack(): boolean {
+  // Only check on server-side where process.env is available
+  if (typeof window !== 'undefined') {
+    return false
+  }
+  return process.env.USE_KNACK_DATABASE === 'true' && isKnackConfigured()
+}
+
+// Firestore imports (only used if not using Knack)
 import { collection, addDoc, getDocs, query, where, deleteDoc } from 'firebase/firestore'
 import { requireDb } from './firebase'
 
 // Get all signups (for listing players)
 export async function getAllSignups() {
+  if (shouldUseKnack()) {
+    return await knackSignups.getAllSignups()
+  }
+
   const ref = collection(requireDb(), 'signups')
   const snapshot = await getDocs(ref)
   return snapshot.docs.map(doc => doc.data())
@@ -11,6 +29,10 @@ export async function getAllSignups() {
 
 // Delete a specific user's signup for a date
 export async function deleteSignup(userId: string, date: string) {
+  if (shouldUseKnack()) {
+    return await knackSignups.deleteSignup(userId, date)
+  }
+
   const ref = collection(requireDb(), 'signups')
   const q = query(ref, where('userId', '==', userId), where('date', '==', date))
   const snapshot = await getDocs(q)
@@ -21,6 +43,10 @@ export async function deleteSignup(userId: string, date: string) {
 
 // Delete ALL signups (for resetting data)
 export async function deleteAllSignups() {
+  if (shouldUseKnack()) {
+    return await knackSignups.deleteAllSignups()
+  }
+
   const ref = collection(requireDb(), 'signups')
   const snapshot = await getDocs(ref)
   
@@ -68,6 +94,20 @@ export async function addSignup({
   sponsorEmail?: string | null
   date: string
 }) {
+  if (shouldUseKnack()) {
+    return await knackSignups.addSignup({
+      userId,
+      username,
+      displayName,
+      email,
+      isGuest,
+      sponsorUserId,
+      sponsorName,
+      sponsorEmail,
+      date,
+    })
+  }
+
   const ref = collection(requireDb(), 'signups')
   await addDoc(ref, {
     userId: userId || null,
@@ -85,6 +125,10 @@ export async function addSignup({
 
 // Get signup count for a specific date
 export async function getSignupCount(date: string): Promise<number> {
+  if (shouldUseKnack()) {
+    return await knackSignups.getSignupCount(date)
+  }
+
   const ref = collection(requireDb(), 'signups')
   const q = query(ref, where('date', '==', date))
   const snapshot = await getDocs(q)
@@ -93,6 +137,10 @@ export async function getSignupCount(date: string): Promise<number> {
 
 // Get all signups for a week (array of dates)
 export async function getSignupCountsForWeek(dates: string[]): Promise<number[]> {
+  if (shouldUseKnack()) {
+    return await knackSignups.getSignupCountsForWeek(dates)
+  }
+
   const ref = collection(requireDb(), 'signups')
   const counts: number[] = []
   for (const date of dates) {
@@ -105,6 +153,10 @@ export async function getSignupCountsForWeek(dates: string[]): Promise<number[]>
 
 // Get all guest names for a sponsor user and date
 export async function getGuestsForUserDate(sponsorUserId: string, date: string): Promise<string[]> {
+  if (shouldUseKnack()) {
+    return await knackSignups.getGuestsForUserDate(sponsorUserId, date)
+  }
+
   const ref = collection(requireDb(), 'signups')
   const q = query(ref,
     where('sponsorUserId', '==', sponsorUserId),
@@ -117,6 +169,10 @@ export async function getGuestsForUserDate(sponsorUserId: string, date: string):
 
 // Delete a guest signup for a sponsor user and date
 export async function deleteGuestSignup(sponsorUserId: string, guestName: string, date: string) {
+  if (shouldUseKnack()) {
+    return await knackSignups.deleteGuestSignup(sponsorUserId, guestName, date)
+  }
+
   const ref = collection(requireDb(), 'signups')
   const q = query(ref,
     where('sponsorUserId', '==', sponsorUserId),

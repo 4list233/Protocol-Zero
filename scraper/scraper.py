@@ -1071,14 +1071,21 @@ def main():
     options.add_argument('--no-first-run')
     options.add_argument('--disable-extensions')
     options.add_argument('--window-size=1920,1080')  # High-res for better screenshots
+    options.add_argument('--remote-debugging-port=9222')  # Allow remote debugging
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])  # Reduce logging noise
     
     print("🚀 Starting Chrome with persistent profile (Selenium Manager)...")
     print(f"   Profile: {SELENIUM_PROFILE_DIR}")
+    print("   Waiting for Chrome to launch...")
     
-    driver = webdriver.Chrome(options=options)
-    driver.set_page_load_timeout(60)
-    
-    print("✓ Chrome started successfully")
+    try:
+        driver = webdriver.Chrome(options=options)
+        driver.set_page_load_timeout(60)
+        print("✓ Chrome started successfully")
+    except Exception as e:
+        print(f"❌ Failed to start Chrome: {e}")
+        print("   Make sure Chrome is installed and ChromeDriver is available")
+        return
     print(f"   Note: Session persists in {SELENIUM_PROFILE_DIR}")
     all_scraped_data = []
     
@@ -1248,6 +1255,23 @@ def main():
     
     # M5: Export products manifest for shop integration
     export_products_manifest(all_scraped_data)
+    
+    print("\n" + "="*60)
+    print("⏸️  PAUSE: Please review and filter images before continuing")
+    print("="*60)
+    print("\n📋 Next steps:")
+    print("  1. Review images in scraper/media/ folders")
+    print("  2. Delete unwanted images (ads, unrelated content) from Details/ folders")
+    print("  3. Run: python3 stitch-details.py (to stitch detail images)")
+    print("  4. Run: python3 translate.py (to enhance translations)")
+    print("  5. Run: cd ../shared/scripts && node csv-to-knack.js (to import to Knack)")
+    print("\nPress Enter when ready to continue, or Ctrl+C to exit...")
+    try:
+        input()
+    except (EOFError, KeyboardInterrupt):
+        print("\nExiting. You can run the next steps manually when ready.")
+        driver.quit()
+        return
 
 if __name__ == "__main__":
     # Allow a login-setup mode to help users log into Taobao once and persist session

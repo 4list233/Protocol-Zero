@@ -4,22 +4,23 @@ import { useRouter } from "next/navigation"
 import { addToCart } from "../../../lib/cart"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import type { RuntimeProduct } from "../../../lib/products"
 import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
 import { ArrowLeft, ShoppingCart } from "lucide-react"
 import VariantSelector from "@/components/variant-selector"
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { addToast } = useToast()
+  const { id } = use(params)
   const [product, setProduct] = useState<RuntimeProduct | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch(`/api/products/${params.id}`)
+    fetch(`/api/products/${id}`)
       .then(res => res.json())
       .then(data => {
         setProduct(data)
@@ -32,7 +33,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         console.error('Failed to fetch product:', err)
         setLoading(false)
       })
-  }, [params.id])
+  }, [id])
 
   if (loading) {
     return (
@@ -52,9 +53,19 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     )
   }
 
-  const selectedVariant = product.variants?.find(v => v.id === selectedVariantId)
-  const displayPrice = selectedVariant?.price_cad || product.price_cad
+  // All products should have at least 1 variant - default to first variant if none selected
+  const defaultVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null
+  const effectiveVariantId = selectedVariantId || defaultVariant?.id || null
+  const selectedVariant = product.variants?.find(v => v.id === effectiveVariantId) || defaultVariant
+  
+  // Always use variant pricing (all products should have variants)
+  const displayPrice = selectedVariant?.price_cad || 0
   const displayStock = selectedVariant?.stock ?? product.stock
+  
+  // Update selected variant ID if we defaulted to first variant
+  if (!selectedVariantId && defaultVariant) {
+    setSelectedVariantId(defaultVariant.id)
+  }
   const images = Array.from(new Set([
     product.primaryImage,
     ...(product.images || [])
@@ -65,13 +76,14 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     
     const cartProduct = {
       ...product,
+      url: product.url || '',
       selectedVariantId,
       selectedVariantTitle: selectedVariant?.variantName,
       price_cad: displayPrice,
       stock: displayStock
     }
     
-    addToCart(cartProduct, 1)
+    addToCart(cartProduct as any, 1)
     
     addToast({
       title: "Added to cart!",
@@ -143,14 +155,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   {product.category}
                 </span>
               )}
-              {product.title_original && product.title_original !== product.title && (
-                <p className="mt-2 text-sm text-[#A1A1A1]">{product.title_original}</p>
-              )}
             </div>
 
             <div className="flex items-center gap-4">
-              <span className="text-3xl font-bold text-[#3D9A6C] font-mono">${displayPrice.toFixed(2)}</span>
+              <span className="text-3xl font-bold text-[#3D9A6C] font-mono">
+                ${displayPrice > 0 ? displayPrice.toFixed(2) : '0.00'}
+              </span>
               <span className="text-xs text-[#A1A1A1] font-mono uppercase">CAD</span>
+              {!selectedVariant && (
+                <span className="text-xs text-yellow-500">(Select a variant to see price)</span>
+              )}
             </div>
 
             {product.description && (
@@ -162,18 +176,25 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             {displayStock !== undefined && (
               <div className="text-sm">
                 {displayStock > 0 ? (
-                  <span className="text-[#3D9A6C]">✓ In Stock ({displayStock} available)</span>
+                  <span className="text-[#3D9A6C]">✓ In Stock</span>
                 ) : (
                   <span className="text-red-500">✗ Out of Stock</span>
                 )}
               </div>
             )}
 
-            {product.variants && product.variants.length > 1 && (
+            {product.variants && product.variants.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-[#F5F5F5] mb-3">Select Variant:</p>
+                <p className="text-sm font-medium text-[#F5F5F5] mb-3">
+                  {product.variants.length > 1 ? 'Select Variant:' : 'Variant:'}
+                </p>
                 <VariantSelector
-                  variants={product.variants}
+                  variants={product.variants.map(v => ({
+                    id: v.id,
+                    title: v.variantName,
+                    stock: (v.stock ?? 0) > 0 ? 1 : 0, // Convert to 0 or 1 for display
+                    price_cad: v.price_cad ?? product.price_cad
+                  }))}
                   selectedVariantId={selectedVariantId || product.variants[0].id}
                   onChange={setSelectedVariantId}
                 />
@@ -189,16 +210,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               {displayStock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
 
-            {product.url && (
-              <a
-                href={product.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-[#A1A1A1] hover:text-[#3D9A6C] transition-colors text-center"
-              >
-                View on Taobao →
-              </a>
-            )}
           </div>
         </div>
       </main>

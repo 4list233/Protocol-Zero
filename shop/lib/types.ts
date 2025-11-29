@@ -1,14 +1,3 @@
-// Extend NextAuth types
-import { DefaultSession } from "next-auth"
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string
-    } & DefaultSession["user"]
-  }
-}
-
 // Utility types for common data structures
 export type ClipWithAuthor = {
   id: string
