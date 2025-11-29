@@ -3,8 +3,11 @@ interface CacheEntry<T> {
   timestamp: number
 }
 
-const cache = new Map<string, CacheEntry<any>>()
-const TTL = (parseInt(process.env.NOTION_CACHE_TTL_SECONDS || '120') || 120) * 1000
+const cache = new Map<string, CacheEntry<unknown>>()
+// Reduced TTL for live updates - 15 seconds for products when using Knack
+// Can be overridden with NOTION_CACHE_TTL_SECONDS env var
+const DEFAULT_TTL = 15 // 15 seconds for near-live updates
+const TTL = (parseInt(process.env.NOTION_CACHE_TTL_SECONDS || String(DEFAULT_TTL)) || DEFAULT_TTL) * 1000
 
 export function getCached<T>(key: string): T | null {
   const entry = cache.get(key)

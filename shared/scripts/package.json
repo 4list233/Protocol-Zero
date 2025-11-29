@@ -7,9 +7,17 @@
     "sync-media": "node sync-media.js",
     "generate-products": "node generate-products.js",
     "promote-reviewed": "node promote-reviewed-media.js",
-    "sync-all": "npm run promote-reviewed && npm run sync-media && npm run generate-products"
+    "sync-all": "npm run promote-reviewed && npm run sync-media && npm run generate-products",
+    "verify-notion": "node verify-notion.js",
+    "seed-notion": "node json-to-notion.js",
+    "snapshot:products": "node snapshot-products.js",
+    "import-knack": "node csv-to-knack.js"
   },
   "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.5",
     "fs-extra": "^11.2.0"
   }
 }

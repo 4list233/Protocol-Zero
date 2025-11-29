@@ -1,0 +1,9 @@
+# Test file with just 2 URLs for quick testing
+https://item.taobao.com/item.htm?id=969220337986&last_time=1763006142&mi_id=0000ZGBYesTQpeAQnYUD44pBJ7f2WiKrvcxuIvD1wj8_XzA&scm=1007.13982.82927.0&upStreamPrice=21500
+https://item.taobao.com/item.htm?from=cart&id=911159245418&mi_id=0000DamQMBEF6SyVICsEt2DG6Og9Pw3bSp_zFH2LgajJo4Y&skuId=5940060162282&spm=a1z0d.6639537%2F202410.item.d911159245418.5b4b74841fAyC5&upStreamPrice=3190
+
+
+
+
+
+

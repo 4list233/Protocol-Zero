@@ -25,8 +25,23 @@ function formatHours(hours: { open: string; close: string }): string {
   return `${to12Hour(hours.open)}-${to12Hour(hours.close)}`
 }
 
+type ScheduleConfig = {
+  weekSchedule: Array<{
+    dayIndex: number
+    name: string
+    hours: { open: string; close: string }
+    pricing?: {
+      base: number
+      discounted?: number
+      discountType?: string
+      special?: string
+      lateNight?: { price?: number; hours?: string }
+    }
+  }>
+}
+
 export function getWeekSchedule(): DaySchedule[] {
-  const days = (scheduleConfig as any).weekSchedule as any[]
+  const days = (scheduleConfig as ScheduleConfig).weekSchedule
   return days.map((day) => {
     const pricing = day.pricing || {}
     let lnHours: string | undefined

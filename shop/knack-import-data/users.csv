@@ -1,0 +1,12 @@
+User ID,Email,Display Name,Username,Phone,Role,Is Active,Created At,Updated At
+user_abc123,john.doe@example.com,John Doe,JohnDoe,555-0101,customer,true,01/01/2025 00:00,11/24/2025 00:00
+user_def456,jane.smith@example.com,Jane Smith,JaneSmith,555-0102,customer,true,01/02/2025 00:00,11/24/2025 00:00
+user_ghi789,bob.wilson@example.com,Bob Wilson,BobWilson,555-0103,customer,true,01/03/2025 00:00,11/24/2025 00:00
+user_jkl012,alice.brown@example.com,Alice Brown,AliceBrown,555-0104,customer,true,01/04/2025 00:00,11/24/2025 00:00
+user_mno345,charlie.davis@example.com,Charlie Davis,CharlieDavis,555-0105,customer,true,01/05/2025 00:00,11/24/2025 00:00
+user_pqr678,david.miller@example.com,David Miller,DavidMiller,555-0106,customer,true,01/06/2025 00:00,11/24/2025 00:00
+user_stu901,emily.jones@example.com,Emily Jones,EmilyJones,555-0107,customer,true,01/07/2025 00:00,11/24/2025 00:00
+user_vwx234,frank.taylor@example.com,Frank Taylor,FrankTaylor,555-0108,customer,true,01/08/2025 00:00,11/24/2025 00:00
+admin_001,admin@protocolzero.com,Admin User,AdminUser,555-1001,admin,true,01/01/2025 00:00,11/24/2025 00:00
+admin_002,manager@protocolzero.com,Manager User,ManagerUser,555-1002,admin,true,01/01/2025 00:00,11/24/2025 00:00
+admin_003,staff@protocolzero.com,Staff User,StaffUser,555-1003,staff,true,01/01/2025 00:00,11/24/2025 00:00

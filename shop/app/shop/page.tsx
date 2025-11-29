@@ -14,25 +14,61 @@ export default function ShopPage() {
   const [products, setProducts] = useState<RuntimeProduct[]>([])
   const [loading, setLoading] = useState(true)
 
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch('/api/products', { 
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      })
+      const data = await res.json()
+      setProducts(data)
+      setLoading(false)
+    } catch (err) {
+      console.error('Failed to fetch products:', err)
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Failed to fetch products:', err)
-        setLoading(false)
-      })
+    // Initial fetch
+    fetchProducts()
+
+    // Set up periodic refresh every 30 seconds for live updates
+    const refreshInterval = setInterval(() => {
+      fetchProducts()
+    }, 30000) // 30 seconds
+
+    // Cleanup interval on unmount
+    return () => clearInterval(refreshInterval)
   }, [])
 
   const handleAddToCart = (product: RuntimeProduct) => {
-    addToCart(product, 1)
+    // All products should have at least 1 variant - use first variant
+    const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null
+    
+    if (!firstVariant) {
+      addToast({
+        title: "Error",
+        description: "This product has no variants available",
+      })
+      return
+    }
+    
+    // Create cart product with variant information
+    const cartProduct = {
+      ...product,
+      url: product.url || '',
+      selectedVariantId: firstVariant.id,
+      selectedVariantTitle: firstVariant.variantName,
+      price_cad: firstVariant.price_cad || 0,
+      stock: firstVariant.stock ?? product.stock
+    }
+    
+    addToCart(cartProduct as any, 1)
     
     addToast({
       title: "Added to cart!",
-      description: product.title,
+      description: `${product.title}${firstVariant ? ` - ${firstVariant.variantName}` : ''}`,
       action: (
         <Link 
           href="/cart"
@@ -123,7 +159,11 @@ export default function ShopPage() {
                   )}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-[#2C2C2C]">
-                  <span className="text-2xl font-bold text-[#3D9A6C] font-mono">${product.price_cad.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-[#3D9A6C] font-mono">
+                    ${product.variants && product.variants.length > 0 
+                      ? (product.variants[0].price_cad || 0).toFixed(2)
+                      : '0.00'}
+                  </span>
                   <span className="text-xs text-[#A1A1A1] font-mono uppercase">CAD</span>
                 </div>
                 <button

@@ -2,6 +2,8 @@
 
 const fs = require('fs/promises')
 const path = require('path')
+// Load environment variables from root .env file
+require('dotenv').config({ path: path.join(__dirname, '../../.env') })
 
 const MANIFEST_PATH = path.join(__dirname, '../data/products_manifest.json')
 const OVERRIDES_PATH = path.join(__dirname, '../data/product_overrides.json')

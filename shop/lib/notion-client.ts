@@ -1,7 +1,20 @@
 import { Client } from '@notionhq/client'
+// Support both Notion and Knack backends
+// Set USE_KNACK_DATABASE=true to use Knack, otherwise uses Notion
+import { isKnackConfigured } from './knack-client'
+import * as knackProducts from './knack-products'
 
 const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS as string
 const VARIANTS_DB = process.env.NOTION_DATABASE_ID_VARIANTS as string
+
+// Lazy check - only evaluate on server-side
+function shouldUseKnack(): boolean {
+  // Only check on server-side where process.env is available
+  if (typeof window !== 'undefined') {
+    return false
+  }
+  return process.env.USE_KNACK_DATABASE === 'true' && isKnackConfigured()
+}
 
 // Create a singleton client instance
 let notionClient: Client | null = null
@@ -18,16 +31,25 @@ function getNotionClient(): Client {
   return notionClient
 }
 
-function text(rt: any[] | undefined): string {
-  if (!rt || rt.length === 0) return ''
-  return rt.map((t: any) => t.plain_text || t.text?.content || '').join('')
+type RichTextItem = {
+  plain_text?: string
+  text?: { content?: string }
 }
 
-function sel(s: any): string | undefined {
+type SelectOption = {
+  name?: string
+}
+
+function text(rt: RichTextItem[] | undefined): string {
+  if (!rt || rt.length === 0) return ''
+  return rt.map((t: RichTextItem) => t.plain_text || t.text?.content || '').join('')
+}
+
+function sel(s: SelectOption | undefined): string | undefined {
   return s?.name
 }
 
-function num(n: any): number {
+function num(n: number | undefined | null): number {
   return typeof n === 'number' ? n : 0
 }
 
@@ -61,6 +83,10 @@ export type ProductRuntime = {
 }
 
 export async function fetchProducts(): Promise<ProductRuntime[]> {
+  if (shouldUseKnack()) {
+    return await knackProducts.fetchProducts()
+  }
+
   const notion = getNotionClient()
   const response = await notion.databases.query({
     database_id: PRODUCTS_DB,
@@ -68,7 +94,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
   })
 
   const products = await Promise.all(
-    response.results.map(async (page: any) => {
+    response.results.map(async (page: { id: string; properties: Record<string, unknown> }) => {
       const props = page.properties
 
       const variantsRes = await getNotionClient().databases.query({
@@ -77,7 +103,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
         sorts: [{ property: 'Sort Order', direction: 'ascending' }],
       })
 
-      const variants: ProductVariant[] = variantsRes.results.map((vp: any) => {
+      const variants: ProductVariant[] = variantsRes.results.map((vp: { id: string; properties: Record<string, unknown> }) => {
         const p = vp.properties
         return {
           id: vp.id,
@@ -92,13 +118,15 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
       })
 
       // Extract images from Files property
-      const imageFiles = props['Images']?.files || []
-      const images: string[] = imageFiles.map((f: any) => {
+      type FileItem = { external?: { url?: string }; file?: { url?: string } }
+      const imageFiles = (props['Images'] as { files?: FileItem[] } | undefined)?.files || []
+      const images: string[] = imageFiles.map((f: FileItem) => {
         return f.external?.url || f.file?.url || ''
       }).filter(Boolean)
 
       // Extract detail image
-      const detailFiles = props['Detail Image']?.files || []
+      const detailImageProp = props['Detail Image'] as { files?: FileItem[] } | undefined
+      const detailFiles = detailImageProp?.files || []
       const detailLongImage = detailFiles.length > 0 
         ? (detailFiles[0].external?.url || detailFiles[0].file?.url) 
         : undefined
@@ -115,7 +143,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
         detailLongImage,
         category: sel(props['Category']?.select),
         description: text(props['Description']?.rich_text),
-        status: sel(props['Status']?.select) as any,
+        status: sel(props['Status'] as { select?: SelectOption } | undefined) as 'Active' | 'Draft' | 'Discontinued' | 'Out of Stock' | undefined,
         stock: props['Stock']?.number ?? undefined,
         url: props['URL']?.url || undefined,
         variants: variants.length ? variants : undefined,
@@ -127,6 +155,10 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
 }
 
 export async function fetchProductById(id: string): Promise<ProductRuntime | null> {
+  if (shouldUseKnack()) {
+    return await knackProducts.fetchProductById(id)
+  }
+
   const notion = getNotionClient()
   const response = await notion.databases.query({
     database_id: PRODUCTS_DB,
@@ -140,7 +172,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
 
   if (response.results.length === 0) return null
 
-  const page: any = response.results[0]
+  const page = response.results[0] as { id: string; properties: Record<string, unknown> }
   const props = page.properties
 
   const variantsRes = await notion.databases.query({
@@ -149,7 +181,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     sorts: [{ property: 'Sort Order', direction: 'ascending' }],
   })
 
-  const variants: ProductVariant[] = variantsRes.results.map((vp: any) => {
+  const variants: ProductVariant[] = variantsRes.results.map((vp: { id: string; properties: Record<string, unknown> }) => {
     const p = vp.properties
     return {
       id: vp.id,
@@ -179,7 +211,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     detailLongImage: text(props['Detail Image Path']?.rich_text) || undefined,
     category: sel(props['Category']?.select),
     description: text(props['Description']?.rich_text),
-    status: sel(props['Status']?.select) as any,
+    status: sel(props['Status'] as { select?: SelectOption } | undefined) as 'Active' | 'Draft' | 'Discontinued' | 'Out of Stock' | undefined,
     stock: props['Stock']?.number ?? undefined,
     url: props['URL']?.url || undefined,
     variants: variants.length ? variants : undefined,
