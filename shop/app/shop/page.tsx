@@ -7,7 +7,7 @@ import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
 import type { RuntimeProduct } from "@/lib/products"
 import Image from "next/image"
-import { ShoppingCart, ArrowLeft, Check } from "lucide-react"
+import { ShoppingCart, Check } from "lucide-react"
 
 export default function ShopPage() {
   const { addToast } = useToast()
@@ -85,7 +85,7 @@ export default function ShopPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-[#2C2C2C] bg-[#1E1E1E]/95 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <Link href="/shop" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img 
               src="/logos/logo-icon.png" 
               alt="Protocol Zero" 
@@ -94,7 +94,7 @@ export default function ShopPage() {
             <span className="text-xl font-heading font-bold tracking-wide uppercase">Protocol Zero</span>
           </Link>
           <nav className="flex gap-6 items-center">
-            <Link href="/" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Home</Link>
+            <Link href="/shop" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Shop</Link>
             <Link href="/clips" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Clips</Link>
             <Link href="/account" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Account</Link>
             <CartDrawer />
@@ -104,13 +104,6 @@ export default function ShopPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-[#A1A1A1] hover:text-[#3D9A6C] mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to home
-        </Link>
 
         {loading ? (
           <div className="text-center py-12 text-[#A1A1A1]">

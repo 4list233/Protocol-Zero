@@ -47,6 +47,21 @@ function extractNotionImages(props: Record<string, unknown>): { images: string[]
   return { images, detailImage: detailLongImage }
 }
 
+// Fix image URLs that were stored with localhost - replace with production URL
+function fixImageUrl(url: string): string {
+  if (!url) return url
+  
+  // Get the production base URL
+  const productionUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.com'
+  
+  // Replace localhost URLs with production URL
+  if (url.includes('localhost:3000')) {
+    return url.replace(/https?:\/\/localhost:3000/g, productionUrl)
+  }
+  
+  return url
+}
+
 // Fetch images from Notion by product ID (primary) or SKU (fallback)
 // Images are sourced from Notion under the same product ID
 async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ images: string[]; detailImage?: string }> {
@@ -83,7 +98,13 @@ async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ 
 
     if (response.results.length > 0) {
       const page = response.results[0] as { properties: Record<string, unknown> }
-      return extractNotionImages(page.properties)
+      const { images, detailImage } = extractNotionImages(page.properties)
+      
+      // Fix any localhost URLs in the images
+      return {
+        images: images.map(fixImageUrl),
+        detailImage: detailImage ? fixImageUrl(detailImage) : undefined,
+      }
     }
   } catch (error) {
     console.warn('Error fetching images from Notion:', error)
@@ -114,7 +135,7 @@ async function syncImagesToNotion(
   try {
     // Convert image URLs to Notion file format
     // For local paths (starting with /), convert to full URLs
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.com'
     
     const imageFiles = images
       .filter((url) => url && !url.includes('placeholder.png'))
@@ -233,8 +254,8 @@ function extractImageUrl(imageField: unknown): string {
       }
       if (typeof parsed === 'object' && parsed !== null) {
         return extractImageUrl(parsed)
-      }
-    } catch {
+    }
+  } catch {
       // Not JSON, treat as URL string (but validate it looks like a URL)
       if (imageField.startsWith('http://') || imageField.startsWith('https://') || imageField.startsWith('/')) {
         return imageField
@@ -378,7 +399,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     sortField: PRODUCT_FIELDS.title,
     sortOrder: 'asc',
   })
-  
+
   console.log(`Fetched ${products.length} active products from Knack`)
 
   // Fetch all active variants and group by product
@@ -387,7 +408,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     sortField: VARIANT_FIELDS.sortOrder,
     sortOrder: 'asc',
   })
-  
+
   console.log(`Fetched ${allVariants.length} active variants for ${products.length} products`)
 
   // Create maps for product lookups - by field_45 AND by Knack record ID
@@ -533,13 +554,13 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
 
   // 2. If not found by ID field, try by SKU
   if (!product) {
-    const bySku = await getKnackRecords<Record<string, unknown>>(PRODUCTS_OBJECT_KEY, {
-      filters: { [PRODUCT_FIELDS.sku]: id },
-    })
-    if (bySku.length > 0) {
-      product = bySku[0]
+      const bySku = await getKnackRecords<Record<string, unknown>>(PRODUCTS_OBJECT_KEY, {
+        filters: { [PRODUCT_FIELDS.sku]: id },
+      })
+      if (bySku.length > 0) {
+        product = bySku[0]
+      }
     }
-  }
 
   // 3. If still not found, try direct record lookup by Knack record ID
   if (!product) {
@@ -580,7 +601,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     sortField: VARIANT_FIELDS.sortOrder,
     sortOrder: 'asc',
   })
-  
+
   console.log(`Total variants in Knack: ${allVariants.length}`)
 
   // Match variants by checking multiple possible connection formats
