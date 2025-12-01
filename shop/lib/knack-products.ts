@@ -1,5 +1,6 @@
-// Knack-based products operations (replaces Notion products)
-// Images are fetched from Notion to maintain compatibility
+// Knack-based products operations
+// Images are served directly from /public/images/ folder (fast - no API calls for fetching)
+// Notion is only used for syncing images when creating/updating products
 import {
   getKnackRecords,
   getKnackRecord,
@@ -11,11 +12,7 @@ import { KNACK_CONFIG, getFieldValue } from './knack-config'
 import type { ProductRuntime, ProductVariant } from './notion-client'
 import { Client } from '@notionhq/client'
 
-// Simple in-memory cache for Notion images (reset on each deployment)
-const imageCache = new Map<string, { images: string[]; detailImage?: string }>()
-let notionImagesFetched = false
-
-// Notion client for fetching images (hybrid approach)
+// Notion client (only used for syncing images when creating/updating products)
 let notionClient: Client | null = null
 function getNotionClient(): Client | null {
   if (notionClient) return notionClient
@@ -24,7 +21,6 @@ function getNotionClient(): Client | null {
   const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
   
   if (!NOTION_API_KEY || !PRODUCTS_DB) {
-    console.error('[Notion] ❌ Not configured - missing env vars')
     return null
   }
   
@@ -32,66 +28,22 @@ function getNotionClient(): Client | null {
   return notionClient
 }
 
-// Fetch ALL images from Notion at once and cache them
-async function preloadNotionImages(): Promise<void> {
-  if (notionImagesFetched) return
+// Generate image URLs directly from product ID (no Notion API calls needed)
+// Images follow the pattern: /images/[product-id]-Main.jpg and /images/[product-id]-Details_Long.jpg
+function getProductImages(productId: string): { images: string[]; detailImage?: string } {
+  // Generate direct paths to static images in public folder
+  const mainImage = `/images/${productId}-Main.jpg`
+  const detailImage = `/images/${productId}-Details_Long.jpg`
   
-  const notion = getNotionClient()
-  if (!notion) return
-  
-  const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
-  if (!PRODUCTS_DB) return
-  
-  console.log('[Notion] 📸 Preloading all product images from Notion...')
-  
-  try {
-    // Fetch all pages from Notion (paginated)
-    let hasMore = true
-    let startCursor: string | undefined = undefined
-    let totalLoaded = 0
-    
-    while (hasMore) {
-      const response = await notion.databases.query({
-        database_id: PRODUCTS_DB,
-        page_size: 100,
-        start_cursor: startCursor,
-      })
-      
-      for (const page of response.results) {
-        const props = (page as { properties: Record<string, unknown> }).properties
-        
-        // Get product ID from Notion
-        const idProp = props['ID'] as { rich_text?: Array<{ plain_text?: string }> } | undefined
-        const productId = idProp?.rich_text?.[0]?.plain_text
-        
-        if (!productId) continue
-        
-        // Extract images
-        type FileItem = { external?: { url?: string }; file?: { url?: string } }
-        const imagesProp = props['Images'] as { files?: FileItem[] } | undefined
-        const detailProp = props['Detail Image'] as { files?: FileItem[] } | undefined
-        
-        const images = (imagesProp?.files || [])
-          .map(f => fixImageUrl(f.external?.url || f.file?.url || ''))
-          .filter(Boolean)
-        
-        const detailImage = detailProp?.files?.[0]
-          ? fixImageUrl(detailProp.files[0].external?.url || detailProp.files[0].file?.url || '')
-          : undefined
-        
-        imageCache.set(productId, { images, detailImage })
-        totalLoaded++
-      }
-      
-      hasMore = response.has_more
-      startCursor = response.next_cursor || undefined
-    }
-    
-    notionImagesFetched = true
-    console.log(`[Notion] ✅ Preloaded ${totalLoaded} product images into cache`)
-  } catch (error) {
-    console.error('[Notion] ❌ Failed to preload images:', error instanceof Error ? error.message : error)
+  return {
+    images: [mainImage],
+    detailImage: detailImage,
   }
+}
+
+// Legacy function - no longer needed, kept for compatibility
+async function preloadNotionImages(): Promise<void> {
+  // No-op - we now use direct image paths instead of Notion
 }
 
 // Helper to extract images from Notion file property
@@ -135,56 +87,10 @@ function fixImageUrl(url: string): string {
   return url
 }
 
-// Fetch images from cache (preloaded from Notion)
-async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ images: string[]; detailImage?: string }> {
-  // Check cache first
-  if (imageCache.has(productId)) {
-    return imageCache.get(productId)!
-  }
-  
-  // Try SKU as fallback
-  if (imageCache.has(sku)) {
-    return imageCache.get(sku)!
-  }
-  
-  // If cache miss and we haven't preloaded, try individual query
-  const notion = getNotionClient()
-  if (!notion) {
-    return { images: [], detailImage: undefined }
-  }
-
-  const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
-  if (!PRODUCTS_DB) {
-    return { images: [], detailImage: undefined }
-  }
-
-  try {
-    const response = await notion.databases.query({
-      database_id: PRODUCTS_DB,
-      filter: {
-        property: 'ID',
-        rich_text: { equals: productId },
-      },
-    })
-
-    if (response.results.length > 0) {
-      const page = response.results[0] as { properties: Record<string, unknown> }
-      const { images, detailImage } = extractNotionImages(page.properties)
-      
-      const result = {
-        images: images.map(fixImageUrl),
-        detailImage: detailImage ? fixImageUrl(detailImage) : undefined,
-      }
-      
-      // Cache for future use
-      imageCache.set(productId, result)
-      return result
-    }
-  } catch (error) {
-    console.error(`[Notion] Failed to fetch images for ${productId}:`, error instanceof Error ? error.message : error)
-  }
-
-  return { images: [], detailImage: undefined }
+// Get images using direct paths (fast - no API calls)
+async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{ images: string[]; detailImage?: string }> {
+  // Use direct image paths - no Notion API needed
+  return getProductImages(productId)
 }
 
 // Create or update product images in Notion (linked by ID/SKU)
