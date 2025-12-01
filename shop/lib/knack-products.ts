@@ -20,29 +20,53 @@ function getNotionClient(): Client | null {
   const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
   
   if (!NOTION_API_KEY || !PRODUCTS_DB) {
+    console.warn('[Notion Images] Notion not configured:', {
+      hasApiKey: !!NOTION_API_KEY,
+      hasProductsDb: !!PRODUCTS_DB
+    })
     return null // Notion not configured, images will use placeholder
   }
   
+  console.log('[Notion Images] Initializing Notion client')
   notionClient = new Client({ auth: NOTION_API_KEY })
   return notionClient
 }
 
 // Helper to extract images from Notion file property
 function extractNotionImages(props: Record<string, unknown>): { images: string[]; detailImage?: string } {
-  type FileItem = { external?: { url?: string }; file?: { url?: string } }
+  type FileItem = { external?: { url?: string }; file?: { url?: string }; name?: string; type?: string }
+  
+  // Log available properties for debugging
+  const availableProps = Object.keys(props)
+  console.log(`[Notion Images] Available properties: ${availableProps.join(', ')}`)
   
   // Extract images from Files property
-  const imageFiles = (props['Images'] as { files?: FileItem[] } | undefined)?.files || []
-  const images: string[] = imageFiles.map((f: FileItem) => {
-    return f.external?.url || f.file?.url || ''
+  const imagesProp = props['Images'] as { files?: FileItem[]; type?: string } | undefined
+  console.log(`[Notion Images] Images property type: ${imagesProp?.type || 'undefined'}`)
+  
+  const imageFiles = imagesProp?.files || []
+  console.log(`[Notion Images] Found ${imageFiles.length} file(s) in Images property`)
+  
+  const images: string[] = imageFiles.map((f: FileItem, idx: number) => {
+    const url = f.external?.url || f.file?.url || ''
+    if (url) {
+      console.log(`[Notion Images] Image ${idx + 1}: ${url} (type: ${f.type || 'unknown'})`)
+    }
+    return url
   }).filter(Boolean)
 
   // Extract detail image
-  const detailImageProp = props['Detail Image'] as { files?: FileItem[] } | undefined
+  const detailImageProp = props['Detail Image'] as { files?: FileItem[]; type?: string } | undefined
+  console.log(`[Notion Images] Detail Image property type: ${detailImageProp?.type || 'undefined'}`)
+  
   const detailFiles = detailImageProp?.files || []
   const detailLongImage = detailFiles.length > 0 
     ? (detailFiles[0].external?.url || detailFiles[0].file?.url) 
     : undefined
+  
+  if (detailLongImage) {
+    console.log(`[Notion Images] Detail image: ${detailLongImage}`)
+  }
 
   return { images, detailImage: detailLongImage }
 }
@@ -67,11 +91,13 @@ function fixImageUrl(url: string): string {
 async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ images: string[]; detailImage?: string }> {
   const notion = getNotionClient()
   if (!notion) {
+    console.warn(`[Notion Images] Notion client not available for product ${productId}. Check NOTION_API_KEY and NOTION_DATABASE_ID_PRODUCTS env vars.`)
     return { images: [], detailImage: undefined }
   }
 
   const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
   if (!PRODUCTS_DB) {
+    console.warn(`[Notion Images] NOTION_DATABASE_ID_PRODUCTS not set for product ${productId}`)
     return { images: [], detailImage: undefined }
   }
 
@@ -87,6 +113,7 @@ async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ 
 
     // Fallback: if not found by ID, try SKU
     if (response.results.length === 0) {
+      console.log(`[Notion Images] Product ${productId} not found by ID, trying SKU: ${sku}`)
       response = await notion.databases.query({
         database_id: PRODUCTS_DB,
         filter: {
@@ -100,14 +127,21 @@ async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ 
       const page = response.results[0] as { properties: Record<string, unknown> }
       const { images, detailImage } = extractNotionImages(page.properties)
       
+      console.log(`[Notion Images] Found ${images.length} image(s) for product ${productId}${detailImage ? ' (with detail image)' : ''}`)
+      
       // Fix any localhost URLs in the images
       return {
         images: images.map(fixImageUrl),
         detailImage: detailImage ? fixImageUrl(detailImage) : undefined,
       }
+    } else {
+      console.warn(`[Notion Images] No Notion page found for product ${productId} (ID) or SKU ${sku}`)
     }
   } catch (error) {
-    console.warn('Error fetching images from Notion:', error)
+    console.error(`[Notion Images] Error fetching images from Notion for product ${productId}:`, error)
+    if (error instanceof Error) {
+      console.error(`[Notion Images] Error details: ${error.message}`)
+    }
   }
 
   return { images: [], detailImage: undefined }
