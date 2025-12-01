@@ -508,7 +508,6 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     if (recordId) {
       productsByRecordId.set(recordId, product)
     }
-    console.log(`Product: record ID=${recordId}, field_45=${idFieldValue}`)
   }
 
   // Group variants by product - match by field_45 OR Knack record ID
@@ -576,29 +575,38 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     
     if (matchedProductRecordId) {
       const variant = mapKnackRecordToVariant(variantRecord)
+      
+      // Only include variants with status = 'Active'
+      if (variant.status !== 'Active') {
+        continue // Skip non-active variants
+      }
+      
       if (!variantsByProductRecordId.has(matchedProductRecordId)) {
         variantsByProductRecordId.set(matchedProductRecordId, [])
       }
       variantsByProductRecordId.get(matchedProductRecordId)!.push(variant)
-      console.log(`✅ Variant "${variantName}" linked to product ${matchedProductRecordId}`)
-    } else {
-      console.log(`❌ Variant "${variantName}" (${variantId}) not matched. Values: ${JSON.stringify(extractedValues)}`)
     }
   }
   
-  console.log(`\nVariants grouped: ${variantsByProductRecordId.size} products have variants`)
+  console.log(`Variants grouped: ${variantsByProductRecordId.size} products have active variants`)
 
-  // Map products with their variants (now async to fetch images from Notion)
+  // Map products with their variants - only include products with at least one active variant
   const mappedProducts = await Promise.all(
     products.map(async (product) => {
       const knackRecordId = String(product.id || '')
       if (!knackRecordId) {
-        console.warn('Product missing Knack record ID, skipping')
         return null
       }
       
       // Get variants for this product by Knack record ID
       const variants = variantsByProductRecordId.get(knackRecordId) || []
+      
+      // Skip products with no active variants
+      if (variants.length === 0) {
+        const productTitle = getFieldValue(product, PRODUCT_FIELDS.title, 'Title')
+        console.log(`Skipping product "${productTitle}" - no active variants`)
+        return null
+      }
       
       const productTitle = getFieldValue(product, PRODUCT_FIELDS.title, 'Title')
       console.log(`Product "${productTitle}" (${knackRecordId}): ${variants.length} variant(s)`)
@@ -678,31 +686,16 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
   }
 
   // Fetch ALL variants first (without status filter) to debug
-  console.log(`\n=== Fetching variants for product ${id} ===`)
-  console.log(`Product Knack record ID: ${knackRecordId}`)
-  console.log(`Product field_45 value: ${productIdFieldValue}`)
-  
   const allVariants = await getKnackRecords<Record<string, unknown>>(VARIANTS_OBJECT_KEY, {
     sortField: VARIANT_FIELDS.sortOrder,
     sortOrder: 'asc',
   })
 
-  console.log(`Total variants in Knack: ${allVariants.length}`)
-
   // Match variants by checking multiple possible connection formats
   const validVariants: ProductVariant[] = []
   for (const variantRecord of allVariants) {
-    const variantId = String(variantRecord.id || '')
-    const variantName = getFieldValue(variantRecord, VARIANT_FIELDS.variantName, 'Variant Name')
-    const variantStatus = getFieldValue(variantRecord, VARIANT_FIELDS.status, 'Status')
-    
     // Get the variant's product connection (field_61)
     const productConnection = getFieldValue(variantRecord, VARIANT_FIELDS.product, 'Product')
-    
-    console.log(`\nVariant: ${variantName} (${variantId})`)
-    console.log(`  Status: ${variantStatus}`)
-    console.log(`  Raw field_61: ${JSON.stringify(productConnection)}`)
-    console.log(`  Type: ${typeof productConnection}${Array.isArray(productConnection) ? ' (array)' : ''}`)
     
     // Extract all possible ID values from the connection
     let extractedValues: string[] = []
@@ -749,25 +742,21 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
       if (obj[PRODUCT_FIELDS.id]) extractedValues.push(String(obj[PRODUCT_FIELDS.id]))
     }
     
-    console.log(`  Extracted values: ${JSON.stringify(extractedValues)}`)
-    
     // Check if any extracted value matches product's field_45 OR Knack record ID
     const matchesField45 = extractedValues.some(v => v === productIdFieldValue)
     const matchesRecordId = extractedValues.some(v => v === knackRecordId)
     
-    console.log(`  Matches field_45 (${productIdFieldValue}): ${matchesField45}`)
-    console.log(`  Matches record ID (${knackRecordId}): ${matchesRecordId}`)
-    
-    // Include variant if it matches (don't filter by status - user manages via price)
+    // Include variant if it matches AND has Active status
     if (matchesField45 || matchesRecordId) {
-      validVariants.push(mapKnackRecordToVariant(variantRecord))
-      console.log(`  ✓ LINKED (status: ${variantStatus})`)
-    } else {
-      console.log(`  ✗ No match`)
+      const variant = mapKnackRecordToVariant(variantRecord)
+      // Only include Active variants
+      if (variant.status === 'Active') {
+        validVariants.push(variant)
+      }
     }
   }
 
-  console.log(`Found ${validVariants.length} variants for product ${id}`)
+  console.log(`Found ${validVariants.length} active variants for product ${id}`)
 
   return await mapKnackRecordToProduct(product, validVariants)
 }
