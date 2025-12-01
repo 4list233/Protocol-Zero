@@ -125,10 +125,14 @@ async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ 
       console.warn(`[Notion Images] No Notion page found for product ${productId} (ID) or SKU ${sku}`)
     }
   } catch (error) {
-    console.error(`[Notion Images] Error fetching images from Notion for product ${productId}:`, error)
+    console.error(`[Notion Images] ❌ ERROR fetching images from Notion for product ${productId}:`, error)
     if (error instanceof Error) {
-      console.error(`[Notion Images] Error details: ${error.message}`)
+      console.error(`[Notion Images] Error message: ${error.message}`)
+      if (error.stack) {
+        console.error(`[Notion Images] Error stack: ${error.stack}`)
+      }
     }
+    // Continue without images rather than breaking product fetching
   }
 
   return { images: [], detailImage: undefined }
