@@ -14,20 +14,26 @@ import { Client } from '@notionhq/client'
 // Notion client for fetching images (hybrid approach)
 let notionClient: Client | null = null
 function getNotionClient(): Client | null {
-  if (notionClient) return notionClient
+  if (notionClient) {
+    console.log('[Notion Images] ✅ Using existing Notion client')
+    return notionClient
+  }
   
+  console.log('[Notion Images] 🔧 Initializing Notion client...')
   const NOTION_API_KEY = process.env.NOTION_API_KEY
   const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
   
   if (!NOTION_API_KEY || !PRODUCTS_DB) {
-    console.warn('[Notion Images] Notion not configured:', {
+    console.error('[Notion Images] ❌ Notion not configured:', {
       hasApiKey: !!NOTION_API_KEY,
-      hasProductsDb: !!PRODUCTS_DB
+      hasProductsDb: !!PRODUCTS_DB,
+      apiKeyLength: NOTION_API_KEY?.length || 0,
+      dbIdLength: PRODUCTS_DB?.length || 0
     })
     return null // Notion not configured, images will use placeholder
   }
   
-  console.log('[Notion Images] Initializing Notion client')
+  console.log('[Notion Images] ✅ Notion client initialized successfully')
   notionClient = new Client({ auth: NOTION_API_KEY })
   return notionClient
 }
@@ -76,17 +82,21 @@ function fixImageUrl(url: string): string {
 // Fetch images from Notion by product ID (primary) or SKU (fallback)
 // Images are sourced from Notion under the same product ID
 async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ images: string[]; detailImage?: string }> {
+  console.log(`[Notion Images] 🔍 START fetching images for product ${productId} (SKU: ${sku})`)
+  
   const notion = getNotionClient()
   if (!notion) {
-    console.warn(`[Notion Images] Notion client not available for product ${productId}. Check NOTION_API_KEY and NOTION_DATABASE_ID_PRODUCTS env vars.`)
+    console.error(`[Notion Images] ❌ Notion client not available for product ${productId}. Check NOTION_API_KEY and NOTION_DATABASE_ID_PRODUCTS env vars.`)
     return { images: [], detailImage: undefined }
   }
 
   const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
   if (!PRODUCTS_DB) {
-    console.warn(`[Notion Images] NOTION_DATABASE_ID_PRODUCTS not set for product ${productId}`)
+    console.error(`[Notion Images] ❌ NOTION_DATABASE_ID_PRODUCTS not set for product ${productId}`)
     return { images: [], detailImage: undefined }
   }
+  
+  console.log(`[Notion Images] ✅ Notion client initialized, database ID: ${PRODUCTS_DB.substring(0, 8)}...`)
 
   try {
     // Primary lookup: find product by ID (field_45) - images are stored under the same product ID
@@ -333,6 +343,8 @@ function extractImageUrl(imageField: unknown): string {
 // Map Knack record to ProductRuntime type
 // Images are fetched from Notion (hybrid approach)
 async function mapKnackRecordToProduct(record: Record<string, unknown>, variants: ProductVariant[] = []): Promise<ProductRuntime> {
+  console.log(`[Product Mapping] ⚡ START mapping product (variants: ${variants.length})`)
+  
   const knackRecordId = String(record.id || '')
   if (!knackRecordId) {
     throw new Error('Product record must have a Knack record ID')
@@ -348,7 +360,7 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     : (sku || knackRecordId)
   
   // Fetch images from Notion (matching by ID or SKU)
-  console.log(`[Product Mapping] Fetching images for product ${productId} (SKU: ${sku})`)
+  console.log(`[Product Mapping] 📸 Fetching images for product ${productId} (SKU: ${sku})`)
   const { images: notionImages, detailImage: notionDetailImage } = await fetchImagesFromNotion(productId, sku)
   console.log(`[Product Mapping] Got ${notionImages.length} image(s) from Notion for product ${productId}`)
   
