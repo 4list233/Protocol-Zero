@@ -7,7 +7,13 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Enable Next.js image optimization for faster loading
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'pzairsoft.ca',
+      },
+    ],
   },
 }
 
