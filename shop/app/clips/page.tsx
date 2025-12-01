@@ -183,7 +183,7 @@ export default function ClipsPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-[#2C2C2C] bg-[#1E1E1E]/95 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <Link href="/shop" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img 
               src="/logos/logo-icon.png" 
               alt="Protocol Zero" 
@@ -192,8 +192,8 @@ export default function ClipsPage() {
             <span className="text-xl font-heading font-bold tracking-wide uppercase">Protocol Zero</span>
           </Link>
           <nav className="flex gap-6 items-center">
-            <Link href="/" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Home</Link>
             <Link href="/shop" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Shop</Link>
+            <Link href="/clips" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Clips</Link>
             <Link href="/account" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Account</Link>
             <CartDrawer />
           </nav>
@@ -203,12 +203,33 @@ export default function ClipsPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <Link
-          href="/"
+          href="/shop"
           className="inline-flex items-center gap-2 text-sm text-[#A1A1A1] hover:text-[#3D9A6C] mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to home
+          Back to shop
         </Link>
+
+        {/* Under Construction Notice */}
+        <div className="mb-8 bg-[#1E1E1E] border-2 border-[#E4B100] rounded-2xl p-8 text-center">
+          <div className="mb-4">
+            <div className="inline-block p-4 bg-[#E4B100]/20 rounded-full mb-4">
+              <svg className="w-16 h-16 text-[#E4B100]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-heading font-bold tracking-wide uppercase text-[#F5F5F5] mb-4">
+              Under Construction
+            </h1>
+            <p className="text-lg text-[#A1A1A1] font-body mb-2">
+              The Clips feature is currently being built
+            </p>
+            <p className="text-sm text-[#A1A1A1] font-body opacity-80">
+              Check back soon for updates!
+            </p>
+          </div>
+        </div>
 
         {/* Error Banner */}
         {errorMessage && (
@@ -218,25 +239,27 @@ export default function ClipsPage() {
           </div>
         )}
 
-        {/* Header Section */}
-        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <div className="inline-block mb-2">
-              <h1 className="text-3xl md:text-4xl font-heading font-bold tracking-wide uppercase relative">
-                Community Clips
-                <div className="absolute -bottom-2 left-0 w-1/4 h-1 bg-[#3D9A6C] rounded-full"></div>
-              </h1>
+        {/* Header Section - Hidden when under construction */}
+        {false && (
+          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <div className="inline-block mb-2">
+                <h1 className="text-3xl md:text-4xl font-heading font-bold tracking-wide uppercase relative">
+                  Community Clips
+                  <div className="absolute -bottom-2 left-0 w-1/4 h-1 bg-[#3D9A6C] rounded-full"></div>
+                </h1>
+              </div>
+              <p className="text-[#A1A1A1] font-body">Share your best airsoft moments with the community</p>
             </div>
-            <p className="text-[#A1A1A1] font-body">Share your best airsoft moments with the community</p>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="px-5 py-2.5 bg-[#3D9A6C] hover:bg-[#337E59] text-black font-heading font-bold uppercase tracking-wide rounded-2xl transition-all flex items-center gap-2 shadow-glow"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Clip
+            </button>
           </div>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="px-5 py-2.5 bg-[#3D9A6C] hover:bg-[#337E59] text-black font-heading font-bold uppercase tracking-wide rounded-2xl transition-all flex items-center gap-2 shadow-glow"
-          >
-            <Upload className="h-4 w-4" />
-            Upload Clip
-          </button>
-        </div>
+        )}
 
         {/* Filters and Sort */}
         <div className="mb-6 bg-[#1E1E1E] border border-[#2C2C2C] rounded-2xl p-4">
@@ -289,25 +312,26 @@ export default function ClipsPage() {
           )}
         </div>
 
-        {/* Clips Feed */}
-        <div className="space-y-6">
-          {loading ? (
-            <div className="text-center py-12 bg-[#1E1E1E] border border-[#2C2C2C] rounded-2xl">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#3D9A6C] border-r-transparent"></div>
-              <p className="text-[#A1A1A1] font-body mt-4">Loading clips...</p>
-            </div>
-          ) : filteredClips.length === 0 ? (
-            <div className="text-center py-12 bg-[#1E1E1E] border border-[#2C2C2C] rounded-2xl">
-              <p className="text-[#A1A1A1] font-body mb-2">No clips found matching your filters</p>
-              <button
-                onClick={() => setSelectedTags([])}
-                className="text-[#3D9A6C] hover:underline text-sm font-medium"
-              >
-                Clear filters
-              </button>
-            </div>
-          ) : (
-            filteredClips.map((clip) => (
+        {/* Clips Feed - Hidden when under construction */}
+        {false && (
+          <div className="space-y-6">
+            {loading ? (
+              <div className="text-center py-12 bg-[#1E1E1E] border border-[#2C2C2C] rounded-2xl">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#3D9A6C] border-r-transparent"></div>
+                <p className="text-[#A1A1A1] font-body mt-4">Loading clips...</p>
+              </div>
+            ) : filteredClips.length === 0 ? (
+              <div className="text-center py-12 bg-[#1E1E1E] border border-[#2C2C2C] rounded-2xl">
+                <p className="text-[#A1A1A1] font-body mb-2">No clips found matching your filters</p>
+                <button
+                  onClick={() => setSelectedTags([])}
+                  className="text-[#3D9A6C] hover:underline text-sm font-medium"
+                >
+                  Clear filters
+                </button>
+              </div>
+            ) : (
+              filteredClips.map((clip) => (
               <div key={clip.id} className="bg-[#1E1E1E] border-2 border-[#2C2C2C] rounded-2xl overflow-hidden hover:border-[#3D9A6C]/30 transition-all shadow-card">
                 {/* Clip Header */}
                 <div className="p-4 border-b border-[#2C2C2C]">
@@ -393,8 +417,9 @@ export default function ClipsPage() {
                 </div>
               </div>
             ))
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Upload Modal */}
