@@ -100,6 +100,7 @@ async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ 
 
   try {
     // Primary lookup: find product by ID (field_45) - images are stored under the same product ID
+    console.log(`[Notion Images] 🔎 Querying Notion for product ID: ${productId}`)
     let response = await notion.databases.query({
       database_id: PRODUCTS_DB,
       filter: {
@@ -107,10 +108,11 @@ async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ 
         rich_text: { equals: productId },
       },
     })
+    console.log(`[Notion Images] 📊 Query result: ${response.results.length} page(s) found by ID`)
 
     // Fallback: if not found by ID, try SKU
     if (response.results.length === 0) {
-      console.log(`[Notion Images] Product ${productId} not found by ID, trying SKU: ${sku}`)
+      console.log(`[Notion Images] ⚠️ Product ${productId} not found by ID, trying SKU: ${sku}`)
       response = await notion.databases.query({
         database_id: PRODUCTS_DB,
         filter: {
@@ -118,6 +120,7 @@ async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ 
           rich_text: { equals: sku },
         },
       })
+      console.log(`[Notion Images] 📊 SKU query result: ${response.results.length} page(s) found`)
     }
 
     if (response.results.length > 0) {
