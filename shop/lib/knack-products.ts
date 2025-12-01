@@ -402,9 +402,8 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
 
   console.log(`Fetched ${products.length} active products from Knack`)
 
-  // Fetch all active variants and group by product
+  // Fetch ALL variants (don't filter by status - user manages variant availability via price)
   const allVariants = await getKnackRecords<Record<string, unknown>>(VARIANTS_OBJECT_KEY, {
-    filters: { [VARIANT_FIELDS.status]: 'Active' },
     sortField: VARIANT_FIELDS.sortOrder,
     sortOrder: 'asc',
   })
@@ -673,12 +672,10 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     console.log(`  Matches field_45 (${productIdFieldValue}): ${matchesField45}`)
     console.log(`  Matches record ID (${knackRecordId}): ${matchesRecordId}`)
     
-    // Include variant if it matches AND has Active status
-    if ((matchesField45 || matchesRecordId) && variantStatus === 'Active') {
+    // Include variant if it matches (don't filter by status - user manages via price)
+    if (matchesField45 || matchesRecordId) {
       validVariants.push(mapKnackRecordToVariant(variantRecord))
-      console.log(`  ✓ LINKED (Active)`)
-    } else if (matchesField45 || matchesRecordId) {
-      console.log(`  ⚠ Matches but status is: ${variantStatus}`)
+      console.log(`  ✓ LINKED (status: ${variantStatus})`)
     } else {
       console.log(`  ✗ No match`)
     }
