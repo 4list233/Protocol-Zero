@@ -727,8 +727,11 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
   }
 
   console.log(`\n=== Result: ${validVariants.length} active variants match product ${id} ===\n`)
+  console.log(`[fetchProductById] 🚀 About to call mapKnackRecordToProduct with ${validVariants.length} variant(s)`)
 
-  return await mapKnackRecordToProduct(product, validVariants)
+  const result = await mapKnackRecordToProduct(product, validVariants)
+  console.log(`[fetchProductById] ✅ Product mapped successfully, returning product`)
+  return result
 }
 
 /**
