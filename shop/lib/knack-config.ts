@@ -117,7 +117,7 @@ export const KNACK_CONFIG = {
       variantName: process.env.KNACK_FIELD_VARIANTS_VARIANT_NAME || 'field_62',
       sku: process.env.KNACK_FIELD_VARIANTS_SKU || 'field_63',
       priceCny: process.env.KNACK_FIELD_VARIANTS_PRICE_CNY || 'field_64',
-      priceCadOverride: process.env.KNACK_FIELD_VARIANTS_PRICE_CAD_OVERRIDE || 'field_65',
+      priceCad: process.env.KNACK_FIELD_VARIANTS_PRICE_CAD || 'field_138',
       stock: process.env.KNACK_FIELD_VARIANTS_STOCK || 'field_66',
       status: process.env.KNACK_FIELD_VARIANTS_STATUS || 'field_67',
       sortOrder: process.env.KNACK_FIELD_VARIANTS_SORT_ORDER || 'field_68',

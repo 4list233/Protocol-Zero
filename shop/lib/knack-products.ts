@@ -363,18 +363,24 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
   }
 }
 
+// CNY to CAD conversion rate (approximate - update as needed)
+const CNY_TO_CAD_RATE = 0.19
+
 // Map Knack variant record to ProductVariant type
 function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVariant {
+  const priceCny = Number(getFieldValue(record, VARIANT_FIELDS.priceCny, 'Price CNY') || 0)
+  // Variant CAD price is in field_138 (Selling Price)
+  const priceCadValue = getFieldValue(record, VARIANT_FIELDS.priceCad, 'Selling Price')
+  const priceCad = priceCadValue ? Number(priceCadValue) : undefined
+  
   return {
     id: String(record.id || ''),
     variantName: String(getFieldValue(record, VARIANT_FIELDS.variantName, 'Variant Name') || ''),
     sku: getFieldValue(record, VARIANT_FIELDS.sku, 'SKU')
       ? String(getFieldValue(record, VARIANT_FIELDS.sku, 'SKU'))
       : undefined,
-    price_cny: Number(getFieldValue(record, VARIANT_FIELDS.priceCny, 'Price CNY') || 0),
-    price_cad: getFieldValue(record, VARIANT_FIELDS.priceCadOverride, 'Price CAD Override')
-      ? Number(getFieldValue(record, VARIANT_FIELDS.priceCadOverride, 'Price CAD Override'))
-      : undefined,
+    price_cny: priceCny,
+    price_cad: priceCad,
     // Stock is a yes/no (boolean) field in Knack - converted to number (1 = in stock, 0 = out of stock)
     // Uses the same conversion logic as products
     stock: convertKnackStockToNumber(getFieldValue(record, VARIANT_FIELDS.stock, 'Stock')),
@@ -726,7 +732,7 @@ export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<s
       variantData[VARIANT_FIELDS.variantName] = variant.variantName
       variantData[VARIANT_FIELDS.sku] = variant.sku || null
       variantData[VARIANT_FIELDS.priceCny] = variant.price_cny
-      variantData[VARIANT_FIELDS.priceCadOverride] = variant.price_cad || null
+      variantData[VARIANT_FIELDS.priceCad] = variant.price_cad || null
       variantData[VARIANT_FIELDS.stock] = variant.stock || null
       variantData[VARIANT_FIELDS.status] = variant.status || 'Active'
       variantData[VARIANT_FIELDS.sortOrder] = variant.sortOrder || 0
