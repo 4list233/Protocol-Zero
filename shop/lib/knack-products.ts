@@ -11,31 +11,87 @@ import { KNACK_CONFIG, getFieldValue } from './knack-config'
 import type { ProductRuntime, ProductVariant } from './notion-client'
 import { Client } from '@notionhq/client'
 
+// Simple in-memory cache for Notion images (reset on each deployment)
+const imageCache = new Map<string, { images: string[]; detailImage?: string }>()
+let notionImagesFetched = false
+
 // Notion client for fetching images (hybrid approach)
 let notionClient: Client | null = null
 function getNotionClient(): Client | null {
-  if (notionClient) {
-    console.log('[Notion Images] ✅ Using existing Notion client')
-    return notionClient
-  }
+  if (notionClient) return notionClient
   
-  console.log('[Notion Images] 🔧 Initializing Notion client...')
   const NOTION_API_KEY = process.env.NOTION_API_KEY
   const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
   
   if (!NOTION_API_KEY || !PRODUCTS_DB) {
-    console.error('[Notion Images] ❌ Notion not configured:', {
-      hasApiKey: !!NOTION_API_KEY,
-      hasProductsDb: !!PRODUCTS_DB,
-      apiKeyLength: NOTION_API_KEY?.length || 0,
-      dbIdLength: PRODUCTS_DB?.length || 0
-    })
-    return null // Notion not configured, images will use placeholder
+    console.error('[Notion] ❌ Not configured - missing env vars')
+    return null
   }
   
-  console.log('[Notion Images] ✅ Notion client initialized successfully')
   notionClient = new Client({ auth: NOTION_API_KEY })
   return notionClient
+}
+
+// Fetch ALL images from Notion at once and cache them
+async function preloadNotionImages(): Promise<void> {
+  if (notionImagesFetched) return
+  
+  const notion = getNotionClient()
+  if (!notion) return
+  
+  const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
+  if (!PRODUCTS_DB) return
+  
+  console.log('[Notion] 📸 Preloading all product images from Notion...')
+  
+  try {
+    // Fetch all pages from Notion (paginated)
+    let hasMore = true
+    let startCursor: string | undefined = undefined
+    let totalLoaded = 0
+    
+    while (hasMore) {
+      const response = await notion.databases.query({
+        database_id: PRODUCTS_DB,
+        page_size: 100,
+        start_cursor: startCursor,
+      })
+      
+      for (const page of response.results) {
+        const props = (page as { properties: Record<string, unknown> }).properties
+        
+        // Get product ID from Notion
+        const idProp = props['ID'] as { rich_text?: Array<{ plain_text?: string }> } | undefined
+        const productId = idProp?.rich_text?.[0]?.plain_text
+        
+        if (!productId) continue
+        
+        // Extract images
+        type FileItem = { external?: { url?: string }; file?: { url?: string } }
+        const imagesProp = props['Images'] as { files?: FileItem[] } | undefined
+        const detailProp = props['Detail Image'] as { files?: FileItem[] } | undefined
+        
+        const images = (imagesProp?.files || [])
+          .map(f => fixImageUrl(f.external?.url || f.file?.url || ''))
+          .filter(Boolean)
+        
+        const detailImage = detailProp?.files?.[0]
+          ? fixImageUrl(detailProp.files[0].external?.url || detailProp.files[0].file?.url || '')
+          : undefined
+        
+        imageCache.set(productId, { images, detailImage })
+        totalLoaded++
+      }
+      
+      hasMore = response.has_more
+      startCursor = response.next_cursor || undefined
+    }
+    
+    notionImagesFetched = true
+    console.log(`[Notion] ✅ Preloaded ${totalLoaded} product images into cache`)
+  } catch (error) {
+    console.error('[Notion] ❌ Failed to preload images:', error instanceof Error ? error.message : error)
+  }
 }
 
 // Helper to extract images from Notion file property
@@ -79,84 +135,53 @@ function fixImageUrl(url: string): string {
   return url
 }
 
-// Fetch images from Notion by product ID (primary) or SKU (fallback)
-// Images are sourced from Notion under the same product ID
+// Fetch images from cache (preloaded from Notion)
 async function fetchImagesFromNotion(productId: string, sku: string): Promise<{ images: string[]; detailImage?: string }> {
-  console.log(`[Notion Images] 🔍 START fetching images for product ${productId} (SKU: ${sku})`)
+  // Check cache first
+  if (imageCache.has(productId)) {
+    return imageCache.get(productId)!
+  }
   
+  // Try SKU as fallback
+  if (imageCache.has(sku)) {
+    return imageCache.get(sku)!
+  }
+  
+  // If cache miss and we haven't preloaded, try individual query
   const notion = getNotionClient()
   if (!notion) {
-    console.error(`[Notion Images] ❌ Notion client not available for product ${productId}. Check NOTION_API_KEY and NOTION_DATABASE_ID_PRODUCTS env vars.`)
     return { images: [], detailImage: undefined }
   }
 
   const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
   if (!PRODUCTS_DB) {
-    console.error(`[Notion Images] ❌ NOTION_DATABASE_ID_PRODUCTS not set for product ${productId}`)
     return { images: [], detailImage: undefined }
   }
-  
-  console.log(`[Notion Images] ✅ Notion client initialized, database ID: ${PRODUCTS_DB.substring(0, 8)}...`)
 
   try {
-    // Primary lookup: find product by ID (field_45) - images are stored under the same product ID
-    console.log(`[Notion Images] 🔎 Querying Notion for product ID: ${productId}`)
-    console.log(`[Notion Images] 📋 Database ID: ${PRODUCTS_DB}, Property: ID, Value: ${productId}`)
-    
-    let response
-    try {
-      response = await notion.databases.query({
-        database_id: PRODUCTS_DB,
-        filter: {
-          property: 'ID',
-          rich_text: { equals: productId },
-        },
-      })
-      console.log(`[Notion Images] ✅ Query completed: ${response.results.length} page(s) found by ID`)
-    } catch (queryError) {
-      console.error(`[Notion Images] ❌ Query failed for product ${productId}:`, queryError)
-      if (queryError instanceof Error) {
-        console.error(`[Notion Images] Error message: ${queryError.message}`)
-      }
-      throw queryError
-    }
-
-    // Fallback: if not found by ID, try SKU
-    if (response.results.length === 0) {
-      console.log(`[Notion Images] ⚠️ Product ${productId} not found by ID, trying SKU: ${sku}`)
-      response = await notion.databases.query({
-        database_id: PRODUCTS_DB,
-        filter: {
-          property: 'SKU',
-          rich_text: { equals: sku },
-        },
-      })
-      console.log(`[Notion Images] 📊 SKU query result: ${response.results.length} page(s) found`)
-    }
+    const response = await notion.databases.query({
+      database_id: PRODUCTS_DB,
+      filter: {
+        property: 'ID',
+        rich_text: { equals: productId },
+      },
+    })
 
     if (response.results.length > 0) {
       const page = response.results[0] as { properties: Record<string, unknown> }
       const { images, detailImage } = extractNotionImages(page.properties)
       
-      console.log(`[Notion Images] Found ${images.length} image(s) for product ${productId}${detailImage ? ' (with detail image)' : ''}`)
-      
-      // Fix any localhost URLs in the images
-      return {
+      const result = {
         images: images.map(fixImageUrl),
         detailImage: detailImage ? fixImageUrl(detailImage) : undefined,
       }
-    } else {
-      console.warn(`[Notion Images] No Notion page found for product ${productId} (ID) or SKU ${sku}`)
+      
+      // Cache for future use
+      imageCache.set(productId, result)
+      return result
     }
   } catch (error) {
-    console.error(`[Notion Images] ❌ ERROR fetching images from Notion for product ${productId}:`, error)
-    if (error instanceof Error) {
-      console.error(`[Notion Images] Error message: ${error.message}`)
-      if (error.stack) {
-        console.error(`[Notion Images] Error stack: ${error.stack}`)
-      }
-    }
-    // Continue without images rather than breaking product fetching
+    console.error(`[Notion] Failed to fetch images for ${productId}:`, error instanceof Error ? error.message : error)
   }
 
   return { images: [], detailImage: undefined }
@@ -355,10 +380,8 @@ function extractImageUrl(imageField: unknown): string {
 }
 
 // Map Knack record to ProductRuntime type
-// Images are fetched from Notion (hybrid approach)
+// Images are fetched from cache (preloaded from Notion)
 async function mapKnackRecordToProduct(record: Record<string, unknown>, variants: ProductVariant[] = []): Promise<ProductRuntime> {
-  console.log(`[Product Mapping] ⚡ START mapping product (variants: ${variants.length})`)
-  
   const knackRecordId = String(record.id || '')
   if (!knackRecordId) {
     throw new Error('Product record must have a Knack record ID')
@@ -373,10 +396,8 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     ? String(idField) 
     : (sku || knackRecordId)
   
-  // Fetch images from Notion (matching by ID or SKU)
-  console.log(`[Product Mapping] 📸 Fetching images for product ${productId} (SKU: ${sku})`)
+  // Fetch images from cache (preloaded from Notion)
   const { images: notionImages, detailImage: notionDetailImage } = await fetchImagesFromNotion(productId, sku)
-  console.log(`[Product Mapping] Got ${notionImages.length} image(s) from Notion for product ${productId}`)
   
   // Use Notion images if available, otherwise fallback to placeholder
   const images = notionImages.length > 0 ? notionImages : ['/images/placeholder.png']
@@ -451,6 +472,9 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
   if (!isKnackConfigured()) {
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
+
+  // Preload all images from Notion (single batch query)
+  await preloadNotionImages()
 
   // Fetch only products with status=Active
   const products = await getKnackRecords<Record<string, unknown>>(PRODUCTS_OBJECT_KEY, {
@@ -596,6 +620,9 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
 
+  // Preload all images from Notion (single batch query)
+  await preloadNotionImages()
+
   let product: Record<string, unknown> | null = null
   
   // Strategy: Prioritize ID field lookup (field_45) since that's what we use in URLs
@@ -740,12 +767,9 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     }
   }
 
-  console.log(`\n=== Result: ${validVariants.length} active variants match product ${id} ===\n`)
-  console.log(`[fetchProductById] 🚀 About to call mapKnackRecordToProduct with ${validVariants.length} variant(s)`)
+  console.log(`Found ${validVariants.length} variants for product ${id}`)
 
-  const result = await mapKnackRecordToProduct(product, validVariants)
-  console.log(`[fetchProductById] ✅ Product mapped successfully, returning product`)
-  return result
+  return await mapKnackRecordToProduct(product, validVariants)
 }
 
 /**
