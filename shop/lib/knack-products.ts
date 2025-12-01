@@ -52,7 +52,7 @@ function fixImageUrl(url: string): string {
   if (!url) return url
   
   // Get the production base URL
-  const productionUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.com'
+  const productionUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.ca'
   
   // Replace localhost URLs with production URL
   if (url.includes('localhost:3000')) {
@@ -135,7 +135,7 @@ async function syncImagesToNotion(
   try {
     // Convert image URLs to Notion file format
     // For local paths (starting with /), convert to full URLs
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.com'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.ca'
     
     const imageFiles = images
       .filter((url) => url && !url.includes('placeholder.png'))
