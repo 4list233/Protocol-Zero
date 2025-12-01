@@ -36,36 +36,23 @@ function getNotionClient(): Client | null {
 function extractNotionImages(props: Record<string, unknown>): { images: string[]; detailImage?: string } {
   type FileItem = { external?: { url?: string }; file?: { url?: string }; name?: string; type?: string }
   
-  // Log available properties for debugging
-  const availableProps = Object.keys(props)
-  console.log(`[Notion Images] Available properties: ${availableProps.join(', ')}`)
-  
   // Extract images from Files property
   const imagesProp = props['Images'] as { files?: FileItem[]; type?: string } | undefined
-  console.log(`[Notion Images] Images property type: ${imagesProp?.type || 'undefined'}`)
-  
   const imageFiles = imagesProp?.files || []
-  console.log(`[Notion Images] Found ${imageFiles.length} file(s) in Images property`)
   
-  const images: string[] = imageFiles.map((f: FileItem, idx: number) => {
-    const url = f.external?.url || f.file?.url || ''
-    if (url) {
-      console.log(`[Notion Images] Image ${idx + 1}: ${url} (type: ${f.type || 'unknown'})`)
-    }
-    return url
+  const images: string[] = imageFiles.map((f: FileItem) => {
+    return f.external?.url || f.file?.url || ''
   }).filter(Boolean)
 
   // Extract detail image
   const detailImageProp = props['Detail Image'] as { files?: FileItem[]; type?: string } | undefined
-  console.log(`[Notion Images] Detail Image property type: ${detailImageProp?.type || 'undefined'}`)
-  
   const detailFiles = detailImageProp?.files || []
   const detailLongImage = detailFiles.length > 0 
     ? (detailFiles[0].external?.url || detailFiles[0].file?.url) 
     : undefined
-  
-  if (detailLongImage) {
-    console.log(`[Notion Images] Detail image: ${detailLongImage}`)
+
+  if (images.length > 0 || detailLongImage) {
+    console.log(`[Notion Images] Extracted ${images.length} image(s)${detailLongImage ? ' + detail image' : ''}`)
   }
 
   return { images, detailImage: detailLongImage }
@@ -357,7 +344,9 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     : (sku || knackRecordId)
   
   // Fetch images from Notion (matching by ID or SKU)
+  console.log(`[Product Mapping] Fetching images for product ${productId} (SKU: ${sku})`)
   const { images: notionImages, detailImage: notionDetailImage } = await fetchImagesFromNotion(productId, sku)
+  console.log(`[Product Mapping] Got ${notionImages.length} image(s) from Notion for product ${productId}`)
   
   // Use Notion images if available, otherwise fallback to placeholder
   const images = notionImages.length > 0 ? notionImages : ['/images/placeholder.png']
