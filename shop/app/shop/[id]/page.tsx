@@ -9,7 +9,7 @@ import type { RuntimeProduct } from "../../../lib/products"
 import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
 import { ArrowLeft, ShoppingCart } from "lucide-react"
-import VariantSelector from "@/components/variant-selector"
+import MultiVariantSelector from "@/components/multi-variant-selector"
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -188,12 +188,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm font-medium text-[#F5F5F5] mb-3">
                   {product.variants.length > 1 ? 'Select Variant:' : 'Variant:'}
                 </p>
-                <VariantSelector
+                <MultiVariantSelector
                   variants={product.variants.map(v => ({
                     id: v.id,
                     title: v.variantName,
-                    stock: (v.stock ?? 0) > 0 ? 1 : 0, // Convert to 0 or 1 for display
-                    price_cad: v.price_cad ?? product.price_cad
+                    stock: (v.stock ?? 0) > 0 ? 1 : 0,
+                    price_cad: v.price_cad ?? product.price_cad,
+                    // Multi-dimensional option fields
+                    optionType1: v.optionType1,
+                    optionValue1: v.optionValue1,
+                    optionType2: v.optionType2,
+                    optionValue2: v.optionValue2,
                   }))}
                   selectedVariantId={selectedVariantId || product.variants[0].id}
                   onChange={setSelectedVariantId}
