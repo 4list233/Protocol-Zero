@@ -123,6 +123,11 @@ export const KNACK_CONFIG = {
       sortOrder: process.env.KNACK_FIELD_VARIANTS_SORT_ORDER || 'field_68',
       createdAt: process.env.KNACK_FIELD_VARIANTS_CREATED_AT || 'field_69',
       updatedAt: process.env.KNACK_FIELD_VARIANTS_UPDATED_AT || 'field_70',
+      // Multi-dimensional variant option fields (Color + Size selection)
+      optionType1: 'field_145',   // e.g., "Color", "Style"
+      optionValue1: 'field_146',  // e.g., "Black", "Standard"
+      optionType2: 'field_147',   // e.g., "Size" (nullable)
+      optionValue2: 'field_148',  // e.g., "M", "85-125cm" (nullable)
     },
 
     // Orders Object Fields (object_10)

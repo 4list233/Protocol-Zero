@@ -353,6 +353,12 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
   const priceCadValue = getFieldValue(record, VARIANT_FIELDS.priceCad, 'Selling Price')
   const priceCad = priceCadValue ? Number(priceCadValue) : undefined
   
+  // Extract multi-dimensional option fields
+  const optionType1 = getFieldValue(record, VARIANT_FIELDS.optionType1, 'Option Type 1')
+  const optionValue1 = getFieldValue(record, VARIANT_FIELDS.optionValue1, 'Option Value 1')
+  const optionType2 = getFieldValue(record, VARIANT_FIELDS.optionType2, 'Option Type 2')
+  const optionValue2 = getFieldValue(record, VARIANT_FIELDS.optionValue2, 'Option Value 2')
+  
   return {
     id: String(record.id || ''),
     variantName: String(getFieldValue(record, VARIANT_FIELDS.variantName, 'Variant Name') || ''),
@@ -368,6 +374,11 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
     sortOrder: getFieldValue(record, VARIANT_FIELDS.sortOrder, 'Sort Order')
       ? Number(getFieldValue(record, VARIANT_FIELDS.sortOrder, 'Sort Order'))
       : 0,
+    // Multi-dimensional variant options
+    optionType1: optionType1 ? String(optionType1) : undefined,
+    optionValue1: optionValue1 ? String(optionValue1) : undefined,
+    optionType2: optionType2 ? String(optionType2) : undefined,
+    optionValue2: optionValue2 ? String(optionValue2) : undefined,
   }
 }
 

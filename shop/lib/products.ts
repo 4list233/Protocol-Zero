@@ -57,6 +57,11 @@ export type ProductVariant = {
   stock?: number
   status?: 'Active' | 'Out of Stock'
   sortOrder?: number
+  // Multi-dimensional variant options (e.g., Color + Size)
+  optionType1?: string   // e.g., "Color", "Style", "Material"
+  optionValue1?: string  // e.g., "Black", "Standard", "Nylon"
+  optionType2?: string   // e.g., "Size", "Length" (nullable)
+  optionValue2?: string  // e.g., "M", "85-125cm" (nullable)
 }
 
 export type RuntimeProduct = {
