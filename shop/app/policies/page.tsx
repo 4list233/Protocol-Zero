@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { PICKUP_LOCATION, STORE_EMAIL } from "@/lib/constants"
+import { STORE_EMAIL } from "@/lib/constants"
 
 export default function PoliciesPage() {
   return (
@@ -45,10 +45,9 @@ export default function PoliciesPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3">Pickup</h2>
+            <h2 className="text-xl font-semibold mb-3">Pickup & Delivery</h2>
             <p className="text-muted-foreground">
-              All orders are pickup-only at {PICKUP_LOCATION}. We do not offer shipping at this time. Pickup
-              instructions will be provided after payment confirmation.
+              We will arrange the pickup or drop-off location via email when your order is ready. You can select your preferred location at that time.
             </p>
           </section>
 
