@@ -92,12 +92,21 @@ async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{
 }
 
 // Create or update product images in Notion (linked by ID/SKU)
+// SECURITY: This function is DISABLED in production to prevent tampering
+// Notion writes should only happen from local scripts, not from the deployed site
 async function syncImagesToNotion(
   productId: string,
   sku: string,
   images: string[],
   detailImage?: string
 ): Promise<void> {
+  // SECURITY: Block Notion writes in production
+  // All Notion updates must be done locally to prevent tampering
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    console.warn('[SECURITY] Notion writes are disabled in production. Use local scripts for updates.')
+    return
+  }
+
   const notion = getNotionClient()
   if (!notion) {
     console.warn('Notion not configured, skipping image sync')
@@ -694,8 +703,17 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
 /**
  * Create a new product
  * Data goes to Knack, images go to Notion (linked by ID/SKU)
+ * 
+ * SECURITY: This function is DISABLED in production to prevent tampering
+ * Product/variant creation should only happen from local scripts
  */
 export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<string> {
+  // SECURITY: Block product creation in production
+  // All product/variant updates must be done locally to prevent tampering
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    throw new Error('Product creation is disabled in production. Use local scripts to manage products.')
+  }
+
   if (!isKnackConfigured()) {
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
@@ -750,8 +768,17 @@ export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<s
 /**
  * Update an existing product
  * Data updates go to Knack, image updates go to Notion (linked by ID/SKU)
+ * 
+ * SECURITY: This function is DISABLED in production to prevent tampering
+ * Product/variant updates should only happen from local scripts
  */
 export async function updateProduct(productId: string, data: Partial<ProductRuntime>): Promise<void> {
+  // SECURITY: Block product updates in production
+  // All product/variant updates must be done locally to prevent tampering
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    throw new Error('Product updates are disabled in production. Use local scripts to manage products.')
+  }
+
   if (!isKnackConfigured()) {
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
