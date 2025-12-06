@@ -316,9 +316,9 @@ export default function CartPage() {
                     <span className="text-[#A1A1A1]">Subtotal ({itemCount} items)</span>
                     <span className="font-medium text-[#F5F5F5]">${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <span className="text-[#A1A1A1]">Shipping</span>
-                    <span className="font-medium text-[#A1A1A1]">Calculated at checkout</span>
+                    <span className="text-lg font-bold text-[#3D9A6C]">FREE</span>
                   </div>
                   
                   <div className="border-t border-[#2C2C2C] pt-3 mt-3">
