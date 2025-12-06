@@ -3,6 +3,7 @@ import { fetchProducts } from '@/lib/knack-products'
 
 export const dynamic = 'force-dynamic'
 
+// Public addon item type - excludes internal cost/margin data
 export type AddonItem = {
   productId: string
   productTitle: string
@@ -19,6 +20,7 @@ export type AddonItem = {
 /**
  * GET /api/addons
  * Returns all variants that are eligible for add-on pricing
+ * Note: Does NOT expose addon cost or margin data
  */
 export async function GET() {
   try {
@@ -35,6 +37,7 @@ export async function GET() {
           const savings = variant.price_cad - variant.addonPrice
           const savingsPercent = Math.round((savings / variant.price_cad) * 100)
           
+          // Only include public-safe data
           addonItems.push({
             productId: product.id,
             productTitle: product.title,
@@ -46,6 +49,7 @@ export async function GET() {
             addonPrice: variant.addonPrice,
             savings,
             savingsPercent,
+            // Intentionally NOT including: addonCost, addonMargin
           })
         }
       }
@@ -63,7 +67,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('Error fetching addon items:', error)
+    console.error('[API] Addons fetch error')
     return NextResponse.json(
       { error: 'Failed to fetch addon items' },
       { status: 500 }

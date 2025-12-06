@@ -5,6 +5,17 @@ import { KNACK_CONFIG } from '@/lib/knack-config'
 
 export const dynamic = 'force-dynamic'
 
+// =============================================================================
+// SECURITY: Bot/Spam Protection
+// =============================================================================
+
+// Honeypot field names (bots will fill these, humans won't see them)
+const HONEYPOT_FIELDS = ['website', 'url', 'company', 'fax'] as const
+
+// Minimum time (ms) between page load and checkout submission
+// Bots typically submit instantly, humans take at least a few seconds
+const MIN_SUBMISSION_TIME_MS = 3000 // 3 seconds
+
 // Types for the checkout request
 type CheckoutItem = {
   variantId: string // Knack variant record ID for connection
@@ -34,6 +45,13 @@ type CheckoutRequest = {
   subtotalCad: number
   shippingCad: number
   totalCad: number
+  
+  // Security fields (honeypot + timing)
+  _formLoadTime?: number  // Timestamp when form was loaded (for timing check)
+  website?: string        // Honeypot: bots fill this
+  url?: string            // Honeypot: bots fill this
+  company?: string        // Honeypot: bots fill this
+  fax?: string            // Honeypot: bots fill this
 }
 
 // Generate unique order number
@@ -66,8 +84,8 @@ async function generateUniqueOrderNumber(): Promise<string> {
         }
       }
     }
-  } catch (error) {
-    console.warn('Could not fetch existing orders:', error)
+  } catch {
+    // Continue with sequence 1 if we can't fetch existing orders
   }
   
   const nextSequence = String(maxSequence + 1).padStart(4, '0')
@@ -78,13 +96,60 @@ export async function POST(request: Request) {
   try {
     const body: CheckoutRequest = await request.json()
     
-    // Validate required fields
-    if (!body.email || !body.displayName) {
+    // ==========================================================================
+    // SECURITY: Bot Detection
+    // ==========================================================================
+    
+    // Check honeypot fields - if any are filled, it's likely a bot
+    for (const field of HONEYPOT_FIELDS) {
+      if (body[field] && String(body[field]).trim() !== '') {
+        // Log for monitoring but return generic error to not tip off bots
+        console.warn('[Checkout] Honeypot triggered')
+        // Return success-like response to confuse bots
+        return NextResponse.json(
+          { success: true, orderId: 'processing', message: 'Order received' },
+          { status: 200 }
+        )
+      }
+    }
+    
+    // Check timing - if submitted too fast, likely a bot
+    if (body._formLoadTime) {
+      const timeSinceLoad = Date.now() - body._formLoadTime
+      if (timeSinceLoad < MIN_SUBMISSION_TIME_MS) {
+        console.warn('[Checkout] Timing check failed - too fast')
+        // Return success-like response to confuse bots
+        return NextResponse.json(
+          { success: true, orderId: 'processing', message: 'Order received' },
+          { status: 200 }
+        )
+      }
+    }
+    
+    // ==========================================================================
+    // Input Validation
+    // ==========================================================================
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!body.email || !emailRegex.test(body.email)) {
       return NextResponse.json(
-        { error: 'Email and display name are required' },
+        { error: 'Valid email is required' },
         { status: 400 }
       )
     }
+    
+    // Sanitize and validate display name (prevent injection)
+    if (!body.displayName || body.displayName.length < 2 || body.displayName.length > 100) {
+      return NextResponse.json(
+        { error: 'Display name must be 2-100 characters' },
+        { status: 400 }
+      )
+    }
+    
+    // Strip HTML/script tags from user input
+    const sanitizedDisplayName = body.displayName.replace(/<[^>]*>/g, '').trim()
+    const sanitizedName = body.name?.replace(/<[^>]*>/g, '').trim()
     
     if (!body.items || body.items.length === 0) {
       return NextResponse.json(
@@ -93,7 +158,27 @@ export async function POST(request: Request) {
       )
     }
     
+    // Validate items have required fields and reasonable values
+    for (const item of body.items) {
+      if (!item.variantId || !item.productId || item.quantity < 1 || item.quantity > 99) {
+        return NextResponse.json(
+          { error: 'Invalid order items' },
+          { status: 400 }
+        )
+      }
+    }
+    
+    // Validate totals are reasonable
+    if (body.totalCad < 0 || body.totalCad > 10000) {
+      return NextResponse.json(
+        { error: 'Invalid order total' },
+        { status: 400 }
+      )
+    }
+    
+    // ==========================================================================
     // Step 1: Create or get Knack user record
+    // ==========================================================================
     let knackUserId: string
     let isNewUser = false
     const isGuest = body.isGuest || !body.firebaseUid
@@ -116,26 +201,27 @@ export async function POST(request: Request) {
     
     if (existingKnackUser) {
       knackUserId = existingKnackUser.id
-      console.log(`Using existing Knack user: ${knackUserId}`)
     } else {
-      // Create new Knack user (guest or registered)
+      // Create new Knack user (guest or registered) with sanitized input
       knackUserId = await createKnackUser({
-        displayName: body.displayName,
-        name: body.name || body.displayName,
+        displayName: sanitizedDisplayName,
+        name: sanitizedName || sanitizedDisplayName,
         userId: userId,
         email: body.email,
-        phone: body.phone,
+        phone: body.phone?.replace(/<[^>]*>/g, '').trim(),
         isGuest: isGuest,
       })
       isNewUser = true
-      console.log(`Created new Knack user (${isGuest ? 'guest' : 'registered'}): ${knackUserId}`)
     }
     
+    // ==========================================================================
     // Step 2: Generate unique order number
+    // ==========================================================================
     const orderNumber = await generateUniqueOrderNumber()
-    console.log(`Generated order number: ${orderNumber}`)
     
+    // ==========================================================================
     // Step 3: Create order in Knack
+    // ==========================================================================
     const ORDER_FIELDS = KNACK_CONFIG.fields.orders
     const ORDERS_OBJECT_KEY = KNACK_CONFIG.objectKeys.orders
     const now = new Date().toISOString()
@@ -162,7 +248,6 @@ export async function POST(request: Request) {
     }
     
     const orderId = await createKnackRecord(ORDERS_OBJECT_KEY, orderData)
-    console.log(`Created order: ${orderId}`)
     
     // Return success with order details
     return NextResponse.json({
@@ -186,9 +271,10 @@ export async function POST(request: Request) {
     })
     
   } catch (error) {
-    console.error('Checkout error:', error)
+    // Log error without exposing details
+    console.error('[Checkout] Order creation failed')
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Checkout failed' },
+      { error: 'Checkout failed. Please try again.' },
       { status: 500 }
     )
   }

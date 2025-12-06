@@ -65,9 +65,7 @@ function extractNotionImages(props: Record<string, unknown>): { images: string[]
     ? (detailFiles[0].external?.url || detailFiles[0].file?.url) 
     : undefined
 
-  if (images.length > 0 || detailLongImage) {
-    console.log(`[Notion Images] Extracted ${images.length} image(s)${detailLongImage ? ' + detail image' : ''}`)
-  }
+  // Images extracted from Notion properties
 
   return { images, detailImage: detailLongImage }
 }
@@ -413,7 +411,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     sortOrder: 'asc',
   })
 
-  console.log(`Fetched ${products.length} active products from Knack`)
+  // Products fetched from Knack
 
   // Fetch ALL variants (don't filter by status - user manages variant availability via price)
   const allVariants = await getKnackRecords<Record<string, unknown>>(VARIANTS_OBJECT_KEY, {
@@ -421,7 +419,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     sortOrder: 'asc',
   })
 
-  console.log(`Fetched ${allVariants.length} active variants for ${products.length} products`)
+  // Variants fetched from Knack
 
   // Create maps for product lookups - by field_45 AND by Knack record ID
   const productsByIdField = new Map<string, Record<string, unknown>>()
@@ -518,7 +516,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     }
   }
   
-  console.log(`Variants grouped: ${variantsByProductRecordId.size} products have active variants`)
+  // Variants grouped by product
 
   // Map products with their variants - only include products with at least one active variant
   const mappedProducts = await Promise.all(
@@ -539,13 +537,8 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
       
       // Skip products with no active variants
       if (variants.length === 0) {
-        const productTitle = getFieldValue(product, PRODUCT_FIELDS.title, 'Title')
-        console.log(`Skipping product "${productTitle}" - no active variants`)
         return null
       }
-      
-      const productTitle = getFieldValue(product, PRODUCT_FIELDS.title, 'Title')
-      console.log(`Product "${productTitle}" (${knackRecordId}): ${variants.length} variant(s)`)
       
       return await mapKnackRecordToProduct(product, variants)
     })
@@ -576,9 +569,6 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
   })
   if (byIdField.length > 0) {
     product = byIdField[0]
-    console.log(`Found product by ID field: ${id} -> ${getFieldValue(product, PRODUCT_FIELDS.title, 'Title')}`)
-  } else {
-    console.log(`No product found by ID field: ${id} (field key: ${PRODUCT_FIELDS.id})`)
   }
 
   // 2. If not found by ID field, try by SKU
@@ -601,14 +591,12 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
   }
 
   if (!product) {
-    console.warn(`Product not found with ID: ${id}`)
     return null
   }
 
   // Get the Knack record ID for variant lookup (variants are connected by record ID)
   const knackRecordId = String(product.id || '')
   if (!knackRecordId) {
-    console.error('Product found but has no Knack record ID')
     return null
   }
 
@@ -617,7 +605,6 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
   const productIdFieldValue = productIdField ? String(productIdField) : ''
   
   if (!productIdFieldValue) {
-    console.warn(`Product ${knackRecordId} has no ID field (${PRODUCT_FIELDS.id}), cannot fetch variants`)
     return await mapKnackRecordToProduct(product, [])
   }
 
@@ -692,7 +679,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     }
   }
 
-  console.log(`Found ${validVariants.length} active variants for product ${id}`)
+  // Active variants found for product
 
   // Sort variants: cheapest first (by price ascending)
   validVariants.sort((a, b) => {
