@@ -8,6 +8,9 @@ import { AddonItemsPreview, AddonBadge } from "@/components/addon-items-preview"
 import Image from "next/image"
 import Link from "next/link"
 
+// Prevent static generation - cart requires client-side context and localStorage
+export const dynamic = 'force-dynamic'
+
 type AddonItemData = {
   productId: string
   productTitle: string

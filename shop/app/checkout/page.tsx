@@ -4,13 +4,17 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { CheckoutSummary } from "@/components/checkout-summary"
 import { CopyButton } from "@/components/copy-button"
-import { type CartItem, getCart, getCartTotal, clearCart } from "@/lib/cart"
+import { useCart } from "@/lib/cart-context"
+import { PromoExcludesAddonsNotice, AddonBadge } from "@/components/addon-items-preview"
 import { STORE_EMAIL } from "@/lib/constants"
-import { ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, User, LogIn, Mail } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, User, LogIn, Mail, Tag, Sparkles, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import Image from "next/image"
+
+// Prevent static generation - checkout requires client-side context and localStorage
+export const dynamic = 'force-dynamic'
 
 type CheckoutMode = 'guest' | 'sign_in'
 type CheckoutStep = 'details' | 'processing' | 'success' | 'error'
@@ -34,20 +38,36 @@ type OrderResult = {
 export default function CheckoutPage() {
   const router = useRouter()
   const { user, signInWithEmail, resetPassword } = useAuth()
+  const {
+    items,
+    regularSubtotal,
+    addonSubtotal,
+    subtotal,
+    promoDiscount,
+    total,
+    itemCount,
+    promoCode,
+    applyPromoCode,
+    removePromoCode,
+    clearCart,
+    getItemPrice,
+    isPromoApplicable,
+  } = useCart()
   
   // Checkout mode
   const [mode, setMode] = useState<CheckoutMode>('guest')
-  
-  // Cart state
-  const [cart, setCart] = useState<CartItem[]>([])
   
   // Form state
   const [displayName, setDisplayName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
   const [phone, setPhone] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  
+  // Promo code state
+  const [promoInput, setPromoInput] = useState("")
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoError, setPromoError] = useState("")
   
   // Password reset state
   const [showResetPassword, setShowResetPassword] = useState(false)
@@ -59,10 +79,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string>("")
 
   useEffect(() => {
-    const currentCart = getCart()
-    setCart(currentCart)
-
-    if (currentCart.length === 0) {
+    if (items.length === 0 && step !== 'success') {
       router.push("/shop")
     }
     
@@ -74,20 +91,33 @@ export default function CheckoutPage() {
     if (user?.displayName) {
       setDisplayName(user.displayName)
     }
-  }, [router, user])
+  }, [router, user, items.length, step])
 
-  const total = getCartTotal(cart)
-  
   // Validation
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   const isPasswordValid = password.length >= 6
-  const passwordsMatch = password === confirmPassword
   
   // Form validation based on mode
   const isGuestFormValid = displayName.trim() && isEmailValid
   const isSignInFormValid = isEmailValid && isPasswordValid
   
   const isFormValid = mode === 'guest' ? isGuestFormValid : isSignInFormValid
+  
+  // Handle promo code
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return
+    
+    setPromoLoading(true)
+    setPromoError("")
+    
+    const success = await applyPromoCode(promoInput)
+    
+    if (!success) {
+      setPromoError("Invalid promo code")
+    }
+    
+    setPromoLoading(false)
+  }
   
   const handleResetPassword = async () => {
     if (!isEmailValid) {
@@ -99,8 +129,9 @@ export default function CheckoutPage() {
       await resetPassword(email)
       setResetEmailSent(true)
       setError("")
-    } catch (err: any) {
-      if (err.code === 'auth/user-not-found') {
+    } catch (err: unknown) {
+      const error = err as { code?: string }
+      if (error.code === 'auth/user-not-found') {
         setError("No account found with this email. Try Guest Checkout or Create Account instead.")
       } else {
         setError("Failed to send reset email. Please try again.")
@@ -130,36 +161,45 @@ export default function CheckoutPage() {
           firebaseUid = firebaseUser.uid
           userName = firebaseUser.displayName || displayName || email.split('@')[0]
           console.log(`Signed in Firebase user: ${firebaseUid}`)
-        } catch (signInError: any) {
+        } catch (signInError: unknown) {
+          const error = signInError as { code?: string }
           console.error('Sign in failed:', signInError)
-          if (signInError.code === 'auth/user-not-found') {
+          if (error.code === 'auth/user-not-found') {
             throw new Error('No account found with this email. Use Guest Checkout instead, or click "Forgot Password?" to create an account.')
-          } else if (signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
+          } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
             throw new Error('Incorrect password. Click "Forgot Password?" to reset it.')
           } else {
             throw new Error('Sign in failed. Please check your credentials.')
           }
         }
       }
-      // Guest mode: no Firebase auth, firebaseUid stays undefined
       
       console.log(`Checkout mode: ${mode}, Firebase UID: ${firebaseUid || 'none (guest)'}`)
       
-      // Build checkout items from cart
-      const checkoutItems = cart.map(item => ({
-        variantId: item.product.selectedVariantId || item.product.id,
-        productId: item.product.id,
-        productTitle: item.product.title,
-        variantTitle: item.product.selectedVariantTitle || '',
-        sku: item.product.sku,
-        quantity: item.quantity,
-        unitPriceCad: item.product.price_cad,
-      }))
+      // Build checkout items from cart with proper pricing
+      const checkoutItems = items.map(item => {
+        const price = getItemPrice(item)
+        const isAddon = item.itemType === "addon"
+        
+        return {
+          variantId: item.variantId,
+          productId: item.productId,
+          productTitle: item.productTitle,
+          variantTitle: item.variantTitle,
+          sku: item.sku || '',
+          quantity: item.quantity,
+          unitPriceCad: price,
+          isAddon,
+          regularPrice: item.regularPrice,
+          addonPrice: item.addonPrice,
+        }
+      })
       
       // Calculate totals
-      const subtotalCad = total
+      const subtotalCad = subtotal
       const shippingCad = 0
-      const totalCad = subtotalCad + shippingCad
+      const promoDiscountCad = promoDiscount
+      const totalCad = total
       
       // Call checkout API
       const response = await fetch('/api/checkout', {
@@ -175,6 +215,8 @@ export default function CheckoutPage() {
           items: checkoutItems,
           subtotalCad,
           shippingCad,
+          promoCode: promoCode?.isValid ? promoCode.code : undefined,
+          promoDiscountCad,
           totalCad,
         }),
       })
@@ -198,7 +240,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (cart.length === 0 && step !== 'success') {
+  if (items.length === 0 && step !== 'success') {
     return null
   }
 
@@ -277,9 +319,11 @@ export default function CheckoutPage() {
             )}
 
             <div className="flex gap-4">
-              <Button asChild className="flex-1 bg-[#3D9A6C] hover:bg-[#2D8A5C]">
-                <Link href="/shop">Continue Shopping</Link>
-              </Button>
+              <Link href="/shop" className="flex-1">
+                <Button className="w-full bg-[#3D9A6C] hover:bg-[#2D8A5C]">
+                  Continue Shopping
+                </Button>
+              </Link>
             </div>
           </div>
         </main>
@@ -341,11 +385,11 @@ export default function CheckoutPage() {
 
       <main className="container mx-auto px-4 py-8">
         <Link
-          href="/shop"
+          href="/cart"
           className="inline-flex items-center gap-2 text-sm text-[#A1A1A1] hover:text-[#F5F5F5] mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to shop</span>
+          <span>Back to cart</span>
         </Link>
 
         <h1 className="mb-8 text-3xl font-bold tracking-tight text-[#F5F5F5]">Checkout</h1>
@@ -513,6 +557,65 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* Promo Code Section */}
+            <div className="bg-[#1C1C1C] rounded-lg border border-[#2C2C2C] p-6">
+              <h2 className="text-xl font-semibold text-[#F5F5F5] mb-4 flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Promo Code
+              </h2>
+              
+              {/* Show notice if cart has add-on items */}
+              {items.some(item => item.itemType === "addon") && (
+                <div className="mb-4">
+                  <PromoExcludesAddonsNotice />
+                </div>
+              )}
+              
+              {promoCode?.isValid ? (
+                <div className="flex items-center justify-between bg-[#3D9A6C]/10 border border-[#3D9A6C]/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-[#3D9A6C]" />
+                    <div>
+                      <span className="font-medium text-[#F5F5F5]">{promoCode.code}</span>
+                      <span className="text-[#3D9A6C] ml-2">
+                        -{(promoCode.discount * 100).toFixed(0)}% off regular items
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={removePromoCode}
+                    className="text-[#A1A1A1] hover:text-red-400"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder="Enter promo code"
+                    className="bg-[#0A0A0A] border-[#2C2C2C] text-[#F5F5F5] placeholder:text-[#666]"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    disabled={!promoInput.trim() || promoLoading}
+                    className="bg-[#2C2C2C] hover:bg-[#3C3C3C] text-[#F5F5F5]"
+                  >
+                    {promoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+                  </Button>
+                </div>
+              )}
+              
+              {promoError && (
+                <p className="text-red-400 text-sm mt-2">{promoError}</p>
+              )}
+            </div>
+
             {/* Payment Info Section */}
             <div className="bg-[#1C1C1C] rounded-lg border border-[#3D9A6C]/30 p-6">
               <h2 className="text-xl font-semibold text-[#F5F5F5] mb-4">Payment Method</h2>
@@ -553,7 +656,99 @@ export default function CheckoutPage() {
 
           {/* Right Column - Order Summary */}
           <div className="space-y-6">
-            <CheckoutSummary cart={cart} />
+            <div className="bg-[#1C1C1C] rounded-lg border border-[#2C2C2C] p-6">
+              <h2 className="text-xl font-semibold text-[#F5F5F5] mb-4">Order Summary</h2>
+              
+              {/* Items list */}
+              <div className="space-y-4 mb-6">
+                {items.map((item) => {
+                  const price = getItemPrice(item)
+                  const isAddon = item.itemType === "addon"
+                  const promoApplies = isPromoApplicable(item) && promoCode?.isValid
+                  
+                  return (
+                    <div key={item.variantId} className="flex gap-3">
+                      <div className="relative w-16 h-16 rounded-md overflow-hidden bg-[#0A0A0A] flex-shrink-0">
+                        <Image
+                          src={item.productImage}
+                          alt={item.productTitle}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#F5F5F5] truncate">{item.productTitle}</p>
+                        <p className="text-xs text-[#A1A1A1]">{item.variantTitle}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-[#A1A1A1]">Qty: {item.quantity}</span>
+                          {isAddon && (
+                            <span className="inline-flex items-center gap-1 text-xs text-[#3D9A6C]">
+                              <Sparkles className="h-3 w-3" />
+                              Add-on
+                            </span>
+                          )}
+                          {promoApplies && (
+                            <span className="inline-flex items-center gap-1 text-xs text-[#3D9A6C]">
+                              <Tag className="h-3 w-3" />
+                              -{(promoCode!.discount * 100).toFixed(0)}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-[#F5F5F5]">
+                          ${(price * item.quantity).toFixed(2)}
+                        </p>
+                        {isAddon && (
+                          <p className="text-xs text-[#666] line-through">
+                            ${(item.regularPrice * item.quantity).toFixed(2)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              
+              {/* Totals */}
+              <div className="space-y-2 border-t border-[#2C2C2C] pt-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#A1A1A1]">Regular items</span>
+                  <span className="text-[#F5F5F5]">${regularSubtotal.toFixed(2)}</span>
+                </div>
+                {addonSubtotal > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#A1A1A1] flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-[#3D9A6C]" />
+                      Add-on items
+                    </span>
+                    <span className="text-[#3D9A6C]">${addonSubtotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#A1A1A1] flex items-center gap-1">
+                      <Tag className="h-3 w-3 text-[#3D9A6C]" />
+                      Promo ({promoCode?.code})
+                    </span>
+                    <span className="text-[#3D9A6C]">-${promoDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#A1A1A1]">Subtotal</span>
+                  <span className="text-[#F5F5F5]">${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#A1A1A1]">Shipping</span>
+                  <span className="text-[#A1A1A1]">Free</span>
+                </div>
+                <div className="flex justify-between text-lg font-semibold border-t border-[#2C2C2C] pt-2 mt-2">
+                  <span className="text-[#F5F5F5]">Total</span>
+                  <span className="text-[#3D9A6C]">${total.toFixed(2)} CAD</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
