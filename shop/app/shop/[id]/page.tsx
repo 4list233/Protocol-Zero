@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { addToCart } from "../../../lib/cart"
+import { useCart } from "@/lib/cart-context"
 import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect, use } from "react"
@@ -14,6 +14,7 @@ import MultiVariantSelector from "@/components/multi-variant-selector"
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { addToast } = useToast()
+  const { addItem, addonsUnlocked } = useCart()
   const { id } = use(params)
   const [product, setProduct] = useState<RuntimeProduct | null>(null)
   const [loading, setLoading] = useState(true)
@@ -72,18 +73,22 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   ].filter(Boolean)))
 
   const handleAddToCart = () => {
-    if (!product) return
+    if (!product || !selectedVariant) return
     
-    const cartProduct = {
-      ...product,
-      url: product.url || '',
-      selectedVariantId,
-      selectedVariantTitle: selectedVariant?.variantName,
-      price_cad: displayPrice,
-      stock: displayStock
-    }
-    
-    addToCart(cartProduct as any, 1)
+    // Add to cart using new cart context
+    const variant = selectedVariant as any // Type assertion for add-on fields
+    addItem({
+      productId: product.id,
+      productTitle: product.title,
+      productImage: product.primaryImage || product.images?.[0] || '/images/placeholder.png',
+      category: product.category,
+      variantId: selectedVariant.id,
+      variantTitle: selectedVariant.variantName,
+      sku: selectedVariant.sku,
+      regularPrice: selectedVariant.price_cad || 0,
+      addonPrice: variant.addonPrice ?? undefined,
+      isAddonEligible: variant.isAddonEligible ?? false,
+    }, false) // Don't add as addon initially - user can toggle later
     
     addToast({
       title: "Added to cart!",
