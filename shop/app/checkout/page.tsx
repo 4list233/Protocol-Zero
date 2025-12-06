@@ -77,6 +77,13 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<CheckoutStep>('details')
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null)
   const [error, setError] = useState<string>("")
+  
+  // Security: Track form load time for bot detection
+  const [formLoadTime] = useState<number>(() => Date.now())
+  
+  // Security: Honeypot fields (bots fill these, humans don't see them)
+  const [honeypotWebsite, setHoneypotWebsite] = useState("")
+  const [honeypotUrl, setHoneypotUrl] = useState("")
 
   useEffect(() => {
     if (items.length === 0 && step !== 'success') {
@@ -160,10 +167,8 @@ export default function CheckoutPage() {
           const firebaseUser = await signInWithEmail(email, password)
           firebaseUid = firebaseUser.uid
           userName = firebaseUser.displayName || displayName || email.split('@')[0]
-          console.log(`Signed in Firebase user: ${firebaseUid}`)
         } catch (signInError: unknown) {
           const error = signInError as { code?: string }
-          console.error('Sign in failed:', signInError)
           if (error.code === 'auth/user-not-found') {
             throw new Error('No account found with this email. Use Guest Checkout instead, or click "Forgot Password?" to create an account.')
           } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
@@ -174,7 +179,6 @@ export default function CheckoutPage() {
         }
       }
       
-      console.log(`Checkout mode: ${mode}, Firebase UID: ${firebaseUid || 'none (guest)'}`)
       
       // Build checkout items from cart with proper pricing
       const checkoutItems = items.map(item => {
@@ -218,6 +222,10 @@ export default function CheckoutPage() {
           promoCode: promoCode?.isValid ? promoCode.code : undefined,
           promoDiscountCad,
           totalCad,
+          // Security: Bot detection fields
+          _formLoadTime: formLoadTime,
+          website: honeypotWebsite,  // Honeypot - should be empty
+          url: honeypotUrl,          // Honeypot - should be empty
         }),
       })
       
@@ -234,7 +242,6 @@ export default function CheckoutPage() {
       clearCart()
       
     } catch (err) {
-      console.error('Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Checkout failed. Please try again.')
       setStep('error')
     }
@@ -425,6 +432,30 @@ export default function CheckoutPage() {
                   Sign In
                 </button>
               </div>
+            </div>
+
+            {/* Honeypot fields - hidden from humans, bots will fill these */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+              <label htmlFor="website">Website</label>
+              <input
+                type="text"
+                id="website"
+                name="website"
+                value={honeypotWebsite}
+                onChange={(e) => setHoneypotWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+              <label htmlFor="url">URL</label>
+              <input
+                type="text"
+                id="url"
+                name="url"
+                value={honeypotUrl}
+                onChange={(e) => setHoneypotUrl(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
             </div>
 
             {/* Form Fields */}
