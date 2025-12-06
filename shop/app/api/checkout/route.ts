@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createKnackUser, getUserByEmail, getUserByFirebaseUid } from '@/lib/knack-users'
-import { createKnackRecord, getKnackRecords } from '@/lib/knack-client'
+import { createKnackRecord, getKnackRecords, updateKnackRecord } from '@/lib/knack-client'
 import { KNACK_CONFIG } from '@/lib/knack-config'
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +25,9 @@ type CheckoutItem = {
   sku: string
   quantity: number
   unitPriceCad: number
+  isAddon?: boolean
+  regularPrice?: number
+  addonPrice?: number
 }
 
 type CheckoutRequest = {
@@ -44,6 +47,8 @@ type CheckoutRequest = {
   items: CheckoutItem[]
   subtotalCad: number
   shippingCad: number
+  promoCode?: string
+  promoDiscountCad?: number
   totalCad: number
   
   // Security fields (honeypot + timing)
@@ -52,6 +57,58 @@ type CheckoutRequest = {
   url?: string            // Honeypot: bots fill this
   company?: string        // Honeypot: bots fill this
   fax?: string            // Honeypot: bots fill this
+}
+
+// Track promo code usage
+async function trackPromoCodeUsage(code: string, discountAmount: number): Promise<void> {
+  const PROMO_FIELDS = KNACK_CONFIG.fields.promoCodes
+  const PROMO_OBJECT_KEY = PROMO_FIELDS.objectKey
+  
+  if (!PROMO_OBJECT_KEY || !PROMO_FIELDS.code) {
+    // Promo codes object not set up yet - skip tracking
+    console.warn('[Checkout] Promo codes object not configured, skipping usage tracking')
+    return
+  }
+  
+  try {
+    // Find existing promo code
+    const existingCodes = await getKnackRecords<Record<string, unknown>>(PROMO_OBJECT_KEY, {
+      filters: { [PROMO_FIELDS.code]: code },
+      perPage: 1,
+    })
+    
+    const now = new Date().toISOString()
+    
+    if (existingCodes.length > 0) {
+      // Update existing promo code
+      const existing = existingCodes[0]
+      const existingId = String(existing.id || '')
+      const currentUsage = Number(existing[PROMO_FIELDS.usageCount] || 0)
+      const currentTotal = Number(existing[PROMO_FIELDS.totalDiscountGiven] || 0)
+      
+      await updateKnackRecord(PROMO_OBJECT_KEY, existingId, {
+        [PROMO_FIELDS.usageCount]: currentUsage + 1,
+        [PROMO_FIELDS.totalDiscountGiven]: currentTotal + discountAmount,
+        [PROMO_FIELDS.lastUsedAt]: now,
+      })
+    } else {
+      // Create new promo code record (first time used)
+      // Note: We don't know the discount % here, so we'll set it to 0
+      // Admin should update it manually or we can calculate from first order
+      await createKnackRecord(PROMO_OBJECT_KEY, {
+        [PROMO_FIELDS.code]: code,
+        [PROMO_FIELDS.discountPercent]: 0, // Will need to be set manually
+        [PROMO_FIELDS.usageCount]: 1,
+        [PROMO_FIELDS.totalDiscountGiven]: discountAmount,
+        [PROMO_FIELDS.isActive]: true,
+        [PROMO_FIELDS.createdAt]: now,
+        [PROMO_FIELDS.lastUsedAt]: now,
+      })
+    }
+  } catch (error) {
+    // Don't fail checkout if promo tracking fails
+    console.error('[Checkout] Failed to track promo code usage:', error)
+  }
 }
 
 // Generate unique order number
@@ -226,16 +283,40 @@ export async function POST(request: Request) {
     const ORDERS_OBJECT_KEY = KNACK_CONFIG.objectKeys.orders
     const now = new Date().toISOString()
     
+    // Track promo code usage if provided
+    if (body.promoCode && body.promoDiscountCad && body.promoDiscountCad > 0) {
+      await trackPromoCodeUsage(body.promoCode, body.promoDiscountCad)
+    }
+    
+    // Build order items JSON with quantities
+    const orderItemsJson = body.items.map(item => ({
+      variantId: item.variantId,
+      productId: item.productId,
+      productTitle: item.productTitle,
+      variantTitle: item.variantTitle,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitPriceCad: item.unitPriceCad,
+      isAddon: item.isAddon || false,
+      regularPrice: item.regularPrice,
+      addonPrice: item.addonPrice,
+    }))
+    
     // Build the order record
     // For connection fields (User ID and Items), use array of Knack record IDs
     const orderData: Record<string, unknown> = {
       [ORDER_FIELDS.orderNumber]: orderNumber,
       // Connection to User - array of Knack record IDs
       [ORDER_FIELDS.userId]: [knackUserId],
-      // Connection to Variants - array of variant Knack record IDs
+      // Connection to Variants - array of variant Knack record IDs (legacy, for compatibility)
       [ORDER_FIELDS.items]: body.items.map(item => item.variantId),
+      // Order items as JSON with quantities
+      [ORDER_FIELDS.itemsJson]: JSON.stringify(orderItemsJson),
       [ORDER_FIELDS.subtotalCad]: body.subtotalCad,
       [ORDER_FIELDS.shippingCad]: body.shippingCad,
+      // Promo code tracking
+      [ORDER_FIELDS.promoCode]: body.promoCode || null,
+      [ORDER_FIELDS.promoDiscountCad]: body.promoDiscountCad || 0,
       [ORDER_FIELDS.totalCad]: body.totalCad,
       [ORDER_FIELDS.paymentMethod]: 'e-transfer',
       [ORDER_FIELDS.paymentStatus]: 'Pending',
