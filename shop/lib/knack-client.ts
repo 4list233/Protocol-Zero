@@ -134,7 +134,6 @@ export async function getKnackRecords<T = KnackRecord>(
   // If a specific page is requested, just return that page
   if (options?.page) {
     const data = await getKnackRecordsPage<T>(objectKey, options)
-    console.log(`Knack API returned ${data.records.length} records (page ${data.current_page}/${data.total_pages})`)
     return data.records
   }
   
@@ -152,13 +151,9 @@ export async function getKnackRecords<T = KnackRecord>(
     
     allRecords.push(...data.records)
     totalPages = data.total_pages
-    
-    console.log(`Knack API: fetched page ${currentPage}/${totalPages} (${data.records.length} records, total so far: ${allRecords.length})`)
-    
     currentPage++
   } while (currentPage <= totalPages)
   
-  console.log(`Knack API: fetched ALL ${allRecords.length} records from ${objectKey}`)
   return allRecords
 }
 

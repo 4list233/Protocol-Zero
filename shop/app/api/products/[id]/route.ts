@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { fetchProductById, type ProductRuntime } from '@/lib/notion-client'
+import { fetchProductById } from '@/lib/notion-client'
 import { getCached, setCache } from '@/lib/notion-cache'
+import { sanitizeProduct, type PublicProduct } from '@/lib/api-sanitizer'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,9 +11,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const cacheKey = `product:${id}`
+    const cacheKey = `product:${id}:public`
 
-    const cached = getCached<ProductRuntime>(cacheKey)
+    // Check cache for already-sanitized product
+    const cached = getCached<PublicProduct>(cacheKey)
     if (cached) {
       return NextResponse.json(cached, {
         headers: { 
@@ -27,16 +29,19 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    setCache(cacheKey, product)
+    // Sanitize product before caching and returning
+    // Removes: margin, price_cny, addonCost, addonMargin
+    const publicProduct = sanitizeProduct(product)
+    setCache(cacheKey, publicProduct)
 
-    return NextResponse.json(product, {
+    return NextResponse.json(publicProduct, {
       headers: { 
         'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
         'X-Cache': 'MISS'
       },
     })
   } catch (error) {
-    console.error('Error fetching product:', error)
+    console.error('[API] Product fetch error')
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
   }
 }
