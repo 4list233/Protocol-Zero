@@ -153,9 +153,12 @@ export const KNACK_CONFIG = {
       userEmail: process.env.KNACK_FIELD_ORDERS_USER_EMAIL || '', // Optional: Add field key if you have this field
       customerName: process.env.KNACK_FIELD_ORDERS_CUSTOMER_NAME || '', // Optional: Add field key if you have this field
       customerPhone: process.env.KNACK_FIELD_ORDERS_CUSTOMER_PHONE || '', // Optional: Add field key if you have this field
-      items: process.env.KNACK_FIELD_ORDERS_ITEMS || 'field_96', // Connection to variants
+      items: process.env.KNACK_FIELD_ORDERS_ITEMS || 'field_96', // Connection to variants (legacy - also store in JSON)
+      itemsJson: 'field_163', // JSON array with quantities
       subtotalCad: process.env.KNACK_FIELD_ORDERS_SUBTOTAL_CAD || 'field_97',
       shippingCad: process.env.KNACK_FIELD_ORDERS_SHIPPING_CAD || 'field_98',
+      promoCode: 'field_164', // Promo code used
+      promoDiscountCad: 'field_165', // Discount amount
       totalCad: process.env.KNACK_FIELD_ORDERS_TOTAL_CAD || 'field_99',
       paymentMethod: process.env.KNACK_FIELD_ORDERS_PAYMENT_METHOD || 'field_100',
       paymentStatus: process.env.KNACK_FIELD_ORDERS_PAYMENT_STATUS || 'field_101',
@@ -169,6 +172,18 @@ export const KNACK_CONFIG = {
       statusHistory: process.env.KNACK_FIELD_ORDERS_STATUS_HISTORY || 'field_109',
       createdAt: process.env.KNACK_FIELD_ORDERS_CREATED_AT || 'field_110',
       updatedAt: process.env.KNACK_FIELD_ORDERS_UPDATED_AT || 'field_111',
+    },
+    
+    // Promo Codes Object Fields (object_13)
+    promoCodes: {
+      objectKey: 'object_13',
+      code: 'field_166', // Unique code
+      discountPercent: 'field_167', // Discount %
+      usageCount: 'field_168', // Times used
+      totalDiscountGiven: 'field_169', // Total CAD discounted
+      isActive: 'field_170', // Yes/No
+      createdAt: 'field_171',
+      lastUsedAt: 'field_172',
     },
 
     // Clips Object Fields (object_11)
