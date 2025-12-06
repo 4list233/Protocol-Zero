@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { addToCart } from "@/lib/cart"
+import { useCart } from "@/lib/cart-context"
 import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
 import type { RuntimeProduct } from "@/lib/products"
@@ -11,6 +11,7 @@ import { ShoppingCart, Check } from "lucide-react"
 
 export default function ShopPage() {
   const { addToast } = useToast()
+  const { addItem, addonsUnlocked } = useCart()
   const [products, setProducts] = useState<RuntimeProduct[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -59,17 +60,20 @@ export default function ShopPage() {
       return vPrice < minPrice ? v : min
     }, product.variants[0])
     
-    // Create cart product with variant information
-    const cartProduct = {
-      ...product,
-      url: product.url || '',
-      selectedVariantId: cheapestVariant.id,
-      selectedVariantTitle: cheapestVariant.variantName,
-      price_cad: cheapestVariant.price_cad || 0,
-      stock: cheapestVariant.stock ?? product.stock
-    }
-    
-    addToCart(cartProduct as any, 1)
+    // Add to cart using new cart context
+    const variant = cheapestVariant as any // Type assertion for add-on fields
+    addItem({
+      productId: product.id,
+      productTitle: product.title,
+      productImage: product.primaryImage || product.images?.[0] || '/images/placeholder.png',
+      category: product.category,
+      variantId: cheapestVariant.id,
+      variantTitle: cheapestVariant.variantName,
+      sku: cheapestVariant.sku,
+      regularPrice: cheapestVariant.price_cad || 0,
+      addonPrice: variant.addonPrice ?? undefined,
+      isAddonEligible: variant.isAddonEligible ?? false,
+    }, false) // Don't add as addon initially - user can toggle later
     
     addToast({
       title: "Added to cart!",

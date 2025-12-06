@@ -1,28 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
-import { getCart, getCartItemCount } from "@/lib/cart"
+import { useCart } from "@/lib/cart-context"
 import Link from "next/link"
 
 export function CartDrawer() {
-  const [itemCount, setItemCount] = useState(0)
-
-  useEffect(() => {
-    // Load cart count on mount
-    const cart = getCart()
-    setItemCount(getCartItemCount(cart))
-    
-    // Listen for cart updates
-    const handleCartUpdate = () => {
-      const cart = getCart()
-      setItemCount(getCartItemCount(cart))
-    }
-    
-    window.addEventListener('cartUpdated', handleCartUpdate)
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate)
-  }, [])
+  const { itemCount } = useCart()
 
   return (
     <Link href="/cart">
