@@ -121,9 +121,18 @@ export default function CheckoutPage() {
     
     if (!success) {
       setPromoError("Invalid promo code")
+    } else {
+      setPromoInput("") // Clear input on success
     }
     
     setPromoLoading(false)
+  }
+  
+  // Handle removing promo code
+  const handleRemovePromo = () => {
+    removePromoCode()
+    setPromoError("") // Clear any error messages
+    setPromoInput("") // Clear input field
   }
   
   const handleResetPassword = async () => {
@@ -602,23 +611,36 @@ export default function CheckoutPage() {
                 </div>
               )}
               
-              {promoCode?.isValid ? (
-                <div className="flex items-center justify-between bg-[#3D9A6C]/10 border border-[#3D9A6C]/30 rounded-lg p-4">
+              {promoCode ? (
+                <div className={`flex items-center justify-between rounded-lg p-4 ${
+                  promoCode.isValid 
+                    ? 'bg-[#3D9A6C]/10 border border-[#3D9A6C]/30' 
+                    : 'bg-red-500/10 border border-red-500/30'
+                }`}>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-[#3D9A6C]" />
+                    {promoCode.isValid ? (
+                      <CheckCircle className="h-5 w-5 text-[#3D9A6C]" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    )}
                     <div>
                       <span className="font-medium text-[#F5F5F5]">{promoCode.code}</span>
-                      <span className="text-[#3D9A6C] ml-2">
-                        -{(promoCode.discount * 100).toFixed(0)}% off regular items
-                      </span>
+                      {promoCode.isValid ? (
+                        <span className="text-[#3D9A6C] ml-2">
+                          -{(promoCode.discount * 100).toFixed(0)}% off regular items
+                        </span>
+                      ) : (
+                        <span className="text-red-400 ml-2">Invalid promo code</span>
+                      )}
                     </div>
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={removePromoCode}
+                    onClick={handleRemovePromo}
                     className="text-[#A1A1A1] hover:text-red-400"
+                    title="Remove promo code"
                   >
                     <X className="h-4 w-4" />
                   </Button>
