@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { ToastProvider } from "@/components/toast-provider"
 import { AuthProvider } from "@/lib/auth-context"
+import { CartProvider } from "@/lib/cart-context"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -36,9 +37,11 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <AuthProvider>
-          <ToastProvider>
-            <Suspense fallback={null}>{children}</Suspense>
-          </ToastProvider>
+          <CartProvider>
+            <ToastProvider>
+              <Suspense fallback={null}>{children}</Suspense>
+            </ToastProvider>
+          </CartProvider>
         </AuthProvider>
         <Analytics />
       </body>

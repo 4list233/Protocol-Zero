@@ -1,0 +1,164 @@
+🚀 QUICK START - BEGIN HERE:
+
+You are working directly in the Knack Airsoft Database dashboard to input product variant data.
+
+NEW WORKFLOW: Variants are already imported to Knack. You edit each variant, use its Purchase URL to open Taobao for context, then translate/parse and fill fields.
+
+IMMEDIATE ACTION REQUIRED - DO THIS FIRST:
+
+1. NAVIGATE TO KNACK VARIANTS:
+   - You should see the Knack internal dashboard
+   - Go to Variants object/table
+   - You should see a list of variants with Edit buttons
+
+2. IDENTIFY VARIANTS:
+   - Count variants in the list (e.g., 254 variants)
+   - Look for variants with Chinese names or empty option fields
+   - Each variant should have an "Edit" button or edit icon
+
+3. CONFIRM SCOPE:
+   - Ask user: "I see X variants in Knack. Should I process all of them, or start with a specific subset?"
+   - If no response, start with first 10 variants as test batch
+
+4. BEGIN PROCESSING:
+   - Click "Edit" button for first variant
+   - Edit form opens with all fields
+   - Follow steps below to fill fields
+
+EXAMPLE STARTUP MESSAGE:
+"I see the Knack dashboard with X variants. Should I process all of them, or start with a specific subset? I'll begin by clicking Edit on the first variant and filling in the translated/parsed data."
+
+IF KNACK NOT VISIBLE:
+"I don't see the Knack dashboard. Please navigate to the Variants list in Knack so I can begin editing variants."
+
+TASK: For each variant URL from CSV:
+1. Open variant-specific purchase URL (from CSV Variant URL column)
+2. Extract Chinese product name from page and translate to English
+3. Extract Chinese variant name from page and translate to English
+4. Parse variant options from page context (Color/Size/Style)
+5. Extract prices from page (CNY and CAD)
+6. Fill in Knack form fields including translations, options, prices, and purchase URL
+
+TRANSLATION PROCESS:
+
+CRITICAL: Translate Chinese names to English using Taobao page context.
+
+1. Extract Chinese product name from page title
+2. Translate to English: Remove brand names, keep military terms, use airsoft context
+3. Extract Chinese variant name from page (variant option text)
+4. Translate to English based on context:
+   - Chinese colors: "黑色"→"Black", "狼灰色"→"Wolf Grey", "狼棕色"→"Coyote Brown", "游骑兵绿"→"Ranger Green", "军绿色"→"Army Green", "沙色"→"Sand", "泥色"→"Tan", "MC迷彩"→"MultiCam", "CP迷彩"→"CP Camo", "暗夜迷彩"→"Black Camo"
+   - Chinese sizes: "S"→"S", "M"→"M", "L"→"L", "XL"→"XL", "均码"→"One Size", "通用"→"Universal", keep measurements like "85-125cm"
+   - Chinese styles: "CNC"→"CNC", "金属"→"Metal", "铝合金"→"Aluminum", "尼龙"→"Nylon", "考度拉"→"Cordura", "标准"→"Standard", "升级版"→"Upgraded", "套装"→"Set"
+5. Combine multiple options: Color+Size → "Black / M" or "Black-M", Color+Style → "Black / CNC"
+6. Add codes for clarity: "Black / BK", "Wolf Grey / WG - M"
+7. Put translated variant name in Description field (similar to current workflow)
+
+VARIANT PARSING RULES:
+
+COLOR PATTERNS → Normalize to English:
+- English: black→Black, white→White, grey→Grey, brown→Brown, tan→Tan, sand→Sand, green→Green, blue→Blue, red→Red, pink→Pink
+- Codes: BK→Black, WG→Wolf Grey, CB→Coyote Brown, RG→Ranger Green, OD→Olive Drab, MC→MultiCam, CP→CP Camo, BCP→Black Camo
+- Chinese: 黑色/黑→Black, 白色/白→White, 灰色/灰→Grey, 狼灰色/狼灰→Wolf Grey, 棕色/棕→Brown, 狼棕色/狼棕/土狼棕→Coyote Brown, 沙色→Sand, 泥色→Tan, 卡其→Khaki, 绿色/绿→Green, 军绿色/军绿→Army Green, 游骑兵绿色/游骑兵绿→Ranger Green, 红色/红→Red, 玫红色→Rose Red, 粉色/粉红色→Pink, 蓝色/蓝→Blue, 金色/金→Gold, 银色/银→Silver, 消光黑→Matte Black
+- Camo: 迷彩→Camouflage, CP迷彩→CP Camo, 暗夜迷彩→Black Camo, 丛林迷彩→Jungle Camo, 废墟迷彩/废墟→Ruins Camo, multicam→MultiCam
+
+SIZE PATTERNS → Normalize:
+- Standard: XXS, XS, S, M, L, XL, XXL, XXXL, 2XL, 3XL, 4XL
+- One-size: 均码→One Size, one size/free size→One Size, universal/通用→Universal
+- Chinese: 大款→Large, 小款→Small, 短款→Short, 矮款→Low Profile, 加大款→XL, 小号→Small
+- Numeric: 80-110, 110-150, 150-210 (weight ranges), 85-125cm, 90-130cm (measurements), 20cm, 30mm
+- Quantity: 一个/一块/一只→1 pc, 两个/2个→2 pcs, 三个/3个→3 pcs, 一套→1 Set
+
+STYLE/MATERIAL PATTERNS → Normalize:
+- Materials: CNC→CNC, metal/金属→Metal, aluminum/铝合金→Aluminum, nylon/尼龙→Nylon, cordura/考度拉→Cordura
+- Styles: standard/标准→Standard, upgraded→Upgraded, set/套装→Set, single/单→Single, dual/双→Dual, left/左→Left, right/右→Right
+
+PARSING LOGIC:
+1. Identify Color first (highest priority) → Option Type 1 = "Color", Option Value 1 = normalized color
+2. If Color found, check for Size → Option Type 2 = "Size", Option Value 2 = normalized size
+3. If Color found but no Size, check for Style → Option Type 2 = "Style", Option Value 2 = normalized style
+4. If no Color but Size found → Option Type 1 = "Size", Option Value 1 = normalized size
+5. If no Color/Size but Style found → Option Type 1 = "Style", Option Value 1 = normalized style
+
+KNACK FIELD MAPPINGS:
+- Variant Name (field_62): Full variant name from Taobao (e.g., "黑色 / BK - M")
+- Option Type 1 (field_145): "Color", "Size", or "Style" (or empty)
+- Option Value 1 (field_146): Normalized value (e.g., "Black", "M", "CNC") (or empty)
+- Option Type 2 (field_147): "Size" or "Style" if second dimension exists (or empty)
+- Option Value 2 (field_148): Normalized value for second dimension (or empty)
+- Purchase URL: Capture URL after clicking variant (URL may change with variant parameters)
+
+WORKFLOW:
+
+STEP 0: SETUP IN KNACK
+1. Navigate to Variants list in Knack dashboard
+2. Count variants and confirm scope with user
+3. Identify first variant to process
+
+STEP 1: OPEN VARIANT EDIT FORM
+1. Click "Edit" button for variant in Knack list
+2. Edit form opens showing all fields
+3. Check "Purchase URL" or "Variant URL" field - contains Taobao URL
+4. Note current field values (may be Chinese or empty)
+
+STEP 2: OPEN TAOBAO PAGE
+5. Copy Variant URL from Knack edit form
+6. Open URL in new browser tab
+7. Wait for Taobao page to load completely
+8. Verify correct variant is selected on page
+
+STEP 3: EXTRACT & TRANSLATE FROM TAOBAO
+9. Extract Chinese product title from Taobao page
+10. Translate product title to English using page context
+11. Extract Chinese variant name from Taobao page (variant option text)
+12. Translate variant name to English using page context
+13. Parse variant options from page (Color/Size/Style) using context
+14. Extract prices from page (CNY and CAD)
+
+STEP 4: FILL KNACK EDIT FORM
+15. Return to Knack edit form (still open)
+16. Fill in fields:
+    - Product Title: translated English name
+    - Product Title ZH: Chinese name (keep as-is)
+    - Variant Name: translated English name
+    - Description: translated variant name (similar to current workflow)
+    - Option Type 1: primary dimension (Color/Size/Style)
+    - Option Value 1: normalized value
+    - Option Type 2: secondary dimension if exists
+    - Option Value 2: normalized value if exists
+    - Purchase URL: verify it's filled (from Step 1)
+    - Price CNY: extracted from page
+    - Price CAD: calculated/input
+17. Click "Save" or "Submit" button
+18. Return to variants list
+19. Click "Edit" for next variant
+20. Repeat until all variants processed
+
+LEARNING FROM PAGE:
+- Look for option labels: "颜色" (Color), "尺码" (Size), "规格" (Specification)
+- Colored squares/buttons usually = colors
+- Text buttons with measurements = sizes
+- Material words = styles
+- Options may cascade (selecting Color filters available Sizes)
+
+EXAMPLES:
+
+Translation & Parsing (Chinese → English):
+- Taobao shows "黑色" → Variant Name: "Black / BK" → Description: "Black / BK" → Type1: Color, Value1: Black, Type2: empty, Value2: empty
+- Taobao shows "狼灰色 / WG - M" → Variant Name: "Wolf Grey / WG - M" → Description: "Wolf Grey / WG - M" → Type1: Color, Value1: Wolf Grey, Type2: Size, Value2: M
+- Taobao shows "85-125cm" (under "尺码") → Variant Name: "85-125cm" → Description: "85-125cm" → Type1: Size, Value1: 85-125cm, Type2: empty, Value2: empty
+- Taobao shows "黑色 CNC" → Variant Name: "Black / CNC" → Description: "Black / CNC" → Type1: Color, Value1: Black, Type2: Style, Value2: CNC
+- Taobao shows "均码" → Variant Name: "One Size" → Description: "One Size" → Type1: Size, Value1: One Size, Type2: empty, Value2: empty
+
+QUALITY CHECK:
+- Variant-specific URL opened from CSV ✓
+- Chinese product name extracted from page ✓
+- Product name translated to English ✓
+- Chinese variant name extracted from page ✓
+- Variant name translated to English ✓
+- Translated variant name in Description field ✓
+- Options parsed correctly from page context ✓
+- Prices extracted from page ✓
+- Purchase URL from CSV input ✓
+- Fields normalized properly ✓
+

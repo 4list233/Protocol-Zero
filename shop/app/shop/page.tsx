@@ -43,10 +43,8 @@ export default function ShopPage() {
   }, [])
 
   const handleAddToCart = (product: RuntimeProduct) => {
-    // All products should have at least 1 variant - use first variant
-    const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null
-    
-    if (!firstVariant) {
+    // All products should have at least 1 variant - use cheapest variant
+    if (!product.variants || product.variants.length === 0) {
       addToast({
         title: "Error",
         description: "This product has no variants available",
@@ -54,21 +52,28 @@ export default function ShopPage() {
       return
     }
     
+    // Find cheapest variant
+    const cheapestVariant = product.variants.reduce((min, v) => {
+      const minPrice = min.price_cad ?? Number.MAX_SAFE_INTEGER
+      const vPrice = v.price_cad ?? Number.MAX_SAFE_INTEGER
+      return vPrice < minPrice ? v : min
+    }, product.variants[0])
+    
     // Create cart product with variant information
     const cartProduct = {
       ...product,
       url: product.url || '',
-      selectedVariantId: firstVariant.id,
-      selectedVariantTitle: firstVariant.variantName,
-      price_cad: firstVariant.price_cad || 0,
-      stock: firstVariant.stock ?? product.stock
+      selectedVariantId: cheapestVariant.id,
+      selectedVariantTitle: cheapestVariant.variantName,
+      price_cad: cheapestVariant.price_cad || 0,
+      stock: cheapestVariant.stock ?? product.stock
     }
     
     addToCart(cartProduct as any, 1)
     
     addToast({
       title: "Added to cart!",
-      description: `${product.title}${firstVariant ? ` - ${firstVariant.variantName}` : ''}`,
+      description: `${product.title} - ${cheapestVariant.variantName}`,
       action: (
         <Link 
           href="/cart"
@@ -154,7 +159,10 @@ export default function ShopPage() {
                 <div className="flex items-center justify-between pt-2 border-t border-[#2C2C2C]">
                   <span className="text-2xl font-bold text-[#3D9A6C] font-mono">
                     ${product.variants && product.variants.length > 0 
-                      ? (product.variants[0].price_cad || 0).toFixed(2)
+                      ? (product.variants.reduce((min, v) => {
+                          const p = v.price_cad || 0
+                          return p < min ? p : min
+                        }, Number.POSITIVE_INFINITY) || 0).toFixed(2)
                       : '0.00'}
                   </span>
                   <span className="text-xs text-[#A1A1A1] font-mono uppercase">CAD</span>

@@ -17,6 +17,12 @@ export type ProductVariant = {
   optionValue1?: string  // e.g., "Black", "Standard", "Nylon"
   optionType2?: string   // e.g., "Size", "Length" (nullable)
   optionValue2?: string  // e.g., "M", "85-125cm" (nullable)
+  // Add-on pricing (for items that are cheaper when added to another order)
+  isAddonEligible?: boolean  // Can this variant be purchased as add-on?
+  addonPrice?: number        // Discounted price when purchased as add-on
+  addonCost?: number         // Cost basis for add-on pricing
+  addonMargin?: number       // Margin % at add-on price
+  minCartForAddon?: number   // Min cart value to unlock add-on pricing
 }
 
 export type ProductRuntime = {

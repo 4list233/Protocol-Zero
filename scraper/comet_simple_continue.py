@@ -192,12 +192,27 @@ def calculate_difference(img1, img2):
         return 100
 
 
-def send_continue_message(message="continue", chatbox_position=None):
+# Simple continue messages to avoid spam detection (rotate through these)
+SIMPLE_CONTINUE_MESSAGES = [
+    "continue",
+    "keep going",
+    "proceed",
+    "next",
+    "go ahead",
+    "carry on",
+    "keep working",
+    "continue processing",
+    "move forward",
+    "keep it up"
+]
+
+def send_continue_message(message="continue", chatbox_position=None, is_full_instructions=False):
     """Send a continue message to the active window."""
     # Show preview of message (first 50 chars)
     preview = message[:50] + "..." if len(message) > 50 else message
     preview = preview.replace('\n', ' ')
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] 📤 Sending: '{preview}'")
+    msg_type = "📋 FULL INSTRUCTIONS" if is_full_instructions else "💬 Simple message"
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg_type} 📤 Sending: '{preview}'")
 
     # If we have a saved chatbox position, click there first to ensure focus
     if chatbox_position:
@@ -275,7 +290,8 @@ def run_monitor(
     just_enter=False,
     sensitivity=1.0,  # Percentage threshold - changes below this are ignored
     chatbox_position=None,  # (x, y) tuple to click before typing
-    monitor_bounds=None  # (x1, y1, x2, y2) tuple for specific monitor
+    monitor_bounds=None,  # (x1, y1, x2, y2) tuple for specific monitor
+    simple_only=False  # If True, only use simple messages (no full instructions)
 ):
     """
     Main monitoring loop.
@@ -298,7 +314,12 @@ def run_monitor(
     print(f"  Inactivity threshold: {inactivity_seconds}s")
     print(f"  Check interval: {check_interval}s")
     print(f"  Sensitivity: {sensitivity}% (changes below this are ignored)")
-    print(f"  Action: {'Press Enter' if just_enter else f'Type \"{message}\"'}")
+    if just_enter:
+        print(f"  Action: Press Enter")
+    else:
+        print(f"  Action: Alternate simple messages + full instructions every 4 cycles")
+        print(f"    - Cycles 1-3: Simple messages (continue, keep going, etc.)")
+        print(f"    - Cycle 4: Full instructions from file")
     if chatbox_position:
         print(f"  Chatbox position: ({chatbox_position[0]}, {chatbox_position[1]})")
     else:
@@ -318,6 +339,19 @@ def run_monitor(
     last_image = None
     last_significant_change = time.time()
     prompts_sent = 0
+    cycle_count = 0  # Track cycles for alternating messages
+    
+    # Load full instructions file if it exists (unless simple_only mode)
+    instructions_file = Path(__file__).parent.parent / "COMET_BROWSER_INSTRUCTIONS.md"
+    full_instructions = None
+    if not simple_only:
+        if instructions_file.exists():
+            full_instructions = instructions_file.read_text().strip()
+            print(f"  ✅ Loaded instructions file ({len(full_instructions)} chars)")
+        else:
+            print(f"  ⚠️  Instructions file not found: {instructions_file}")
+    else:
+        print(f"  ℹ️  Simple messages only mode (full instructions disabled)")
     
     # Track recent differences for debugging
     recent_diffs = []
@@ -363,7 +397,17 @@ def run_monitor(
                         if just_enter:
                             send_enter_key(chatbox_position)
                         else:
-                            send_continue_message(message, chatbox_position)
+                            # Alternate between simple messages and full instructions
+                            cycle_count += 1
+                            
+                            # Every 4th cycle, send full instructions (unless simple_only mode)
+                            if cycle_count % 4 == 0 and full_instructions and not simple_only:
+                                send_continue_message(full_instructions, chatbox_position, is_full_instructions=True)
+                            else:
+                                # Use simple message, rotating through the list
+                                simple_msg_index = (cycle_count - 1) % len(SIMPLE_CONTINUE_MESSAGES)
+                                simple_msg = SIMPLE_CONTINUE_MESSAGES[simple_msg_index]
+                                send_continue_message(simple_msg, chatbox_position, is_full_instructions=False)
 
                         prompts_sent += 1
                         last_significant_change = current_time
@@ -383,6 +427,12 @@ def run_monitor(
         print("\n\n🛑 Stopped (mouse moved to corner)")
     finally:
         print(f"\n📊 Total prompts sent: {prompts_sent}")
+        print(f"📊 Cycles completed: {cycle_count}")
+        if cycle_count > 0:
+            full_instructions_count = cycle_count // 4
+            simple_messages_count = cycle_count - full_instructions_count
+            print(f"   - Full instructions: {full_instructions_count}")
+            print(f"   - Simple messages: {simple_messages_count}")
 
 
 def main():
@@ -413,11 +463,14 @@ def main():
         sensitivity = 1.0
         print("  Using default: 1.0%")
 
-    print("\nWhat should I do when Comet pauses?")
-    print("  1. Send FULL INSTRUCTIONS from file (recommended - prevents context loss)")
-    print("  2. Type 'continue' and press Enter")
-    print("  3. Just press Enter")
-    print("  4. Type custom message")
+    print("\nMessage strategy:")
+    print("  Automatic alternating (recommended):")
+    print("    - Cycles 1-3: Simple messages (continue, keep going, etc.)")
+    print("    - Cycle 4: Full instructions from COMET_BROWSER_INSTRUCTIONS.md")
+    print("    - Repeats every 4 cycles to avoid spam detection")
+    print("\n  1. Use automatic alternating (recommended)")
+    print("  2. Just press Enter (no messages)")
+    print("  3. Use only simple messages (no full instructions)")
 
     try:
         choice = input("  > ").strip() or "1"
@@ -425,25 +478,19 @@ def main():
         choice = "1"
 
     just_enter = False
-    message = "continue"
+    message = "continue"  # Not used in auto mode, but kept for compatibility
 
+    simple_only = False
     if choice == "1":
-        # Load instructions from file
-        instructions_file = Path(__file__).parent.parent / "COMET_BROWSER_INSTRUCTIONS.md"
-        if instructions_file.exists():
-            message = instructions_file.read_text().strip()
-            print(f"  ✅ Loaded instructions ({len(message)} chars)")
-        else:
-            print(f"  ⚠️  File not found: {instructions_file}")
-            print("  Using 'continue' instead")
-            message = "continue"
+        # Automatic alternating mode (default)
+        print("  ✅ Using automatic alternating mode")
+        print("  📋 Will load instructions from COMET_BROWSER_INSTRUCTIONS.md")
     elif choice == "2":
-        message = "continue"
-    elif choice == "3":
         just_enter = True
-    elif choice == "4":
-        print("\nWhat message should I type?")
-        message = input("  > ").strip() or "continue"
+        print("  ✅ Will just press Enter")
+    elif choice == "3":
+        simple_only = True
+        print("  ✅ Using only simple messages (no full instructions)")
 
     # Get chatbox position
     chatbox_position = get_chatbox_position()
@@ -459,7 +506,8 @@ def main():
         just_enter=just_enter,
         sensitivity=sensitivity,
         chatbox_position=chatbox_position,
-        monitor_bounds=monitor_bounds
+        monitor_bounds=monitor_bounds,
+        simple_only=simple_only
     )
 
 
