@@ -178,6 +178,30 @@ Based on your workflow with the Knack Airsoft Database:
 
 The script will keep Comet processing variants without manual intervention!
 
+---
+
+## Variant Data Input Instructions
+
+For inputting variant data (Color, Size, Style options) into Knack:
+
+**See detailed instructions:**
+- `COMET_VARIANT_INPUT_INSTRUCTIONS.md` - Complete guide with parsing rules and examples
+- `COMET_VARIANT_PROMPT.txt` - Concise prompt for direct use in Comet
+
+**Key features:**
+- Extracts Chinese product name from Taobao page
+- Captures variant-specific purchase URLs (after clicking variant)
+- Parses variant names to identify Color/Size/Style using pattern recognition
+- Fills in 4 new multi-dimensional option fields (field_145-148) in Knack
+- Learns from Taobao page structure to identify option categories
+
+**Quick start:**
+1. Copy the contents of `COMET_VARIANT_PROMPT.txt` into Comet's instruction field
+2. Provide the Taobao product URL
+3. Comet will extract variant data and input into Knack form fields
+4. Use `comet_auto_continue.py` to keep Comet running without pauses
+
+
 
 
 

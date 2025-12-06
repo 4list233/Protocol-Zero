@@ -128,6 +128,22 @@ export const KNACK_CONFIG = {
       optionValue1: 'field_146',  // e.g., "Black", "Standard"
       optionType2: 'field_147',   // e.g., "Size" (nullable)
       optionValue2: 'field_148',  // e.g., "M", "85-125cm" (nullable)
+      // Pricing fields (added for ratio-based pricing model)
+      shippingCny: 'field_151',         // Shipping allocation per item (default 70 CNY)
+      isBaseVariant: 'field_152',       // Boolean - mark ONE variant as base for ratio calc
+      competitorPriceCad: 'field_139',  // Research price from Canadian competitors
+      competitorProducts: 'field_137',  // Short text - competitor product links/notes
+      totalCostCad: 'field_153',        // Calculated total cost in CAD
+      marginStandard: 'field_154',      // Calculated margin % for standard sales
+      marginPromo: 'field_155',         // Calculated margin % with promo code
+      isBundle: 'field_156',            // Boolean - is this a bundle variant?
+      bundleComponents: 'field_157',    // What's included in the bundle
+      // Add-on pricing fields - for items that are cheaper when added to another order
+      isAddonItem: 'field_158',      // Boolean - eligible for add-on pricing
+      addonPriceCad: 'field_159',    // Discounted add-on price (¥20 shipping vs ¥70)
+      addonCostCad: 'field_160',     // Cost with reduced shipping
+      addonMargin: 'field_161',      // Margin at add-on price (50%)
+      minCartForAddon: 'field_162',  // Min cart value to unlock ($30)
     },
 
     // Orders Object Fields (object_10)

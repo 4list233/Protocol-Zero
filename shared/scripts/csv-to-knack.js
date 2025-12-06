@@ -350,8 +350,8 @@ async function importToKnack() {
     
     // Add variant
     const product = productsMap.get(url);
-    // Use translated variant name if available, otherwise fall back to original
-    const optionName = row['Translated Option Name'] || row['Option Name'] || row['Option Name ZH'] || '';
+    // Use Chinese variant name (Option Name ZH)
+    const optionName = row['Option Name ZH'] || row['Option Name'] || '';
     
     if (optionName) {
       product.variants.push({

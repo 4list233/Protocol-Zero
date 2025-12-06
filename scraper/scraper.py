@@ -444,11 +444,12 @@ def scrape_product_variants(driver, url, product_index):
 
         def build_variant_row(option_label: str) -> Dict:
             return {
-                'URL': url,
-                'Product Title': product_title,
+                'URL': url,  # Base product URL
+                'Product Title': product_title,  # Chinese product name (stays in Chinese)
                 'Product Title ZH': product_title if contains_chinese(product_title) else product_title,
-                'Option Name': option_label,
+                'Option Name': option_label,  # Chinese variant name (stays in Chinese)
                 'Option Name ZH': option_label,
+                'Variant URL': '',  # Variant-specific purchase URL (captured after clicking)
                 'Media Folder': os.path.basename(product_media_dir)
             }
 
@@ -483,9 +484,14 @@ def scrape_product_variants(driver, url, product_index):
                     print(f"      -> Failed to click variant '{option_name}': {e}")
                     continue
 
-                time.sleep(0.6)
+                time.sleep(0.6)  # Wait for page to update after clicking variant
+
+                # Capture variant-specific URL after clicking
+                variant_url = driver.current_url
+                print(f"      -> Variant URL: {variant_url}")
 
                 row = build_variant_row(option_name)
+                row['Variant URL'] = variant_url  # Add variant-specific purchase URL
                 populate_price_fields(row)
                 variant_rows.append(row)
 
@@ -1107,8 +1113,11 @@ def main():
         print("\nNo data was scraped. Please check your URLs and CSS selectors.")
         return
 
-    print("\nTranslating titles...")
-    # Apply lightweight translations for titles and variants (rule-based)
+    # NOTE: Translation removed - Comet will handle translation with context from Taobao page
+    # Product and variant names stay in Chinese for Comet to translate
+    print("\n✅ Scraping complete - names kept in Chinese for Comet translation")
+    
+    # Keep translation functions commented out for reference (not used)
     def _clean_text(s: str) -> str:
         return (s or '').strip()
 
@@ -1203,33 +1212,16 @@ def main():
             result = re.sub(r"[【】\[\]（）()]", "", zh).strip()
         return result
 
-    # Cache title translations by Chinese title
-    title_cache = {}
-    print("\n🔤 Translating titles and variant names...")
-    for idx, row in enumerate(all_scraped_data):
-        zh_title = _clean_text(row.get('Product Title'))
-        if zh_title not in title_cache:
-            en_title = translate_title_simple(zh_title)
-            title_cache[zh_title] = en_title
-            # Show first 3 translations for debugging
-            if len(title_cache) <= 3:
-                print(f"  Title {len(title_cache)}: {zh_title[:60]}... → {en_title[:60]}...")
-        row['Translated Title'] = title_cache[zh_title]
-        # Translate variant option name
-        zh_opt = _clean_text(row.get('Option Name'))
-        en_opt = translate_variant_simple(zh_opt)
-        row['Option Name'] = en_opt
-        # Show first 5 variant translations for debugging
-        if idx < 5:
-            print(f"  Variant {idx+1}: {zh_opt} → {en_opt}")
+    # Keep names in Chinese - Comet will translate with context from Taobao page
+    # No translation applied here - Comet handles all translation
 
     fieldnames = [
-        'URL',
-        'Product Title',
-        'Product Title ZH',
-        'Translated Title',
-        'Option Name',
-        'Option Name ZH',
+        'URL',  # Base product URL
+        'Product Title',  # Chinese product name (stays in Chinese - Comet will translate)
+        'Product Title ZH',  # Chinese product name
+        'Option Name',  # Chinese variant name (stays in Chinese - Comet will translate)
+        'Option Name ZH',  # Chinese variant name
+        'Variant URL',  # Variant-specific purchase URL (captured when variant is clicked)
         'Price',
         'Price CNY',
         'Price CAD',

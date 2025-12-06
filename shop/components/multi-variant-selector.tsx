@@ -74,10 +74,20 @@ export default function MultiVariantSelector({
   const isMultiDimensional = useMemo(() => hasStructuredOptions(variants), [variants])
 
   // Get the selected variant
-  const selectedVariant = useMemo(
-    () => variants.find(v => v.id === selectedVariantId) || variants[0],
-    [variants, selectedVariantId]
-  )
+  const selectedVariant = useMemo(() => {
+    // If the incoming selection matches, keep it
+    const fromId = variants.find(v => v.id === selectedVariantId)
+    if (fromId) return fromId
+
+    // Prefer a Single as the initial selection when none is provided
+    const firstSingle = variants.find(
+      v => v.optionValue1 && v.optionValue1.toLowerCase() === 'single'
+    )
+    if (firstSingle) return firstSingle
+
+    // Fallback to the first variant
+    return variants[0]
+  }, [variants, selectedVariantId])
 
   // Extract option types and values
   const optionType1 = useMemo(() => {
@@ -94,7 +104,17 @@ export default function MultiVariantSelector({
     return null
   }, [variants])
 
-  const option1Values = useMemo(() => getUniqueOptions(variants, 'optionValue1'), [variants])
+  const option1Values = useMemo(() => {
+    const values = getUniqueOptions(variants, 'optionValue1')
+    // Prefer showing Singles before Bundles for clearer UX
+    return values.sort((a, b) => {
+      const isA = a?.toLowerCase() === 'single'
+      const isB = b?.toLowerCase() === 'single'
+      if (isA && !isB) return -1
+      if (!isA && isB) return 1
+      return a.localeCompare(b)
+    })
+  }, [variants])
   
   // Filter option2 values based on selected option1
   const option2Values = useMemo(() => {

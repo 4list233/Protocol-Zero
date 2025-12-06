@@ -359,6 +359,13 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
   const optionType2 = getFieldValue(record, VARIANT_FIELDS.optionType2, 'Option Type 2')
   const optionValue2 = getFieldValue(record, VARIANT_FIELDS.optionValue2, 'Option Value 2')
   
+  // Extract add-on pricing fields
+  const isAddonItem = getFieldValue(record, VARIANT_FIELDS.isAddonItem, 'Is Add-on Item')
+  const addonPriceCad = getFieldValue(record, VARIANT_FIELDS.addonPriceCad, 'Add-on Price CAD')
+  const addonCostCad = getFieldValue(record, VARIANT_FIELDS.addonCostCad, 'Add-on Cost CAD')
+  const addonMargin = getFieldValue(record, VARIANT_FIELDS.addonMargin, 'Add-on Margin')
+  const minCartForAddon = getFieldValue(record, VARIANT_FIELDS.minCartForAddon, 'Min Cart for Add-on')
+  
   return {
     id: String(record.id || ''),
     variantName: String(getFieldValue(record, VARIANT_FIELDS.variantName, 'Variant Name') || ''),
@@ -379,6 +386,12 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
     optionValue1: optionValue1 ? String(optionValue1) : undefined,
     optionType2: optionType2 ? String(optionType2) : undefined,
     optionValue2: optionValue2 ? String(optionValue2) : undefined,
+    // Add-on pricing (for items cheaper when added to another order)
+    isAddonEligible: isAddonItem === true || isAddonItem === 'Yes' || isAddonItem === 'yes',
+    addonPrice: addonPriceCad ? Number(addonPriceCad) : undefined,
+    addonCost: addonCostCad ? Number(addonCostCad) : undefined,
+    addonMargin: addonMargin ? Number(addonMargin) : undefined,
+    minCartForAddon: minCartForAddon ? Number(minCartForAddon) : undefined,
   }
 }
 
@@ -517,6 +530,12 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
       
       // Get variants for this product by Knack record ID
       const variants = variantsByProductRecordId.get(knackRecordId) || []
+      // Sort variants by price ascending (cheapest first) for display
+      variants.sort((a, b) => {
+        const aPrice = a.price_cad ?? Number.MAX_SAFE_INTEGER
+        const bPrice = b.price_cad ?? Number.MAX_SAFE_INTEGER
+        return aPrice - bPrice
+      })
       
       // Skip products with no active variants
       if (variants.length === 0) {
@@ -674,6 +693,13 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
   }
 
   console.log(`Found ${validVariants.length} active variants for product ${id}`)
+
+  // Sort variants: cheapest first (by price ascending)
+  validVariants.sort((a, b) => {
+    const aPrice = a.price_cad ?? Number.MAX_SAFE_INTEGER
+    const bPrice = b.price_cad ?? Number.MAX_SAFE_INTEGER
+    return aPrice - bPrice
+  })
 
   return await mapKnackRecordToProduct(product, validVariants)
 }
