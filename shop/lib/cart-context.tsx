@@ -124,7 +124,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Load from localStorage on mount
   useEffect(() => {
     setItems(loadCart())
-    setPromoCode(loadPromo())
+    const cachedPromo = loadPromo()
+    setPromoCode(cachedPromo)
     setMounted(true)
   }, [])
 
@@ -266,25 +267,59 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const applyPromoCode = useCallback(async (code: string): Promise<boolean> => {
-    // TODO: Validate promo code against Knack database
-    // For now, accept "PROMO10" as a 10% discount
     const normalizedCode = code.trim().toUpperCase()
     
-    if (normalizedCode === "PROMO10") {
+    if (!normalizedCode) {
       setPromoCode({
         code: normalizedCode,
-        discount: 0.10,
-        isValid: true,
+        discount: 0,
+        isValid: false,
       })
-      return true
+      return false
     }
     
-    setPromoCode({
-      code: normalizedCode,
-      discount: 0,
-      isValid: false,
-    })
-    return false
+    try {
+      // Validate promo code against Knack database
+      console.log(`[Cart] Validating promo code: ${normalizedCode}`)
+      const response = await fetch(`/api/promo/validate?code=${encodeURIComponent(normalizedCode)}`)
+      
+      if (!response.ok) {
+        console.error(`[Cart] API error: ${response.status}`)
+        setPromoCode({
+          code: normalizedCode,
+          discount: 0,
+          isValid: false,
+        })
+        return false
+      }
+      
+      const data = await response.json()
+      console.log(`[Cart] API response:`, data)
+      
+      if (data.valid && data.discount !== undefined) {
+        setPromoCode({
+          code: normalizedCode,
+          discount: data.discount,
+          isValid: true,
+        })
+        return true
+      } else {
+        setPromoCode({
+          code: normalizedCode,
+          discount: 0,
+          isValid: false,
+        })
+        return false
+      }
+    } catch (error) {
+      console.error('[Cart] Error validating promo code:', error)
+      setPromoCode({
+        code: normalizedCode,
+        discount: 0,
+        isValid: false,
+      })
+      return false
+    }
   }, [])
 
   const removePromoCode = useCallback(() => {
@@ -295,6 +330,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([])
     setPromoCode(null)
   }, [])
+  
+  // Validate cached promo code after mount (in case it was removed from Knack)
+  useEffect(() => {
+    if (!mounted) return
+    
+    const cachedPromo = promoCode
+    if (cachedPromo && cachedPromo.isValid) {
+      // Re-validate against Knack to ensure it's still valid
+      applyPromoCode(cachedPromo.code).catch(console.error)
+    }
+  }, [mounted, applyPromoCode, promoCode])
 
   // ============ CONTEXT VALUE ============
 
