@@ -98,14 +98,24 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
 }
 
 // =============================================================================
-// SECURITY HEADERS
+// SECURITY HEADERS (Applied to ALL routes to prevent clickjacking)
 // =============================================================================
 
-const SECURITY_HEADERS: Record<string, string> = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
+function getSecurityHeaders(): Record<string, string> {
+  return {
+    // Prevent clickjacking - block all iframe embedding
+    'X-Frame-Options': 'DENY',
+    // Modern alternative to X-Frame-Options (more flexible, takes precedence)
+    'Content-Security-Policy': "frame-ancestors 'none'",
+    // Prevent MIME type sniffing
+    'X-Content-Type-Options': 'nosniff',
+    // XSS protection (legacy but still useful)
+    'X-XSS-Protection': '1; mode=block',
+    // Control referrer information
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    // Permissions policy (prevent access to sensitive APIs)
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+  }
 }
 
 // =============================================================================
@@ -115,10 +125,18 @@ const SECURITY_HEADERS: Record<string, string> = {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const origin = request.headers.get('origin')
+  const isApiRoute = pathname.startsWith('/api')
   
-  // Only apply to API routes
-  if (!pathname.startsWith('/api')) {
-    return NextResponse.next()
+  // Get security headers (applied to ALL routes)
+  const securityHeaders = getSecurityHeaders()
+  
+  // For non-API routes, just add security headers and return
+  if (!isApiRoute) {
+    const response = NextResponse.next()
+    for (const [key, value] of Object.entries(securityHeaders)) {
+      response.headers.set(key, value)
+    }
+    return response
   }
   
   // Handle CORS preflight requests
@@ -127,7 +145,7 @@ export function middleware(request: NextRequest) {
       status: 204,
       headers: {
         ...getCorsHeaders(origin),
-        ...SECURITY_HEADERS,
+        ...securityHeaders,
       },
     })
   }
@@ -152,7 +170,7 @@ export function middleware(request: NextRequest) {
           'Content-Type': 'application/json',
           'Retry-After': '60',
           ...getCorsHeaders(origin),
-          ...SECURITY_HEADERS,
+          ...securityHeaders,
         },
       }
     )
@@ -167,8 +185,8 @@ export function middleware(request: NextRequest) {
     response.headers.set(key, value)
   }
   
-  // Add security headers
-  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+  // Add security headers (already includes clickjacking protection)
+  for (const [key, value] of Object.entries(securityHeaders)) {
     response.headers.set(key, value)
   }
   
@@ -179,8 +197,16 @@ export function middleware(request: NextRequest) {
 }
 
 // Configure which routes the middleware applies to
+// Apply to ALL routes to ensure security headers are set everywhere
 export const config = {
   matcher: [
-    '/api/:path*',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files (images, etc.)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)).*)',
   ],
 }
