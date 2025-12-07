@@ -92,21 +92,12 @@ async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{
 }
 
 // Create or update product images in Notion (linked by ID/SKU)
-// SECURITY: This function is DISABLED in production to prevent tampering
-// Notion writes should only happen from local scripts, not from the deployed site
 async function syncImagesToNotion(
   productId: string,
   sku: string,
   images: string[],
   detailImage?: string
 ): Promise<void> {
-  // SECURITY: Block Notion writes in production
-  // All Notion updates must be done locally to prevent tampering
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-    console.warn('[SECURITY] Notion writes are disabled in production. Use local scripts for updates.')
-    return
-  }
-
   const notion = getNotionClient()
   if (!notion) {
     console.warn('Notion not configured, skipping image sync')
@@ -320,13 +311,26 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
   // Get status directly from record - no price-based overrides
   const status = (getFieldValue(record, PRODUCT_FIELDS.status, 'Status') || 'Active') as ProductRuntime['status']
 
+  // Get both title fields
+  const titleField = getFieldValue(record, PRODUCT_FIELDS.title, 'Title')
+  const titleOriginalField = getFieldValue(record, PRODUCT_FIELDS.titleOriginal, 'Title Original')
+  
+  // Use titleOriginal if it exists (English translation), otherwise fallback to title
+  // If database has English in titleOriginal, prefer that for display
+  const displayTitle = titleOriginalField 
+    ? String(titleOriginalField)
+    : (titleField ? String(titleField) : '')
+  
+  // Store original Chinese in title_original if title field has it
+  const originalTitle = titleField && !titleOriginalField
+    ? String(titleField)
+    : undefined
+
   return {
     id: productId,
     sku,
-    title: String(getFieldValue(record, PRODUCT_FIELDS.title, 'Title') || ''),
-    title_original: getFieldValue(record, PRODUCT_FIELDS.titleOriginal, 'Title Original') 
-      ? String(getFieldValue(record, PRODUCT_FIELDS.titleOriginal, 'Title Original')) 
-      : undefined,
+    title: displayTitle,
+    title_original: originalTitle,
     // Price is in field_138, but we'll use variant pricing instead
     // Set base price to 0 since all products should have variants with pricing
     price_cad: 0, // Variant pricing will be used instead
@@ -703,17 +707,8 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
 /**
  * Create a new product
  * Data goes to Knack, images go to Notion (linked by ID/SKU)
- * 
- * SECURITY: This function is DISABLED in production to prevent tampering
- * Product/variant creation should only happen from local scripts
  */
 export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<string> {
-  // SECURITY: Block product creation in production
-  // All product/variant updates must be done locally to prevent tampering
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-    throw new Error('Product creation is disabled in production. Use local scripts to manage products.')
-  }
-
   if (!isKnackConfigured()) {
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
@@ -768,17 +763,8 @@ export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<s
 /**
  * Update an existing product
  * Data updates go to Knack, image updates go to Notion (linked by ID/SKU)
- * 
- * SECURITY: This function is DISABLED in production to prevent tampering
- * Product/variant updates should only happen from local scripts
  */
 export async function updateProduct(productId: string, data: Partial<ProductRuntime>): Promise<void> {
-  // SECURITY: Block product updates in production
-  // All product/variant updates must be done locally to prevent tampering
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-    throw new Error('Product updates are disabled in production. Use local scripts to manage products.')
-  }
-
   if (!isKnackConfigured()) {
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
