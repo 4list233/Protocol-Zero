@@ -311,26 +311,10 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
   // Get status directly from record - no price-based overrides
   const status = (getFieldValue(record, PRODUCT_FIELDS.status, 'Status') || 'Active') as ProductRuntime['status']
 
-  // Get both title fields
-  const titleField = getFieldValue(record, PRODUCT_FIELDS.title, 'Title')
-  const titleOriginalField = getFieldValue(record, PRODUCT_FIELDS.titleOriginal, 'Title Original')
-  
-  // Use titleOriginal if it exists (English translation), otherwise fallback to title
-  // If database has English in titleOriginal, prefer that for display
-  const displayTitle = titleOriginalField 
-    ? String(titleOriginalField)
-    : (titleField ? String(titleField) : '')
-  
-  // Store original Chinese in title_original if title field has it
-  const originalTitle = titleField && !titleOriginalField
-    ? String(titleField)
-    : undefined
-
   return {
     id: productId,
     sku,
-    title: displayTitle,
-    title_original: originalTitle,
+    title: String(getFieldValue(record, PRODUCT_FIELDS.title, 'Title') || ''),
     // Price is in field_138, but we'll use variant pricing instead
     // Set base price to 0 since all products should have variants with pricing
     price_cad: 0, // Variant pricing will be used instead
@@ -721,7 +705,6 @@ export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<s
   productData[PRODUCT_FIELDS.id] = productId
   productData[PRODUCT_FIELDS.sku] = data.sku
   productData[PRODUCT_FIELDS.title] = data.title
-  productData[PRODUCT_FIELDS.titleOriginal] = data.title_original || null
   productData[PRODUCT_FIELDS.description] = data.description || null
   productData[PRODUCT_FIELDS.category] = data.category || null
   productData[PRODUCT_FIELDS.status] = data.status || 'Active'
@@ -777,7 +760,6 @@ export async function updateProduct(productId: string, data: Partial<ProductRunt
   const updateData: Record<string, unknown> = {}
 
   if (data.title !== undefined) updateData[PRODUCT_FIELDS.title] = data.title
-  if (data.title_original !== undefined) updateData[PRODUCT_FIELDS.titleOriginal] = data.title_original
   if (data.description !== undefined) updateData[PRODUCT_FIELDS.description] = data.description
   if (data.category !== undefined) updateData[PRODUCT_FIELDS.category] = data.category
   if (data.status !== undefined) updateData[PRODUCT_FIELDS.status] = data.status
