@@ -1,45 +1,45 @@
 {
-	"name": "protocol-zero-shop",
-	"private": true,
-	"version": "0.1.0",
-	"type": "module",
-	"scripts": {
-		"dev": "next dev",
-		"build": "prisma generate && next build",
-		"vercel-build": "prisma generate && next build",
-		"start": "next start",
-		"lint": "next lint",
-		"prisma:generate": "prisma generate",
-		"postinstall": "prisma generate"
-	},
-	"dependencies": {
-		"@notionhq/client": "^2.3.0",
-		"@prisma/client": "^5.20.0",
-		"@tailwindcss/postcss": "^4.1.17",
-		"@vercel/analytics": "^1.5.0",
-		"clsx": "^2.1.1",
-		"firebase": "^11.0.2",
-		"firebase-admin": "^13.0.1",
-		"geist": "^1.5.1",
-		"lucide-react": "^0.453.0",
-		"next": "^15.5.7",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1",
-		"source-map-js": "^1.2.1",
-		"swr": "^2.3.6",
-		"tailwind-merge": "^2.5.2",
-		"tailwindcss": "^4.0.0",
-		"tailwindcss-animate": "^1.0.7"
-	},
-	"devDependencies": {
-		"@types/node": "^20.12.13",
-		"@types/react": "^18.2.66",
-		"@types/react-dom": "^18.2.22",
-		"dotenv": "^17.2.3",
-		"eslint": "^9.12.0",
-		"eslint-config-next": "^15.5.7",
-		"postcss": "^8.4.47",
-		"prisma": "^5.20.0",
-		"typescript": "^5.6.3"
-	}
+  "name": "protocol-zero-shop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.3.0",
+    "@prisma/client": "^5.20.0",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@vercel/analytics": "^1.5.0",
+    "clsx": "^2.1.1",
+    "firebase": "^11.0.2",
+    "firebase-admin": "^13.0.1",
+    "geist": "^1.5.1",
+    "lucide-react": "^0.453.0",
+    "next": "15.5.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "source-map-js": "^1.2.1",
+    "swr": "^2.3.6",
+    "tailwind-merge": "^2.5.2",
+    "tailwindcss": "^4.0.0",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.13",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.12.0",
+    "eslint-config-next": "^15.5.7",
+    "postcss": "^8.4.47",
+    "prisma": "^5.20.0",
+    "typescript": "^5.6.3"
+  }
 }
