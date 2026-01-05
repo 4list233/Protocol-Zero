@@ -1,0 +1,1022 @@
+
+============================================================
+📥 DOWNLOADING KNACK DATA
+============================================================
+
+1. Fetching all products...
+   ✅ Downloaded 34 products
+
+2. Fetching all variants...
+   ✅ Downloaded 603 variants
+
+============================================================
+💾 SAVING BACKUP
+============================================================
+   ✅ Products backup: knack_products_backup_20260105_171301.csv
+   ✅ Variants backup: knack_variants_backup_20260105_171301.csv
+
+============================================================
+🔄 PROCESSING & RECALCULATING DATA
+============================================================
+
+📦 Processing 34 products...
+
+1. 2011战斗大师快拔枪套带灯下挂战术手电UDL P8M N8弹夹套TTI塔兰-淘宝网
+   ID: 2011-light-bearing-quick-draw-holster-with-magazin
+   🌐 Translating product title...
+   ✅ Translated: 2011战斗大师快拔枪套带灯下挂战术手电UDL P8M N8弹夹套TTI塔兰
+   🖼️  Primary: 2011-light-bearing-quick-draw-holster-with-magazin-Main.jpg
+   🖼️  Detail: 2011-light-bearing-quick-draw-holster-with-magazin-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+2. MAG内置弹夹袋快拔固定板工具附件包战术背心5.56/7.62硬质内衬板-淘宝网
+   ID: 556-762-magazine-pouch-rigid-retention-insert
+   🌐 Translating product title...
+   ✅ Translated: MAG内置弹夹袋快拔固定板工具附件包战术背心5.56/7.62硬质内衬板
+   🖼️  Primary: 556-762-magazine-pouch-rigid-retention-insert-Main.jpg
+   🖼️  Detail: 556-762-magazine-pouch-rigid-retention-insert-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+3. 6094战术背心战术马甲CS 户外野营组合背心 战狼野战作训战术背心-淘宝网
+   ID: 6094cs-
+   🌐 Translating product title...
+   ✅ Translated: 6094战术背心战术马甲CS 户外野营组合背心 战狼野战作训战术背心
+   🖼️  Primary: 6094cs--Main.jpg
+   🖼️  Detail: 6094cs--Details_Long.jpg
+   🖼️  Gallery: 2 images
+
+4. Tactical New White 8-Piece Set (Security Patrol Duty Belt, Q
+   ID: 974743803214
+   🖼️  Primary: NOT FOUND
+   🖼️  Detail: NOT FOUND
+   🖼️  Gallery: 0 images
+
+5. ARSON MACHINE电筒PEQ鼠尾开关金属卡槽导轨固定器线夹铝制导线-淘宝网
+   ID: aluminum-rail-mount-for-peq-flashlight-pressure-sw
+   🌐 Translating product title...
+   ✅ Translated: 电筒PEQ鼠尾开关Gold属卡槽导轨固定器线夹铝制导线
+   🖼️  Primary: aluminum-rail-mount-for-peq-flashlight-pressure-sw-Main.jpg
+   🖼️  Detail: aluminum-rail-mount-for-peq-flashlight-pressure-sw-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+6. 左右手转换快拔枪套 G17 G19 2011 VP9 P320带下挂万用型导轨枪套-淘宝网
+   ID: ambidextrous-universal-light-bearing-holster-for-g
+   🌐 Translating product title...
+   ✅ Translated: LeftRight手转换快拔枪套 G17 G19 2011 VP9 P320带下挂万用型导轨枪套
+   🖼️  Primary: ambidextrous-universal-light-bearing-holster-for-g-Main.jpg
+   🖼️  Detail: ambidextrous-universal-light-bearing-holster-for-g-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+7. C3战术耳机头盔款拾音降噪耳机通讯设备耳麦户外耳罩C5后翻支架-淘宝网
+   ID: c3c5-
+   🌐 Translating product title...
+   ✅ Translated: C3战术耳机头盔款拾音降噪耳机通讯设备耳麦户外耳罩C5后翻支架
+   🖼️  Primary: c3c5--Main.jpg
+   🖼️  Detail: c3c5--Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+8. WoSporT K系列头盔电池迷彩副包 兼容盔布PVS-31电池配件配重副包-淘宝网
+   ID: camouflage-helmet-counterweight-pouch-for-pvs-31-b
+   🌐 Translating product title...
+   ✅ Translated: WoSporT K系列头盔电池Camo副包 兼容盔布PVS-31电池配件配重副包
+   🖼️  Primary: camouflage-helmet-counterweight-pouch-for-pvs-31-b-Main.jpg
+   🖼️  Detail: camouflage-helmet-counterweight-pouch-for-pvs-31-b-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+9. 跨境新品Clay the Claymore呆萌小方块毛绒公仔节日赠礼好物-淘宝网
+   ID: clay-the-claymore-plushie
+   🌐 Translating product title...
+   ✅ Translated: 跨境新品Clay the Claymore呆萌小方块毛绒公仔节日赠礼好物
+   🖼️  Primary: clay-the-claymore-plushie-Main.jpg
+   🖼️  Detail: clay-the-claymore-plushie-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+10. 【MST2011底盖/井合集】CNC金属护边铝合金底盖底座配件-淘宝网
+   ID: cnc-aluminum-magwell-magazine-base-plate-set
+   🌐 Translating product title...
+   ✅ Translated: CNCGold属护边铝合Gold底盖底座配件
+   🖼️  Primary: cnc-aluminum-magwell-magazine-base-plate-set-Main.jpg
+   🖼️  Detail: cnc-aluminum-magwell-magazine-base-plate-set-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+11. Speedqb护具套装成人滑板下场护膝护肘护掌SQB水弹酷峰CNSQB竞技-淘宝网
+   ID: competition-knee-elbow-pad-set-with-wrist-guards
+   🌐 Translating product title...
+   ✅ Translated: Speedqb护具Set成人滑板下场护膝护肘护掌SQB水弹酷峰CNSQB竞技
+   🖼️  Primary: competition-knee-elbow-pad-set-with-wrist-guards-Main.jpg
+   🖼️  Detail: competition-knee-elbow-pad-set-with-wrist-guards-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+12. 运动护臂蜂窝加长防撞防摔擦伤加厚防晒专业袖套手臂护具篮足排球-淘宝网
+   ID: extended-honeycomb-padded-protective-arm-sleeve
+   🌐 Translating product title...
+   ✅ Translated: 运动护臂蜂窝加长防撞防摔擦伤加厚防晒专业袖套手臂护具篮足排球
+   🖼️  Primary: extended-honeycomb-padded-protective-arm-sleeve-Main.jpg
+   🖼️  Detail: extended-honeycomb-padded-protective-arm-sleeve-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+13. 灵鹰FAST迷彩盔罩伪装帽套战术头盔改装配件CP魔蝎迷彩弹力绳盔罩-tmall.com天猫
+   ID: fastcp-tmallcom
+   🌐 Translating product title...
+   ✅ Translated: 灵鹰FASTCamo盔罩伪装帽套战术头盔改装配件CP魔蝎Camo弹力绳盔罩
+   🖼️  Primary: fastcp-tmallcom-Main.jpg
+   🖼️  Detail: fastcp-tmallcom-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+14. 金属增高支架镜桥GBRS Hydra九头蛇UNITY EXPS底座T1 T2 H1 2红点-淘宝网
+   ID: gbrs-hydra-optic-riser-mount-for-exps-t1-t2-h1-red
+   🌐 Translating product title...
+   ✅ Translated: Gold属增高支架镜桥GBRS Hydra九头蛇UNITY EXPS底座T1 T2 H1 2Red点
+   🖼️  Primary: gbrs-hydra-optic-riser-mount-for-exps-t1-t2-h1-red-Main.jpg
+   🖼️  Detail: gbrs-hydra-optic-riser-mount-for-exps-t1-t2-h1-red-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+15. 蝮蛇2011 hi capa快速拉柄模型G17 TTiG34蛋夹底盖握把井制退器-淘宝网
+   ID: hi-capa-g17-g34-pistol-charging-handle-magazine-ba
+   🌐 Translating product title...
+   ✅ Translated: 蝮蛇2011 hi capa快速拉柄模型G17 TTiG34蛋夹底盖握把井制退器
+   🖼️  Primary: hi-capa-g17-g34-pistol-charging-handle-magazine-ba-Main.jpg
+   🖼️  Detail: hi-capa-g17-g34-pistol-charging-handle-magazine-ba-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+16. 九头蛇增高支架 UNITY战术GBRS全金属底座T1 T2 H1 H2 R5镜桥创研-淘宝网
+   ID: hydra-style-riser-mount-for-t1-t2-h1-h2-optics
+   🌐 Translating product title...
+   ✅ Translated: 九头蛇增高支架 UNITY战术GBRS全Gold属底座T1 T2 H1 H2 R5镜桥创研
+   🖼️  Primary: hydra-style-riser-mount-for-t1-t2-h1-h2-optics-Main.jpg
+   🖼️  Detail: hydra-style-riser-mount-for-t1-t2-h1-h2-optics-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+17. 全套jpc3.0战术背心cs吃鸡游戏装备作训背心影视拍摄道具马甲-淘宝网
+   ID: jpc30cs-
+   🌐 Translating product title...
+   ✅ Translated: 全套jpc3.0战术背心cs吃鸡游戏装备作训背心影视拍摄道具马甲
+   🖼️  Primary: jpc30cs--Main.jpg
+   🖼️  Detail: jpc30cs--Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+18. WOSPORT L4G24 夜视仪支架（铝合金版）-淘宝网
+   ID: l4g24-nvg-mount-aluminum-version
+   🌐 Translating product title...
+   ✅ Translated: L4G24 夜视仪支架（铝合Gold版）
+   🖼️  Primary: l4g24-nvg-mount-aluminum-version-Main.jpg
+   🖼️  Detail: l4g24-nvg-mount-aluminum-version-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+19. 陌歌 户外M67手雷烟雾模型挂件 可拉环可拆卸 COS装扮 仿真道具-淘宝网
+   ID: m67-dummy-grenade-with-functional-pin-and-spoon
+   🌐 Translating product title...
+   ✅ Translated: 户外M67手雷烟雾模型挂件 可拉环可拆卸 COS装扮 仿真道具
+   🖼️  Primary: m67-dummy-grenade-with-functional-pin-and-spoon-Main.jpg
+   🖼️  Detail: m67-dummy-grenade-with-functional-pin-and-spoon-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+20. 儿童手雷玩具可爆炸水弹M67弹射烟雾手榴弹模型吃鸡男孩生日礼物-tmall.com天猫
+   ID: m67-spring-loaded-gel-ball-toy-grenade
+   🌐 Translating product title...
+   ✅ Translated: 儿童手雷玩具可爆炸水弹M67弹射烟雾手榴弹模型吃鸡男孩生日礼物
+   🖼️  Primary: m67-spring-loaded-gel-ball-toy-grenade-Main.jpg
+   🖼️  Detail: m67-spring-loaded-gel-ball-toy-grenade-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+21. 七彩喷火夜光消荧光玩具喷火战术夜光激发装置软弹感应器影视装备-淘宝网
+   ID: multi-color-muzzle-flash-tracer-unit
+   🌐 Translating product title...
+   ✅ Translated: 七彩喷火夜光消荧光玩具喷火战术夜光激发装置软弹感应器影视装备
+   🖼️  Primary: multi-color-muzzle-flash-tracer-unit-Main.jpg
+   🖼️  Detail: multi-color-muzzle-flash-tracer-unit-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+22. 户外多功能腋下通用尼龙战术配件背带快拆肩带挂绳单点式斜跨挂带-淘宝网
+   ID: multipurpose-tactical-qd-single-point-sling
+   🌐 Translating product title...
+   ✅ Translated: 户外多功能腋下通用Nylon战术配件背带快拆肩带挂绳Single点式斜跨挂带
+   🖼️  Primary: multipurpose-tactical-qd-single-point-sling-Main.jpg
+   🖼️  Detail: multipurpose-tactical-qd-single-point-sling-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+23. 战术头盔夜视仪翻斗车支架加装运动相机连接支架头盔配件-淘宝网
+   ID: nvg-flip-mount-action-camera-adapter-for-tactical-
+   🌐 Translating product title...
+   ✅ Translated: 战术头盔夜视仪翻斗车支架加装运动相机连接支架头盔配件
+   🖼️  Primary: nvg-flip-mount-action-camera-adapter-for-tactical--Main.jpg
+   🖼️  Detail: nvg-flip-mount-action-camera-adapter-for-tactical--Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+24. WST风镜防雾器电动除雾TYPE-C充电风速可调搭配头盔使用战术配件-淘宝网
+   ID: rechargeable-tactical-goggle-anti-fog-fan-with-adj
+   🌐 Translating product title...
+   ✅ Translated: WST风镜防雾器电动除雾TYPE-C充电风速可调搭配头盔使用战术配件
+   🖼️  Primary: rechargeable-tactical-goggle-anti-fog-fan-with-adj-Main.jpg
+   🖼️  Detail: rechargeable-tactical-goggle-anti-fog-fan-with-adj-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+25. Artex户外浪人战术腰带套装多功能组合巡逻腰封可拆卸调节腰带-淘宝网
+   ID: ronin-style-modular-tactical-battle-belt-set
+   🌐 Translating product title...
+   ✅ Translated: 户外浪人战术腰带Set多功能组合巡逻腰封可拆卸调节腰带
+   🖼️  Primary: ronin-style-modular-tactical-battle-belt-set-Main.jpg
+   🖼️  Detail: ronin-style-modular-tactical-battle-belt-set-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+26. FMA 蝎式软壳快拔旦夹套5.56/7.62\9mm旦匣包 军迷射击MOLLE包-淘宝网
+   ID: scorpion-soft-shell-fast-draw-molle-magazine-pouch
+   🌐 Translating product title...
+   ✅ Translated: 蝎式软壳快拔旦夹套5.56/7.62\9mm旦匣包 军迷射击MOLLE包
+   🖼️  Primary: scorpion-soft-shell-fast-draw-molle-magazine-pouch-Main.jpg
+   🖼️  Detail: scorpion-soft-shell-fast-draw-molle-magazine-pouch-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+27. NGD北境防务 "FPS"运动相机战术连接臂-淘宝网
+   ID: tactical-action-camera-mount-arm
+   🌐 Translating product title...
+   ✅ Translated: "FPS"运动相机战术连接臂
+   🖼️  Primary: tactical-action-camera-mount-arm-Main.jpg
+   🖼️  Detail: tactical-action-camera-mount-arm-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+28. TC战术耳机转接器民用PTT按键发射对讲机建伍接口支持Z-Tactical-淘宝网
+   ID: tactical-headset-ptt-adapter-with-kenwood-plug
+   🌐 Translating product title...
+   ✅ Translated: TC战术耳机转接器民用PTT按键发射对讲机建伍接口支持Z-Tactical
+   🖼️  Primary: tactical-headset-ptt-adapter-with-kenwood-plug-Main.jpg
+   🖼️  Detail: tactical-headset-ptt-adapter-with-kenwood-plug-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+29. 战术背心通用型MOLLE系统手机导航面板包胸口PDA包户外多功能胸包-淘宝网
+   ID: tactical-molle-phone-pda-navigation-chest-pouch
+   🌐 Translating product title...
+   ✅ Translated: 战术背心通用型MOLLE系统手机导航面板包胸口PDA包户外多功能胸包
+   🖼️  Primary: tactical-molle-phone-pda-navigation-chest-pouch-Main.jpg
+   🖼️  Detail: tactical-molle-phone-pda-navigation-chest-pouch-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+30. 战术多功能手雷模型装备包 手榴弹道具molle同尺寸弹力收纳附件包-淘宝网
+   ID: tactical-multi-purpose-molle-grenade-pouch
+   🌐 Translating product title...
+   ✅ Translated: 战术多功能手雷模型装备包 手榴弹道具molle同尺寸弹力收纳附件包
+   🖼️  Primary: tactical-multi-purpose-molle-grenade-pouch-Main.jpg
+   🖼️  Detail: tactical-multi-purpose-molle-grenade-pouch-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+31. 战术激光灯PEQ15红绿镭射指示器沃德森M300/M600手电双控鼠尾套装-淘宝网
+   ID: tactical-peq-15-redgreen-laser-and-m300m600-weapon
+   🌐 Translating product title...
+   ✅ Translated: 战术激光灯PEQ15RedGreen镭射指示器沃德森M300/M600手电Dual控鼠尾Set
+   🖼️  Primary: tactical-peq-15-redgreen-laser-and-m300m600-weapon-Main.jpg
+   🖼️  Detail: tactical-peq-15-redgreen-laser-and-m300m600-weapon-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+32. 雅科达jpc 6094 cpc AVS战术背心水壶插板内胆降温防护板通用PE板-淘宝网
+   ID: tactical-vest-cooling-hydration-plate-insert-for-j
+   🌐 Translating product title...
+   ✅ Translated: 雅科达jpc 6094 cpc AVS战术背心水壶插板内胆降温防护板通用PE板
+   🖼️  Primary: tactical-vest-cooling-hydration-plate-insert-for-j-Main.jpg
+   🖼️  Detail: tactical-vest-cooling-hydration-plate-insert-for-j-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+33. KUBLAI库拜来P1N23456789/ZY通用进出气阀扳手钥匙拆装工具不锈钢-淘宝网
+   ID: universal-gas-magazine-valve-tool-stainless-steel
+   🌐 Translating product title...
+   ✅ Translated: P1N23456789/ZY通用进出气阀扳手钥匙拆装工具不锈钢
+   🖼️  Primary: universal-gas-magazine-valve-tool-stainless-steel-Main.jpg
+   🖼️  Detail: universal-gas-magazine-valve-tool-stainless-steel-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+34. 俄罗斯小绿人搭配防尘防雾战术防风骑行军迷户外头套卡其色绿色-淘宝网
+   ID: windproof-dustproof-tactical-balaclava-hood
+   🌐 Translating product title...
+   ✅ Translated: 俄罗斯小Green人搭配防尘防雾战术防风骑行军迷户外头套Khaki色Green
+   🖼️  Primary: windproof-dustproof-tactical-balaclava-hood-Main.jpg
+   🖼️  Detail: windproof-dustproof-tactical-balaclava-hood-Details_Long.jpg
+   🖼️  Gallery: 1 images
+
+
+📋 Processing 603 variants...
+
+   📊 Summary:
+      • 603 variants processed
+      • 446 variants with recalculated pricing
+
+============================================================
+🗑️  DELETING EXISTING KNACK DATA
+============================================================
+
+1. Deleting all variants...
+   [1/603] Deleted: HL-ACC-73-T 金属泥色
+   [2/603] Deleted: HL-ACC-73-BK 金属黑色
+   [3/603] Deleted: 【考度拉】黑色 BK
+   [4/603] Deleted: 【考度拉】狼棕色 CB
+   [5/603] Deleted: 【考度拉】狼灰色 WG
+   [6/603] Deleted: 【考度拉】游骑兵绿色 RG
+   [7/603] Deleted: 【考度拉】CP迷彩
+   [8/603] Deleted: 【考度拉】暗夜迷彩 BCP
+   [9/603] Deleted: Small Square
+   [10/603] Deleted: 黑色-UNITY增高 CNC高品质
+   [11/603] Deleted: 黑色-UNIT Exps增高 CNC高品质
+   [12/603] Deleted: 黑色-电锯支架套装 CNC高品质
+   [13/603] Deleted: 沙色-电锯支架套装 CNC高品质
+   [14/603] Deleted: 棕色-UNIT Exps增高 CNC高品质
+   [15/603] Deleted: 红色-UNIT Exps增高
+   [16/603] Deleted: 玫红色-UNIT Exps增高 CNC高品质
+   [17/603] Deleted: 粉色-UNIT Exps增高 CNC高品质
+   [18/603] Deleted: 蓝色-UNIT Exps增高 CNC高品质
+   [19/603] Deleted: 黑色-SISRO45度侧支架 CNC高品质
+   [20/603] Deleted: 黑色-SIG增高支架
+   [21/603] Deleted: 黑色 SLR增高支架
+   [22/603] Deleted: 黑色-DD增高支架
+   [23/603] Deleted: 黑色-九头蛇增高支架 CNC高品质
+   [24/603] Deleted: 棕色--九头蛇增高支架 CNC高品质
+   [25/603] Deleted: 黑色-矮款/九头蛇 CNC高品质
+   [26/603] Deleted: 棕色-矮款/九头蛇 CNC高品质
+   [27/603] Deleted: 粉红色-矮款/九头蛇 CNC高品质
+   [28/603] Deleted: 蓝色-矮款/九头蛇 CNC高品质
+   [29/603] Deleted: 黑色-GE增高 CNC高品质
+   [30/603] Deleted: 棕色-GE增高 CNC高品质
+   [31/603] Deleted: 蓝色-含拓展导轨的UNITY CNC高品质
+   [32/603] Deleted: 粉色-含拓展导轨的UNITY CNC高品质
+   [33/603] Deleted: 黑色-专用拓展导轨 单导轨
+   [34/603] Deleted: 黑色-含拓展导轨的UNITY CNC高品质
+   [35/603] Deleted: Black Standard
+   [36/603] Deleted: Belt Clip
+   [37/603] Deleted: Chest Rig Plate
+   [38/603] Deleted: Leg Panel
+   [39/603] Deleted: 黑色 一块
+   [40/603] Deleted: 泥色 一块
+   [41/603] Deleted: 橙色 一块
+   [42/603] Deleted: 军绿 一块
+   [43/603] Deleted: MST2011 Base Cover - Black
+   [44/603] Deleted: MST2011 Base Cover - Silver
+   [45/603] Deleted: MST2011 Base Cover - Red
+   [46/603] Deleted: MST2011 Base Cover - Grey
+   [47/603] Deleted: MST2011 Well# (Engraved) - Red
+   [48/603] Deleted: MST2011 Well# (Engraved) - Grey
+   [49/603] Deleted: MST2011 Well# (Engraved) - Black
+   [50/603] Deleted: MST2011 Well# (Engraved) - Silver
+   [51/603] Deleted: MST2011 Well# - Gold
+   [52/603] Deleted: MST2011 Well# - Silver
+   [53/603] Deleted: MST2011 Well# - Black
+   [54/603] Deleted: Black Short - GBRS Hydra Mount
+   [55/603] Deleted: Coyote Brown Short - GBRS Hydra Mount
+   [56/603] Deleted: Black Tall - GBRS Hydra Mount
+   [57/603] Deleted: Sand Tall - GBRS Hydra Mount
+   [58/603] Deleted: Black Tall - UNITY FAST
+   [59/603] Deleted: Coyote Brown Tall - UNITY FAST
+   [60/603] Deleted: Black - UNITY EXPS
+   [61/603] Deleted: Coyote Brown - UNITY EXPS
+   [62/603] Deleted: BK黑色（除雾器）
+   [63/603] Deleted: BK黑色风镜一套（三块镜片）
+   [64/603] Deleted: T泥色风镜一套（三块镜片）
+   [65/603] Deleted: OD军绿色风镜一套（三块镜片）
+   [66/603] Deleted: BK黑色风镜一套（一块镜片）
+   [67/603] Deleted: T泥色风镜一套（一块镜片）
+   [68/603] Deleted: OD军绿色风镜一套（一块镜片）
+   [69/603] Deleted: NGD FPS黑色
+   [70/603] Deleted: NGD FPS沙色
+   [71/603] Deleted: 规格说明：适用大疆及影石等通用转接接口
+   [72/603] Deleted: 喷火猪夜光消音
+   [73/603] Deleted: 7彩夜光消音黑色
+   [74/603] Deleted: 7彩夜光消音沙色
+   [75/603] Deleted: 7彩slr夜光消音
+   [76/603] Deleted: 压迫者彩虹夜光消音
+   [77/603] Deleted: 蜂巢彩虹夜光消音
+   [78/603] Deleted: OD军绿色
+   [79/603] Deleted: DE泥色
+   [80/603] Deleted: BK黑色
+   [81/603] Deleted: FG游骑兵绿
+   [82/603] Deleted: BKT黑泥
+   [83/603] Deleted: BKR黑红
+   [84/603] Deleted: BKOD黑绿
+   [85/603] Deleted: 并联夹子-通用不分大小
+   [86/603] Deleted: 大款
+   [87/603] Deleted: 小款
+   [88/603] Deleted: 短款
+   [89/603] Deleted: 银柄
+   [90/603] Deleted: 黑柄
+   [91/603] Deleted: 钛灰柄
+   [92/603] Deleted: 红柄
+   [93/603] Deleted: 紫柄
+   [94/603] Deleted: 绿柄
+   [95/603] Deleted: 金柄
+   [96/603] Deleted: Japan Marui hi–capa
+   [97/603] Deleted: 番茄蝮蛇2011
+   [98/603] Deleted: JMT蝮蛇2011
+   [99/603] Deleted: 路西法2011
+   [100/603] Deleted: 蓝鲸WK蝮蛇2011
+   [101/603] Deleted: 2011 Single Magazine Pouch
+   [102/603] Deleted: 2011 Double Magazine Pouch
+   [103/603] Deleted: 2011 Quick-Draw Holster Light-Bearing
+   [104/603] Deleted: Outer Belt + 2011 Quick-Draw Holster Light-Bearing
+   [105/603] Deleted: Outer Belt + 2011 Quick-Draw Holster Light-Bearing
+   [106/603] Deleted: Outer Belt + 2011 Quick-Draw Holster Light-Bearing
+   [107/603] Deleted: Outer Belt
+   [108/603] Deleted: 2011 Thigh-Mounted Holster Light-Bearing
+   [109/603] Deleted: 2011 Waist MOLLE Belt Holster Light-Bearing
+   [110/603] Deleted: 2011 Waist MOLLE Belt + Leg Straps
+   [111/603] Deleted: 20MM Rail Cable Organizer Green 3 Pieces
+   [112/603] Deleted: 20MM Rail Cable Organizer Black 1 Piece
+   [113/603] Deleted: 20MM Rail Cable Organizer Sand 1 Piece
+   [114/603] Deleted: 20MM Rail Cable Organizer Red 1 Piece
+   [115/603] Deleted: 20MM Rail Cable Organizer Blue 1 Piece
+   [116/603] Deleted: 20MM Rail Cable Organizer Green 1 Piece
+   [117/603] Deleted: 20MM Rail Cable Organizer Black 3 Pieces
+   [118/603] Deleted: 20MM Rail Cable Organizer Sand 3 Pieces
+   [119/603] Deleted: 20MM Rail Cable Organizer Red 3 Pieces
+   [120/603] Deleted: 20MM Rail Cable Organizer Blue 3 Pieces
+   [121/603] Deleted: 20MM Rail Cable Organizer Green 3 Pieces
+   [122/603] Deleted: 20MM Rail Cable Organizer Mixed Color 5 Pieces
+   [123/603] Deleted: Black BK Standard
+   [124/603] Deleted: Black BK Velcro
+   [125/603] Deleted: 均码
+   [126/603] Deleted: 黑色
+   [127/603] Deleted: 军绿
+   [128/603] Deleted: 卡其
+   [129/603] Deleted: 迷彩CP
+   [130/603] Deleted: 废墟迷彩
+   [131/603] Deleted: 黑色+肩带
+   [132/603] Deleted: 军绿+肩带
+   [133/603] Deleted: 卡其+肩带
+   [134/603] Deleted: CP迷彩+肩带
+   [135/603] Deleted: 废墟绿迷彩+肩带
+   [136/603] Deleted: 黑色-全功能红激光+M300A+点亮鼠尾 含电池+充电器
+   [137/603] Deleted: 沙色-全功能红激光+M300A+点亮鼠尾 含电池+充电器
+   [138/603] Deleted: 黑色-全功能红激光+M600C+点亮鼠尾 含电池+充电器
+   [139/603] Deleted: 沙色-全功能红激光+M600C+点亮鼠尾 含电池+充电器
+   [140/603] Deleted: 黑色-全功能绿激光+M300A+点亮鼠尾 含电池+充电器
+   [141/603] Deleted: 沙色-全功能绿激光+M300A+点亮鼠尾 含电池+充电器
+   [142/603] Deleted: 黑色-全功能绿激光+M600C+点亮鼠尾 含电池+充电器
+   [143/603] Deleted: 沙色-全功能绿激光+M600C+点亮鼠尾 含电池+充电器
+   [144/603] Deleted: 黑色-全功能红激光+M300A+长亮双控鼠尾 含电池+充电器
+   [145/603] Deleted: 沙色-全功能红激光+M300A+长亮双控鼠尾 含电池+充电器
+   [146/603] Deleted: 黑色-全功能红激光+M600C+长亮双控鼠尾 含电池+充电器
+   [147/603] Deleted: 沙色-全功能红激光+M600C+长亮双控鼠尾 含电池+充电器
+   [148/603] Deleted: 黑色-全功能绿激光+M300A+长亮双控鼠尾 含电池+充电器
+   [149/603] Deleted: 沙色-全功能绿激光+M300A+长亮双控鼠尾 含电池+充电器
+   [150/603] Deleted: 黑色-全功能绿激光+M600C+长亮双控鼠尾 含电池+充电器
+   [151/603] Deleted: 沙色-全功能绿激光+M600C+长亮双控鼠尾 含电池+充电器
+   [152/603] Deleted: 黑色-红激光+白光+IR照明+爆闪 送电池（全功能）
+   [153/603] Deleted: 沙色-红激光+白光+IR照明+爆闪 送电池（全功能）
+   [154/603] Deleted: 黑色-绿激光+白光+IR照明+爆闪 送电池（全功能）
+   [155/603] Deleted: 沙色-绿激光+白光+IR照明+爆闪 送电池（全功能）
+   [156/603] Deleted: 黑色-黑色-绿激光+IR照明+爆闪+白光（全功能） 两电一充（全功能）
+   [157/603] Deleted: 黑色-M300A原装鼠尾 +长亮尾盖送电池
+   [158/603] Deleted: 黑色-M600C原装鼠尾 送电池
+   [159/603] Deleted: 沙色-M600C原装鼠尾 送电池
+   [160/603] Deleted: Size XXS – For 45–60 kg
+   [161/603] Deleted: Size XS – For 60–75 kg
+   [162/603] Deleted: Size S – For 75–85 kg
+   [163/603] Deleted: Size M – For 85–105 kg
+   [164/603] Deleted: Size L – For 105–125 kg
+   [165/603] Deleted: 2× Extended Honeycomb Sports Arm Sleeves – Black
+   [166/603] Deleted: 1x Extended Honeycomb Sports Arm Sleeve – Black
+   [167/603] Deleted: 2× Extended Honeycomb Sports Arm Sleeves – White
+   [168/603] Deleted: 1x Extended Honeycomb Sports Arm Sleeve – White
+   [169/603] Deleted: Cool Peak Knee Elbow - 150-210lb
+   [170/603] Deleted: Cool Peak Knee Elbow - 110-150lb
+   [171/603] Deleted: Cool Peak Knee Elbow - 80-110lb
+   [172/603] Deleted: No Label - 150-210lb
+   [173/603] Deleted: No Label - 110-150lb
+   [174/603] Deleted: No Label - 80-110lb
+   [175/603] Deleted: No Label Black - 80-110lb
+   [176/603] Deleted: No Label Black - 110-160lb
+   [177/603] Deleted: No Label Black - 150-210lb
+   [178/603] Deleted: Grey Black - 110-150lb
+   [179/603] Deleted: Grey Black - 150-210lb
+   [180/603] Deleted: Grey Black - 80-110lb
+   [181/603] Deleted: Black White
+   [182/603] Deleted: Black Pink
+   [183/603] Deleted: 黑色
+   [184/603] Deleted: 沙色
+   [185/603] Deleted: 绿色
+   [186/603] Deleted: 灰色
+   [187/603] Deleted: 扳手
+   [188/603] Deleted: 扳手+O圈2套
+   [189/603] Deleted: 1套O圈
+   [190/603] Deleted: 16手榴弹+空投箱
+   [191/603] Deleted: 8手榴弹+空投箱-绿
+   [192/603] Deleted: 8手榴弹+空投箱-黑
+   [193/603] Deleted: 4-Pack (M26 OD Green + M67 OD Green + M18 OD Green
+   [194/603] Deleted: 2-Pack (M26 OD Green + M26 Black)
+   [195/603] Deleted: MF36 (Black) – Reusable
+   [196/603] Deleted: M26 (Black) – Reusable
+   [197/603] Deleted: MF36 (Green) – Reusable
+   [198/603] Deleted: MF36 (Black) – Reusable
+   [199/603] Deleted: 82-2 (OD Green) – Reusable
+   [200/603] Deleted: 82-2 (Black) – Reusable
+   [201/603] Deleted: M67 (OD Green) – Reusable
+   [202/603] Deleted: M67 (Black) – Reusable
+   [203/603] Deleted: M18 (OD Green) – Reusable
+   [204/603] Deleted: M18 (Black) – Reusable
+   [205/603] Deleted: F1 (OD Green) – Reusable
+   [206/603] Deleted: F1 (Black) – Reusable
+   [207/603] Deleted: M26A1 (OD Green) – Reusable
+   [208/603] Deleted: M26A1 (Black) – Reusable
+   [209/603] Deleted: M24 (OD Green) – Reusable
+   [210/603] Deleted: M24 (Black) – Reusable
+   [211/603] Deleted: 2-Pack (82-2 OD Green + 82-2 Black)
+   [212/603] Deleted: 2-Pack (MF36 OD Green + MF36 Black)
+   [213/603] Deleted: 2-Pack (M67 OD Green + M67 Black)
+   [214/603] Deleted: 2-Pack (M18 OD Green + M18 Black)
+   [215/603] Deleted: 2-Pack (F1 OD Green + F1 Black)
+   [216/603] Deleted: 2-Pack (M26A1 OD Green + M26A1 Black)
+   [217/603] Deleted: 2-Pack (M24 OD Green + M24 Black)
+   [218/603] Deleted: 2颗⭐(M26军绿+67军绿)
+   [219/603] Deleted: 3颖⭐(M26车绿+M67军绿+M18军绿)
+   [220/603] Deleted: M18 Medium (OD Green) – Reusable
+   [221/603] Deleted: 官方标配
+   [222/603] Deleted: 标配+1万弹
+   [223/603] Deleted: 标配+2万弹
+   [224/603] Deleted: 标配+3万弹
+   [225/603] Deleted: 手雷单个挂件 【黑色】
+   [226/603] Deleted: 手雷单个挂件 【尼色】
+   [227/603] Deleted: 烟雾弹单个挂件【黑色】
+   [228/603] Deleted: 烟雾弹单个挂件【尼色】
+   [229/603] Deleted: 如有需要套装或模型 请联系客服或进店查看哦
+   [230/603] Deleted: 黑色
+   [231/603] Deleted: 【考度拉】MC迷彩 CP迷彩
+   [232/603] Deleted: 【考度拉】暗夜迷彩 BCP
+   [233/603] Deleted: 【考度拉】黑色 BK
+   [234/603] Deleted: 【考度拉】狼灰色WG
+   [235/603] Deleted: 【考度拉】游骑兵绿色RG
+   [236/603] Deleted: 【考度拉】狼棕色CB
+   [237/603] Deleted: Matte Black
+   [238/603] Deleted: Coyote Brown
+   [239/603] Deleted: Wolf Grey
+   [240/603] Deleted: Ranger Green
+   [241/603] Deleted: CP
+   [242/603] Deleted: BCP
+   [243/603] Deleted: 均码
+   [244/603] Deleted: Black – Full Set (85–125 cm)
+   [245/603] Deleted: OD Green – Full Set (85–125 cm)
+   [246/603] Deleted: Khaki – Full Set (85–125 cm)
+   [247/603] Deleted: MC Camo – Full Set (85–125 cm)
+   [248/603] Deleted: 建伍KEN头 仅支持Z-Tactical
+   [249/603] Deleted: 摩托罗拉M1单插 仅支持Z-Tactical
+   [250/603] Deleted: 摩托罗拉M2双插 仅支持Z-Tactical
+   [251/603] Deleted: 八重洲YA单插 仅支持Z-Tactical
+   [252/603] Deleted: 爱慕可IC双插 仅支持Z-Tactical
+   [253/603] Deleted: 米德兰MIL双插 仅支持Z-Tactical
+   [254/603] Deleted: Black 6094
+   [255/603] Deleted: Black Python Camo 6094
+   [256/603] Deleted: Desert Digital Camo 6094
+   [257/603] Deleted: Desert Python Camo 6094
+   [258/603] Deleted: OD Green 6094
+   [259/603] Deleted: Sand 6094
+   [260/603] Deleted: Tri-Sand Camo 6094
+   [261/603] Deleted: Night Camo 6094
+   [262/603] Deleted: Tiger Stripe Camo 6094
+   [263/603] Deleted: CP Camo 6094
+   [264/603] Deleted: ACU Camo 6094
+   [265/603] Deleted: Jungle Python Camo 6094
+   [266/603] Deleted: Gray 6094
+   [267/603] Deleted: 无快拆主体
+   [268/603] Deleted: 快拆主体
+   [269/603] Deleted: 快拆主体加三联包
+   [270/603] Deleted: 5件套
+   [271/603] Deleted: 6件套
+   [272/603] Deleted: 7件套
+   [273/603] Deleted: 8件套
+   [274/603] Deleted: cp 快拆主体
+   [275/603] Deleted: cp 快拆主体+三联包
+   [276/603] Deleted: cp 五件套
+   [277/603] Deleted: cp 6件套
+   [278/603] Deleted: cp 7件套
+   [279/603] Deleted: cp 8件套
+   [280/603] Deleted: 1.8mm防剌1kg 一片
+   [281/603] Deleted: 2.3mm防手枪微冲1.3kg 一片
+   [282/603] Deleted: 4.5mm防AK2.3kg 一片
+   [283/603] Deleted: 对讲机除外到手如图80/230斤
+   [284/603] Deleted: Helmet-Mounted – No Pickup Version (Black)
+   [285/603] Deleted: Helmet-Mounted – No Pickup Version (Tan)
+   [286/603] Deleted: Helmet-Mounted – No Pickup Version (Green)
+   [287/603] Deleted: Helmet-Mounted – Pickup & Noise Reduction Version 
+   [288/603] Deleted: Helmet-Mounted – Pickup & Noise Reduction Version 
+   [289/603] Deleted: Helmet-Mounted – Pickup & Noise Reduction Version 
+   [290/603] Deleted: Headband Style – No Pickup Version (Black)
+   [291/603] Deleted: Headband Style – No Pickup Version (Tan)
+   [292/603] Deleted: Headband Style – No Pickup Version (Green)
+   [293/603] Deleted: Headband Style – Pickup & Noise Reduction Version 
+   [294/603] Deleted: Headband Style – Pickup & Noise Reduction Version 
+   [295/603] Deleted: Headband Style – Pickup & Noise Reduction Version 
+   [296/603] Deleted: 四色大花CO-17-WL（不含头盔）
+   [297/603] Deleted: 黑色蟒纹CO-17-TY（不含头盔）
+   [298/603] Deleted: 军绿CO-17-OLV（不含头盔）
+   [299/603] Deleted: 大花蟒纹CO-17-MA（不含头盔）
+   [300/603] Deleted: 德斑花CO-17-FL（不含头盔）
+   [301/603] Deleted: 青废墟CO-17-FG（不含头盔）
+   [302/603] Deleted: 卡其色CO-17-KHA（不含头盔）
+   [303/603] Deleted: CP迷彩CO-17-CP（不含头盔）
+   [304/603] Deleted: 黑色CO-17-BLK（不含头盔）
+   [305/603] Deleted: 黑CP CO-17-BCP（不含头盔）
+   [306/603] Deleted: 灰废墟CO-17-AT（不含头盔）
+   [307/603] Deleted: CO-17-ACU（不含头盔）
+   [308/603] Deleted: 订做颜色联系客服
+   [309/603] Deleted: One Size Fits All / Quick Release Locking Baton, O
+   [310/603] Deleted: One Size Fits All / Quick Release Locking Baton, O
+   [311/603] Deleted: One Size Fits All / Quick Release 92/92G Dual Rete
+   [312/603] Deleted: One Size Fits All / Side Opening Quick Release Loc
+   [313/603] Deleted: One Size Fits All / Side Opening Quick Release Loc
+   [314/603] Deleted: One Size Fits All / Side Opening Quick Release Loc
+   [315/603] Deleted: One Size Fits All / Quick Release Universal Handcu
+   [316/603] Deleted: One Size
+   [317/603] Deleted: One Size / Canteen Pouch
+   [318/603] Deleted: One Size / Quick Release D-Clip Pouch
+   [319/603] Deleted: S / Style A Set
+   [320/603] Deleted: S / Quick Release Locking Baton, Spray, Flashlight
+   [321/603] Deleted: S / Quick Release Locking Baton, Spray, Flashlight
+   [322/603] Deleted: S / Duty Belt Pad
+   [323/603] Deleted: S / Outer Duty Belt + Duty Belt Pad
+   [324/603] Deleted: S / Outer Duty Belt + Duty Belt Pad + Inner Belt
+   [325/603] Deleted: S / Quick Release 92/92G Double Retention Holster
+   [326/603] Deleted: S / Side Opening Quick Release Locking Baton Pouch
+   [327/603] Deleted: S / Side Opening Quick Release Locking Flashlight 
+   [328/603] Deleted: S / Side Opening Quick Release Locking Spray Pouch
+   [329/603] Deleted: S / Quick Release Universal Handcuff Pouch
+   [330/603] Deleted: S / Admin Pouch
+   [331/603] Deleted: S / Canteen Pouch
+   [332/603] Deleted: S / Quick Release D-Clip Pouch
+   [333/603] Deleted: M / Style A Set
+   [334/603] Deleted: M / Quick Release Locking Baton, Spray, Flashlight
+   [335/603] Deleted: M / Quick Release Locking Baton, Spray, Flashlight
+   [336/603] Deleted: M / Duty Belt Pad
+   [337/603] Deleted: M / Outer Duty Belt + Duty Belt Pad
+   [338/603] Deleted: M / Outer Duty Belt + Duty Belt Pad + Inner Belt
+   [339/603] Deleted: M / Quick Release 92/92G Double Retention Holster
+   [340/603] Deleted: M / Side Opening Quick Release Locking Baton Pouch
+   [341/603] Deleted: M / Side Opening Quick Release Locking Flashlight 
+   [342/603] Deleted: M / Side Opening Quick Release Locking Spray Pouch
+   [343/603] Deleted: M / Quick Release Universal Handcuff Pouch
+   [344/603] Deleted: M / Admin Pouch
+   [345/603] Deleted: M / Canteen Pouch
+   [346/603] Deleted: M / QD D-ring Pouch
+   [347/603] Deleted: L / Type A Set
+   [348/603] Deleted: L / QD Locking Baton, Pepper Spray, Flashlight, Ha
+   [349/603] Deleted: L / QD Locking Baton, Pepper Spray, Flashlight 3-p
+   [350/603] Deleted: L / Duty Belt Pad
+   [351/603] Deleted: L / Duty Belt + Duty Belt Pad
+   [352/603] Deleted: L / Duty Belt + Duty Belt Pad + Inner Belt
+   [353/603] Deleted: L / QD 92/92G Dual Retention Holster
+   [354/603] Deleted: One Size / Quick Release Universal Handcuff Pouch
+   [355/603] Deleted: One Size / Document Pouch
+   [356/603] Deleted: One Size / Radio Pouch
+   [357/603] Deleted: One Size / Water Bottle Pouch
+   [358/603] Deleted: S / Quick-release 92/92G Double Retention Holster
+   [359/603] Deleted: S / Quick-release Universal Pistol Holster
+   [360/603] Deleted: S / Radio Pouch
+   [361/603] Deleted: S / Water Bottle Pouch
+   [362/603] Deleted: S / Quick-Release D-Ring Pouch
+   [363/603] Deleted: M / Set A
+   [364/603] Deleted: M / Quick-release Locking Baton, Spray, Flashlight
+   [365/603] Deleted: M / Quick-release Locking Baton, Spray, Flashlight
+   [366/603] Deleted: M / Battle Belt
+   [367/603] Deleted: M / Outer Belt + Battle Belt
+   [368/603] Deleted: M / Outer Belt + Battle Belt + Inner Belt
+   [369/603] Deleted: M / Quick-release 92/92G Double Retention Holster
+   [370/603] Deleted: M / Side-Opening Quick-Release Locking Baton Holst
+   [371/603] Deleted: M / Side-Opening Quick-Release Locking Flashlight 
+   [372/603] Deleted: M / Side-Opening Quick-Release Locking Pepper Spra
+   [373/603] Deleted: M / Quick-release Universal Pistol Holster
+   [374/603] Deleted: M / Radio Pouch
+   [375/603] Deleted: M / Water Bottle Pouch
+   [376/603] Deleted: M / Quick-Release D-Ring Pouch
+   [377/603] Deleted: L / Set A
+   [378/603] Deleted: L / Quick-release Locking Baton, Spray, Flashlight
+   [379/603] Deleted: L / Quick-release Locking Baton, Spray, Flashlight
+   [380/603] Deleted: L / Duty Belt
+   [381/603] Deleted: L / Outer Belt + Duty Belt
+   [382/603] Deleted: L / Outer Belt + Duty Belt + Inner Belt
+   [383/603] Deleted: L / Quick-release 92/92G Double Retention Holster
+   [384/603] Deleted: L / Side-opening Quick-release Locking Baton Holst
+   [385/603] Deleted: L / Side-opening Quick-release Locking Flashlight 
+   [386/603] Deleted: L / Side-opening Quick-release Locking Spray Holst
+   [387/603] Deleted: L / Quick-release Universal Pistol Holster
+   [388/603] Deleted: L / Document Pouch
+   [389/603] Deleted: L / Radio Pouch
+   [390/603] Deleted: L / Water Bottle Pouch
+   [391/603] Deleted: L / Quick-release D-Ring Pouch
+   [392/603] Deleted: XL / Set A
+   [393/603] Deleted: XL / Quick-release Locking Baton, Spray, Flashligh
+   [394/603] Deleted: XL / Quick-release Locking Baton, Spray, Flashligh
+   [395/603] Deleted: XL / Battle Belt
+   [396/603] Deleted: XL / Outer Belt + Battle Belt
+   [397/603] Deleted: XL / Outer Belt + Battle Belt + Inner Belt
+   [398/603] Deleted: XL / Quick-release 92/92G Double Retention Holster
+   [399/603] Deleted: XL / Side-Opening Quick-Release Locking Baton Hols
+   [400/603] Deleted: XL / Side-Opening Quick-Release Locking Flashlight
+   [401/603] Deleted: XL / Side-Opening Quick-Release Locking Pepper Spr
+   [402/603] Deleted: XL / Quick-release Universal Pistol Holster
+   [403/603] Deleted: XL / Admin Pouch
+   [404/603] Deleted: XL / Radio Pouch
+   [405/603] Deleted: XL / Water Bottle Pouch
+   [406/603] Deleted: XL / Quick-Release D-Ring Pouch
+   [407/603] Deleted: [Cordura] Black BK
+   [408/603] Deleted: [Cordura] Coyote Brown CB
+   [409/603] Deleted: [Cordura] Wolf Grey WG
+   [410/603] Deleted: [Cordura] Ranger Green RG
+   [411/603] Deleted: [Cordura] CP Camo
+   [412/603] Deleted: [Cordura] Black CP Camo BCP
+   [413/603] Deleted: Small Square / 20cm
+   [414/603] Deleted: Black - G33 Riser Mount CNC High Quality
+   [415/603] Deleted: Brown - G33 Riser Mount CNC High Quality
+   [416/603] Deleted: Black - UNITY Riser Mount CNC High Quality
+   [417/603] Deleted: Black - UNIT Exps Riser Mount CNC High Quality
+   [418/603] Deleted: Brown - UNIT Exps Riser Mount CNC High Quality
+   [419/603] Deleted: Red - UNIT Exps Riser Mount
+   [420/603] Deleted: Pink - UNIT Exps Riser Mount, CNC High Quality
+   [421/603] Deleted: Blue - UNIT Exps Riser Mount, CNC High Quality
+   [422/603] Deleted: Black - SIG Riser Mount
+   [423/603] Deleted: Black - SLR Riser Mount
+   [424/603] Deleted: Black (Standard)
+   [425/603] Deleted: Belt Buckle
+   [426/603] Deleted: Chest Rig Panel
+   [427/603] Deleted: Leg Rig Panel
+   [428/603] Deleted: Black - One Piece
+   [429/603] Deleted: Tan - One Piece
+   [430/603] Deleted: Orange - One Piece
+   [431/603] Deleted: OD Green - One Piece
+   [432/603] Deleted: MST2011 Base Plate - Black
+   [433/603] Deleted: MST2011 Base Plate - Silver
+   [434/603] Deleted: MST2011 Base Plate - Red
+   [435/603] Deleted: MST2011 Base Plate - Grey
+   [436/603] Deleted: MST2011 Magwell (Eng
+   [437/603] Deleted: MST2011井（刻字款）-灰色
+   [438/603] Deleted: MST2011井（刻字款）-黑色
+   [439/603] Deleted: MST2011井（刻字款）-银色
+   [440/603] Deleted: MST2011井-金色
+   [441/603] Deleted: MST2011井银色
+   [442/603] Deleted: 黑色矮款-GBRS Hydra Mount九头蛇
+   [443/603] Deleted: 金棕色矮款-GBRS Hydra Mount九头蛇
+   [444/603] Deleted: 黑色高款-GBRS Hydra Mount九头蛇
+   [445/603] Deleted: 沙色高款-GBRS Hydra Mount九头蛇
+   [446/603] Deleted: 黑色高款-UNITY FAST
+   [447/603] Deleted: 金棕色高款-UNITY FAST
+   [448/603] Deleted: 黑色矮款-UNITY FAST
+   [449/603] Deleted: 金棕色矮款-UNITY FAST
+   [450/603] Deleted: 黑色-UNITY EXPS
+   [451/603] Deleted: 金棕色-UNITY EXPS
+   [452/603] Deleted: Flamethrower Pig Tracer Suppressor
+   [453/603] Deleted: Rainbow SLR Tracer Suppressor
+   [454/603] Deleted: Oppressor Rainbow Tracer Suppressor
+   [455/603] Deleted: Honeycomb Rainbow Tracer Suppressor
+   [456/603] Deleted: OD军绿色 / 大款
+   [457/603] Deleted: OD军绿色 / 小款
+   [458/603] Deleted: OD军绿色 / 短款
+   [459/603] Deleted: DE泥色 / 大款
+   [460/603] Deleted: DE泥色 / 小款
+   [461/603] Deleted: DE泥色 / 短款
+   [462/603] Deleted: BK黑色 / 大款
+   [463/603] Deleted: BK黑色 / 小款
+   [464/603] Deleted: Black / Short
+   [465/603] Deleted: Ranger Green / Large
+   [466/603] Deleted: Ranger Green / Small
+   [467/603] Deleted: Ranger Green / Short
+   [468/603] Deleted: Black-Mud / Large
+   [469/603] Deleted: Black-Mud / Small
+   [470/603] Deleted: Black-Mud / Short
+   [471/603] Deleted: Black-Red / Large
+   [472/603] Deleted: Black-Red / Small
+   [473/603] Deleted: Black-Red / Short
+   [474/603] Deleted: Black-OD Green / Large
+   [475/603] Deleted: Black-OD Green / Small
+   [476/603] Deleted: Black-OD Green / Short
+   [477/603] Deleted: Parallel Clip - Universal One Size Fits All / Smal
+   [478/603] Deleted: Parallel Clip - Universal One Size Fits All / Shor
+   [479/603] Deleted: Silver Grip / Japan Marui Hi-Capa
+   [480/603] Deleted: Silver Grip / Viper 2011
+   [481/603] Deleted: Silver Grip / JMT Viper 2011
+   [482/603] Deleted: Silver Grip / Lucifer 2011
+   [483/603] Deleted: Silver Grip / WK Viper 2011
+   [484/603] Deleted: Silver Grip / 2011 Viper (Compatible with AQK Manu
+   [485/603] Deleted: Black Grip / Japan Marui Hi-Capa
+   [486/603] Deleted: Black Handle / Tomato Viper 2011
+   [487/603] Deleted: Black Handle / JMT Viper 2011
+   [488/603] Deleted: Black Handle / Lucifer 2011
+   [489/603] Deleted: Black Handle / Blue Whale WK Viper 2011
+   [490/603] Deleted: Black Handle / Black Hawk 2011 Viper (AQK Manual S
+   [491/603] Deleted: Titanium Grey Handle / Japan Marui hi–capa
+   [492/603] Deleted: Titanium Grey Handle / Tomato Viper 2011
+   [493/603] Deleted: Titanium Grey Handle / JMT Viper 2011
+   [494/603] Deleted: Titanium Grey Handle / Lucifer 2011
+   [495/603] Deleted: Titanium Grey Handle / Blue Whale WK Viper 2011
+   [496/603] Deleted: Titanium Grey Handle / Black Hawk 2011 Viper (AQK 
+   [497/603] Deleted: Red Handle / Japan Marui hi–capa
+   [498/603] Deleted: Red Handle / Tomato Viper 2011
+   [499/603] Deleted: Red Handle / JMT Viper 2011
+   [500/603] Deleted: Red Handle / Lucifer 2011
+   [501/603] Deleted: Red Handle / Blue Whale WK Viper 2011
+   [502/603] Deleted: Red Handle / Black Hawk 2011 Viper (AQK Manual Sli
+   [503/603] Deleted: Gold Handle / Japan Marui hi–capa
+   [504/603] Deleted: Gold Handle / Tomato Viper 2011
+   [505/603] Deleted: Gold Handle / JMT Viper 2011
+   [506/603] Deleted: Gold Handle / Lucifer 2011
+   [507/603] Deleted: Gold Handle / Blue Whale WK Viper 2011
+   [508/603] Deleted: Golden Grip / Blackhawk 2011 Viper (AQK Spring-Pow
+   [509/603] Deleted: 20MM Rail Cable Management [Green x3]
+   [510/603] Deleted: 20MM Rail Cable Management [Tan x1]
+   [511/603] Deleted: 20MM Rail Cable Management [Blue x1]
+   [512/603] Deleted: 20MM Rail Cable Management [Black x3]
+   [513/603] Deleted: 20MM Rail Cable Management [Red x3]
+   [514/603] Deleted: 20MM Rail Cable Management [Blue x3]
+   [515/603] Deleted: Black BK (Standard Model)
+   [516/603] Deleted: One Size Fits All / Black
+   [517/603] Deleted: One Size Fits All / Army Green
+   [518/603] Deleted: One Size Fits All / Khaki
+   [519/603] Deleted: One Size Fits All / CP Camo
+   [520/603] Deleted: One Size Fits All / Ruin Camo
+   [521/603] Deleted: One Size Fits All / Black + Shoulder Straps
+   [522/603] Deleted: One Size Fits All / Army Green + Shoulder Straps
+   [523/603] Deleted: One Size Fits All / Khaki + Shoulder Straps
+   [524/603] Deleted: One Size Fits All / CP Camo + Shoulder Straps
+   [525/603] Deleted: One Size Fits All / Ruin Green Camo + Shoulder Str
+   [526/603] Deleted: Black - Full Function Red Laser + M300A + Pressure
+   [527/603] Deleted: Black - Full Function Red Laser + M600C + Pressure
+   [528/603] Deleted: Tan - Full Function Red Laser + M600C + Pressure S
+   [529/603] Deleted: Black - Full Function Green Laser + M300A + Pressu
+   [530/603] Deleted: Tan - Full Function Green Laser + M600C + Pressure
+   [531/603] Deleted: Black - Full Function Red Laser + M300A + Constant
+   [532/603] Deleted: Tan - Full Function Red Laser + M300A + Constant O
+   [533/603] Deleted: Size XXS (Adult, 99-132 lbs) / 2 Honeycomb Extende
+   [534/603] Deleted: Size XS (Adult, 133-165 lbs) / 2 Honeycomb Extende
+   [535/603] Deleted: Size XS (Adult, 133-165 lbs) / 1 Honeycomb Extende
+   [536/603] Deleted: Size S (Adult, 166-187 lbs) / 2 Honeycomb Extended
+   [537/603] Deleted: Size S (Adult, 166-187 lbs) / 2 Honeycomb Extended
+   [538/603] Deleted: Size M (Adult, 188-231 lbs) / 2 Honeycomb Extended
+   [539/603] Deleted: M Adult (85.5-105 kg) / 2 pcs Honeycomb Extended S
+   [540/603] Deleted: L Adult (105.5-125 kg) / 1 pc Honeycomb Extended S
+   [541/603] Deleted: L Adult (105.5-125 kg) / 1 pc Honeycomb Extended S
+   [542/603] Deleted: Kufeng Knee Pads & Elbow Pads 150-210
+   [543/603] Deleted: Unbranded Black Knee Pads (110-160 lbs)
+   [544/603] Deleted: Grey-Black Knee, Elbow, and Palm Pads (110-150 lbs
+   [545/603] Deleted: Black
+   [546/603] Deleted: Tan
+   [547/603] Deleted: Wrench + 2 Sets O-rings
+   [548/603] Deleted: Grenade Single Pendant [Black]
+   [549/603] Deleted: Grenade Single Pendant [Tan]
+   [550/603] Deleted: Smoke Grenade Single Pendant [Black]
+   [551/603] Deleted: Smoke Grenade Single Pendant [Tan]
+   [552/603] Deleted: For sets or models, please contact customer servic
+   [553/603] Deleted: Cordura MC Camo CP Camo
+   [554/603] Deleted: Cordura Night Camo BCP
+   [555/603] Deleted: Cordura Black BK
+   [556/603] Deleted: Cordura Wolf Grey WG
+   [557/603] Deleted: Cordura Ranger Green RG
+   [558/603] Deleted: Cordura Coyote Brown CB
+   [559/603] Deleted: CP Camo
+   [560/603] Deleted: One Size / Full Black Set (85-125cm)
+   [561/603] Deleted: One Size / Full OD Green Set (85-125cm)
+   [562/603] Deleted: One Size / Full Khaki Set (85-125cm)
+   [563/603] Deleted: One Size / Full MC Camo Set (85-125cm)
+   [564/603] Deleted: Kenwood Connector, compatible only with Z-Tactical
+   [565/603] Deleted: Motorola M1 Single Plug - Z-Tactical Compatible On
+   [566/603] Deleted: Motorola M2 Dual Plug - Z-Tactical Compatible Only
+   [567/603] Deleted: Yaesu YA Single Plug - Z-Tactical Compatible Only
+   [568/603] Deleted: Icom IC Dual Plug - Z-Tactical Compatible Only
+   [569/603] Deleted: Midland MIL Dual Plug - Z-Tactical Compatible Only
+   [570/603] Deleted: MST2011 Mount (Engraved) - Grey
+   [571/603] Deleted: MST2011 Mount (Engraved) - Black
+   [572/603] Deleted: MST2011 Mount (Engraved) - Silver
+   [573/603] Deleted: MST2011 Mount - Gold
+   [574/603] Deleted: MST2011 Mount - Silver
+   [575/603] Deleted: Black Low Profile - GBRS Hydra Mount
+   [576/603] Deleted: Tan Low Profile - GBRS Hydra Mount
+   [577/603] Deleted: Black High Profile - GBRS Hydra Mount
+   [578/603] Deleted: FDE High Profile - GBRS Hydra Mount
+   [579/603] Deleted: Black High Profile - UNITY FAST
+   [580/603] Deleted: Tan High Profile - UNITY FAST
+   [581/603] Deleted: Black Low Profile - UNITY FAST
+   [582/603] Deleted: Tan Low Profile - UNITY FAST
+   [583/603] Deleted: Tan - UNITY EXPS
+   [584/603] Deleted: Black (Anti-Fog)
+   [585/603] Deleted: Black Goggle Set (3 Lenses)
+   [586/603] Deleted: Tan Goggle Set (3 Lenses)
+   [587/603] Deleted: OD Green Goggle Set (3 Lenses)
+   [588/603] Deleted: Black Goggle Set (1 Lens)
+   [589/603] Deleted: Tan Goggle Set (1 Lens)
+   [590/603] Deleted: OD Green Goggle Set (1 Lens)
+   [591/603] Deleted: Black NGD FPS
+   [592/603] Deleted: FDE NGD FPS
+   [593/603] Deleted: Specifications: Compatible with DJI, Insta360, and
+   [594/603] Deleted: 7-Color Luminous Suppressor - Black
+   [595/603] Deleted: 7-Color Luminous Suppressor - FDE
+   [596/603] Deleted: OD Green / Large
+   [597/603] Deleted: OD Green / Small
+   [598/603] Deleted: OD Green / Short
+   [599/603] Deleted: Tan / Large
+   [600/603] Deleted: Tan / Small
+   [601/603] Deleted: Tan / Short
+   [602/603] Deleted: Black / Large
+   [603/603] Deleted: Black / Small
+
+   ✅ Deleted 603 variants
+
+2. Deleting all products...
+   [1/34] Deleted: 2011战斗大师快拔枪套带灯下挂战术手电UDL P8M N8弹夹套TTI塔兰-淘宝网
+   [2/34] Deleted: MAG内置弹夹袋快拔固定板工具附件包战术背心5.56/7.62硬质内衬板-淘宝网
+   [3/34] Deleted: 6094战术背心战术马甲CS 户外野营组合背心 战狼野战作训战术背心-淘宝网
+   [4/34] Deleted: Tactical New White 8-Piece Set (Security Patrol Du
+   [5/34] Deleted: ARSON MACHINE电筒PEQ鼠尾开关金属卡槽导轨固定器线夹铝制导线-淘宝网
+   [6/34] Deleted: 左右手转换快拔枪套 G17 G19 2011 VP9 P320带下挂万用型导轨枪套-淘宝网
+   [7/34] Deleted: C3战术耳机头盔款拾音降噪耳机通讯设备耳麦户外耳罩C5后翻支架-淘宝网
+   [8/34] Deleted: WoSporT K系列头盔电池迷彩副包 兼容盔布PVS-31电池配件配重副包-淘宝网
+   [9/34] Deleted: 跨境新品Clay the Claymore呆萌小方块毛绒公仔节日赠礼好物-淘宝网
+   [10/34] Deleted: 【MST2011底盖/井合集】CNC金属护边铝合金底盖底座配件-淘宝网
+   [11/34] Deleted: Speedqb护具套装成人滑板下场护膝护肘护掌SQB水弹酷峰CNSQB竞技-淘宝网
+   [12/34] Deleted: 运动护臂蜂窝加长防撞防摔擦伤加厚防晒专业袖套手臂护具篮足排球-淘宝网
+   [13/34] Deleted: 灵鹰FAST迷彩盔罩伪装帽套战术头盔改装配件CP魔蝎迷彩弹力绳盔罩-tmall.com天猫
+   [14/34] Deleted: 金属增高支架镜桥GBRS Hydra九头蛇UNITY EXPS底座T1 T2 H1 2红点-淘宝网
+   [15/34] Deleted: 蝮蛇2011 hi capa快速拉柄模型G17 TTiG34蛋夹底盖握把井制退器-淘宝网
+   [16/34] Deleted: 九头蛇增高支架 UNITY战术GBRS全金属底座T1 T2 H1 H2 R5镜桥创研-淘宝网
+   [17/34] Deleted: 全套jpc3.0战术背心cs吃鸡游戏装备作训背心影视拍摄道具马甲-淘宝网
+   [18/34] Deleted: WOSPORT L4G24 夜视仪支架（铝合金版）-淘宝网
+   [19/34] Deleted: 陌歌 户外M67手雷烟雾模型挂件 可拉环可拆卸 COS装扮 仿真道具-淘宝网
+   [20/34] Deleted: 儿童手雷玩具可爆炸水弹M67弹射烟雾手榴弹模型吃鸡男孩生日礼物-tmall.com天猫
+   [21/34] Deleted: 七彩喷火夜光消荧光玩具喷火战术夜光激发装置软弹感应器影视装备-淘宝网
+   [22/34] Deleted: 户外多功能腋下通用尼龙战术配件背带快拆肩带挂绳单点式斜跨挂带-淘宝网
+   [23/34] Deleted: 战术头盔夜视仪翻斗车支架加装运动相机连接支架头盔配件-淘宝网
+   [24/34] Deleted: WST风镜防雾器电动除雾TYPE-C充电风速可调搭配头盔使用战术配件-淘宝网
+   [25/34] Deleted: Artex户外浪人战术腰带套装多功能组合巡逻腰封可拆卸调节腰带-淘宝网
+   [26/34] Deleted: FMA 蝎式软壳快拔旦夹套5.56/7.62\9mm旦匣包 军迷射击MOLLE包-淘宝网
+   [27/34] Deleted: NGD北境防务 "FPS"运动相机战术连接臂-淘宝网
+   [28/34] Deleted: TC战术耳机转接器民用PTT按键发射对讲机建伍接口支持Z-Tactical-淘宝网
+   [29/34] Deleted: 战术背心通用型MOLLE系统手机导航面板包胸口PDA包户外多功能胸包-淘宝网
+   [30/34] Deleted: 战术多功能手雷模型装备包 手榴弹道具molle同尺寸弹力收纳附件包-淘宝网
+   [31/34] Deleted: 战术激光灯PEQ15红绿镭射指示器沃德森M300/M600手电双控鼠尾套装-淘宝网
+   [32/34] Deleted: 雅科达jpc 6094 cpc AVS战术背心水壶插板内胆降温防护板通用PE板-淘宝网
+   [33/34] Deleted: KUBLAI库拜来P1N23456789/ZY通用进出气阀扳手钥匙拆装工具不锈钢-淘宝网
+   [34/34] Deleted: 俄罗斯小绿人搭配防尘防雾战术防风骑行军迷户外头套卡其色绿色-淘宝网
+
+   ✅ Deleted 34 products
+
+============================================================
+📤 UPLOADING PROCESSED DATA
+============================================================
+
+1. Uploading 34 products...
+   [1/34] Uploaded: 2011战斗大师快拔枪套带灯下挂战术手电UDL P8M N8弹夹套TTI塔兰
+   [2/34] Uploaded: MAG内置弹夹袋快拔固定板工具附件包战术背心5.56/7.62硬质内衬板
+   [3/34] Uploaded: 6094战术背心战术马甲CS 户外野营组合背心 战狼野战作训战术背心
+   [4/34] Uploaded: Tactical New White 8-Piece Set (Security Patrol Du
+   [5/34] Uploaded: 电筒PEQ鼠尾开关Gold属卡槽导轨固定器线夹铝制导线
+   [6/34] Uploaded: LeftRight手转换快拔枪套 G17 G19 2011 VP9 P320带下挂万用型导轨枪套
+   [7/34] Uploaded: C3战术耳机头盔款拾音降噪耳机通讯设备耳麦户外耳罩C5后翻支架
+   [8/34] Uploaded: WoSporT K系列头盔电池Camo副包 兼容盔布PVS-31电池配件配重副包
+   [9/34] Uploaded: 跨境新品Clay the Claymore呆萌小方块毛绒公仔节日赠礼好物
+   [10/34] Uploaded: CNCGold属护边铝合Gold底盖底座配件
+   [11/34] Uploaded: Speedqb护具Set成人滑板下场护膝护肘护掌SQB水弹酷峰CNSQB竞技
+   [12/34] Uploaded: 运动护臂蜂窝加长防撞防摔擦伤加厚防晒专业袖套手臂护具篮足排球
+   [13/34] Uploaded: 灵鹰FASTCamo盔罩伪装帽套战术头盔改装配件CP魔蝎Camo弹力绳盔罩
+   [14/34] Uploaded: Gold属增高支架镜桥GBRS Hydra九头蛇UNITY EXPS底座T1 T2 H1 2Red点
+   [15/34] Uploaded: 蝮蛇2011 hi capa快速拉柄模型G17 TTiG34蛋夹底盖握把井制退器
+   [16/34] Uploaded: 九头蛇增高支架 UNITY战术GBRS全Gold属底座T1 T2 H1 H2 R5镜桥创研
+   [17/34] Uploaded: 全套jpc3.0战术背心cs吃鸡游戏装备作训背心影视拍摄道具马甲
+   [18/34] Uploaded: L4G24 夜视仪支架（铝合Gold版）
+   [19/34] Uploaded: 户外M67手雷烟雾模型挂件 可拉环可拆卸 COS装扮 仿真道具
+   [20/34] Uploaded: 儿童手雷玩具可爆炸水弹M67弹射烟雾手榴弹模型吃鸡男孩生日礼物
+   [21/34] Uploaded: 七彩喷火夜光消荧光玩具喷火战术夜光激发装置软弹感应器影视装备
+   [22/34] Uploaded: 户外多功能腋下通用Nylon战术配件背带快拆肩带挂绳Single点式斜跨挂带
+   [23/34] Uploaded: 战术头盔夜视仪翻斗车支架加装运动相机连接支架头盔配件
+   [24/34] Uploaded: WST风镜防雾器电动除雾TYPE-C充电风速可调搭配头盔使用战术配件
+   [25/34] Uploaded: 户外浪人战术腰带Set多功能组合巡逻腰封可拆卸调节腰带
+   [26/34] Uploaded: 蝎式软壳快拔旦夹套5.56/7.62\9mm旦匣包 军迷射击MOLLE包
+   [27/34] Uploaded: "FPS"运动相机战术连接臂
+   [28/34] Uploaded: TC战术耳机转接器民用PTT按键发射对讲机建伍接口支持Z-Tactical
+   [29/34] Uploaded: 战术背心通用型MOLLE系统手机导航面板包胸口PDA包户外多功能胸包
+   [30/34] Uploaded: 战术多功能手雷模型装备包 手榴弹道具molle同尺寸弹力收纳附件包
+   [31/34] Uploaded: 战术激光灯PEQ15RedGreen镭射指示器沃德森M300/M600手电Dual控鼠尾Set
+   [32/34] Uploaded: 雅科达jpc 6094 cpc AVS战术背心水壶插板内胆降温防护板通用PE板
+   [33/34] Uploaded: P1N23456789/ZY通用进出气阀扳手钥匙拆装工具不锈钢
+   [34/34] Uploaded: 俄罗斯小Green人搭配防尘防雾战术防风骑行军迷户外头套Khaki色Green
+
+   ✅ Uploaded 34 products
+
+2. Uploading 603 variants...
+   [1/603] Uploaded: HL-ACC-73-T Gold属Tan
+   [2/603] Uploaded: HL-ACC-73-Black Gold属Black
+   [3/603] Uploaded: 【Cordura】Black Black
+   [4/603] Uploaded: 【Cordura】狼Brown Coyote Brown
+   [5/603] Uploaded: 【Cordura】狼Grey Wolf Grey
+   [50/603] Uploaded: MST2011 Well# (Engraved) - Silver
+   [100/603] Uploaded: Blue鲸WK蝮蛇2011
+   [150/603] Uploaded: Black-全功能Green激光+M600C+长亮Dual控鼠尾 含电池+充电器
+   [200/603] Uploaded: 82-2 (Black) – Reusable
+   [250/603] Uploaded: 摩托罗拉M2Dual插 仅支持Z-Tactical
+   [300/603] Uploaded: 德斑花CO-17-FL（不含头盔）
+   [350/603] Uploaded: L / Duty Belt Pad
+   [400/603] Uploaded: XL / Side-Opening Quick-Release Locking 
+   [450/603] Uploaded: Black-UNITY EXPS
+   [500/603] Uploaded: Red Handle / Lucifer 2011
+   [550/603] Uploaded: Smoke Grenade Single Pendant [Black]
+   [600/603] Uploaded: Tan / Small
+
+   ✅ Uploaded 603 variants
+
+============================================================
+🎉 MIGRATION COMPLETE
+============================================================
+
+✅ Migrated 34 products
+✅ Migrated 603 variants
+
+📸 All images matched from shop/public/images/
+💰 All margins recalculated using current formula
+🏷️  All variant options restructured
