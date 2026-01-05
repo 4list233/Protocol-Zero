@@ -78,3 +78,4 @@ export function sanitizeProduct(product: ProductRuntime): PublicProduct {
 export function sanitizeProducts(products: ProductRuntime[]): PublicProduct[] {
   return products.map(sanitizeProduct)
 }
+

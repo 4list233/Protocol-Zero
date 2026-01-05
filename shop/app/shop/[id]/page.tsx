@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation"
 import { useCart } from "@/lib/cart-context"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useRef } from "react"
 import type { RuntimeProduct } from "../../../lib/products"
 import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
-import { ArrowLeft, ShoppingCart } from "lucide-react"
+import { ArrowLeft, ShoppingCart, ChevronDown } from "lucide-react"
 import MultiVariantSelector from "@/components/multi-variant-selector"
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,6 +19,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [product, setProduct] = useState<RuntimeProduct | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
+  const [selectedOption2, setSelectedOption2] = useState<string>('') // Selected size/color from available options
 
   useEffect(() => {
     fetch(`/api/products/${id}`)
@@ -72,6 +73,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     ...(product.images || [])
   ].filter(Boolean)))
 
+  // State for selected main image
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const detailsRef = useRef<HTMLDivElement>(null)
+
+  const scrollToDetails = () => {
+    detailsRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return
     
@@ -85,6 +94,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       variantId: selectedVariant.id,
       variantTitle: selectedVariant.variantName,
       sku: selectedVariant.sku,
+      selectedOption: selectedOption2 || undefined, // Store selected size/color
       regularPrice: selectedVariant.price_cad || 0,
       addonPrice: variant.addonPrice ?? undefined,
       isAddonEligible: variant.isAddonEligible ?? false,
@@ -92,7 +102,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     
     addToast({
       title: "Added to cart!",
-      description: `${product.title}${selectedVariant ? ` - ${selectedVariant.variantName}` : ''}`,
+      description: `${product.title}${selectedVariant ? ` - ${selectedVariant.variantName}` : ''}${selectedOption2 ? ` (${selectedOption2})` : ''}`,
       action: (
         <Link 
           href="/cart"
@@ -122,34 +132,79 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 gap-10">
+        {/* Product Section - Taobao Style Layout */}
+        <div className="grid lg:grid-cols-[auto_1fr_1fr] gap-6 mb-8">
+          
+          {/* Left: Thumbnail Gallery (Catalog Images) */}
+          <div className="hidden lg:flex flex-col gap-2 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedImageIndex(idx)}
+                className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                  selectedImageIndex === idx
+                    ? 'border-[#3D9A6C] ring-2 ring-[#3D9A6C]/30'
+                    : 'border-[#2C2C2C] hover:border-[#3D9A6C]/50'
+                }`}
+              >
+                <Image
+                  src={img}
+                  alt={`${product.title} thumbnail ${idx + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Center: Main Image Display */}
           <div className="relative">
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* Main Image */}
+            <div className="relative aspect-square rounded-xl overflow-hidden border border-[#2C2C2C] bg-[#1E1E1E]">
+              <Image
+                src={images[selectedImageIndex] || '/images/placeholder.png'}
+                alt={product.title}
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            
+            {/* Mobile: Horizontal thumbnail scroll */}
+            <div className="lg:hidden flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-thin">
               {images.map((img, idx) => (
-                <div key={idx} className="snap-start shrink-0">
+                <button
+                  key={idx}
+                  onClick={() => setSelectedImageIndex(idx)}
+                  className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    selectedImageIndex === idx
+                      ? 'border-[#3D9A6C]'
+                      : 'border-[#2C2C2C]'
+                  }`}
+                >
                   <Image
                     src={img}
-                    alt={`${product.title} image ${idx + 1}`}
-                    width={640}
-                    height={640}
-                    className="rounded-xl border border-[#2C2C2C] object-cover"
+                    alt={`Thumbnail ${idx + 1}`}
+                    fill
+                    className="object-cover"
                   />
-                </div>
+                </button>
               ))}
             </div>
+
+            {/* Scroll to details indicator */}
             {product.detailLongImage && (
-              <div className="mt-6">
-                <Image
-                  src={product.detailLongImage}
-                  alt={`${product.title} details`}
-                  width={1200}
-                  height={4000}
-                  className="rounded-xl border border-[#2C2C2C] w-full h-auto"
-                />
-              </div>
+              <button
+                onClick={scrollToDetails}
+                className="mt-4 w-full py-2 flex items-center justify-center gap-2 text-sm text-[#A1A1A1] hover:text-[#3D9A6C] transition-colors"
+              >
+                <span>View Product Details</span>
+                <ChevronDown className="h-4 w-4 animate-bounce" />
+              </button>
             )}
           </div>
 
+          {/* Right: Product Info */}
           <div className="flex flex-col gap-6">
             <div>
               <h1 className="text-3xl font-heading font-bold tracking-wide uppercase md:text-4xl text-[#F5F5F5]">
@@ -207,6 +262,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   }))}
                   selectedVariantId={selectedVariantId || product.variants[0].id}
                   onChange={setSelectedVariantId}
+                  onOption2Change={setSelectedOption2}
+                  selectedOption2={selectedOption2}
                 />
               </div>
             )}
@@ -219,9 +276,30 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <ShoppingCart className="h-5 w-5" />
               {displayStock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
-
           </div>
         </div>
+
+        {/* Detail Images Section - Infinite Scroll Style */}
+        {product.detailLongImage && (
+          <div ref={detailsRef} className="border-t border-[#2C2C2C] pt-8">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-heading font-bold tracking-wide uppercase text-[#F5F5F5]">
+                Product Details
+              </h2>
+              <p className="text-sm text-[#A1A1A1] mt-1">Scroll down to see full product information</p>
+            </div>
+            <div className="max-w-3xl mx-auto">
+              <Image
+                src={product.detailLongImage}
+                alt={`${product.title} details`}
+                width={1200}
+                height={8000}
+                className="rounded-xl border border-[#2C2C2C] w-full h-auto"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

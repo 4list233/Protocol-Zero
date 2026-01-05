@@ -124,3 +124,24 @@
     font-family: 'Inter', sans-serif;
   }
 }
+
+/* Custom scrollbar for thumbnail galleries */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #3D9A6C #1E1E1E;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #1E1E1E;
+  border-radius: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #3D9A6C;
+  border-radius: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #4db87f;
+}

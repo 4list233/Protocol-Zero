@@ -129,13 +129,14 @@ export const KNACK_CONFIG = {
       optionType2: 'field_147',   // e.g., "Size" (nullable)
       optionValue2: 'field_148',  // e.g., "M", "85-125cm" (nullable)
       // Pricing fields (added for ratio-based pricing model)
-      shippingCny: 'field_151',         // Shipping allocation per item (default 70 CNY)
+      shippingCny: 'field_151',         // Shipping allocation per item (default 30 CNY)
+      costCad: 'field_173',             // Landed cost in CAD ((Price + Shipping) × 0.19)
       isBaseVariant: 'field_152',       // Boolean - mark ONE variant as base for ratio calc
       competitorPriceCad: 'field_139',  // Research price from Canadian competitors
       competitorProducts: 'field_137',  // Short text - competitor product links/notes
-      totalCostCad: 'field_153',        // Calculated total cost in CAD
-      marginStandard: 'field_154',      // Calculated margin % for standard sales
-      marginPromo: 'field_155',         // Calculated margin % with promo code
+      totalCostCad: 'field_153',        // Calculated total cost in CAD (LEGACY - use costCad)
+      marginStandard: 'field_154',      // Calculated margin % for standard sales (30.5)
+      marginPromo: 'field_155',         // Calculated margin % with promo code (14.2)
       isBundle: 'field_156',            // Boolean - is this a bundle variant?
       bundleComponents: 'field_157',    // What's included in the bundle
       // Add-on pricing fields - for items that are cheaper when added to another order

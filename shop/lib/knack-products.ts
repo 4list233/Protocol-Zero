@@ -348,6 +348,12 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
   const priceCadValue = getFieldValue(record, VARIANT_FIELDS.priceCad, 'Selling Price')
   const priceCad = priceCadValue ? Number(priceCadValue) : undefined
   
+  // Extract shipping and cost fields
+  const shippingCny = getFieldValue(record, VARIANT_FIELDS.shippingCny, 'Shipping CNY')
+  const costCad = getFieldValue(record, VARIANT_FIELDS.costCad, 'Cost CAD')
+  const marginStandard = getFieldValue(record, VARIANT_FIELDS.marginStandard, 'Margin Standard')
+  const marginPromo = getFieldValue(record, VARIANT_FIELDS.marginPromo, 'Margin Promo')
+  
   // Extract multi-dimensional option fields
   const optionType1 = getFieldValue(record, VARIANT_FIELDS.optionType1, 'Option Type 1')
   const optionValue1 = getFieldValue(record, VARIANT_FIELDS.optionValue1, 'Option Value 1')
@@ -368,7 +374,11 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
       ? String(getFieldValue(record, VARIANT_FIELDS.sku, 'SKU'))
       : undefined,
     price_cny: priceCny,
+    shipping_cny: shippingCny ? Number(shippingCny) : undefined,
+    cost_cad: costCad ? Number(costCad) : undefined,
     price_cad: priceCad,
+    margin: marginStandard ? Number(marginStandard) : undefined,
+    margin_promo: marginPromo ? Number(marginPromo) : undefined,
     // Stock is a yes/no (boolean) field in Knack - converted to number (1 = in stock, 0 = out of stock)
     // Uses the same conversion logic as products
     stock: convertKnackStockToNumber(getFieldValue(record, VARIANT_FIELDS.stock, 'Stock')),

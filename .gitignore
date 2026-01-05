@@ -10,3 +10,10 @@ shop/.next/
 scraper/chrome_profile_selenium/
 scraper/selenium_profile/
 scraper/taobao_cookies.json
+shop/public/images/
+# Large directories to exclude
+scraper/chrome_profile_selenium/
+scraper/ai_scraper_output/
+scraper/Archive Media/
+scraper/__pycache__/
+shop/public/images/

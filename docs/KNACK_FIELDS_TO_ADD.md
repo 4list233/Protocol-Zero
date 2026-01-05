@@ -120,3 +120,4 @@ After adding fields:
 3. Check Promo Codes object - should have usage count = 1
 4. Check Order Items JSON - should have quantities for each item
 
+
