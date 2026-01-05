@@ -21,6 +21,7 @@ export type CartItem = {
   variantId: string
   variantTitle: string
   sku?: string
+  selectedOption?: string  // Selected size/color from available options (e.g., "L", "Black")
   
   // Pricing
   regularPrice: number      // Full price CAD

@@ -461,6 +461,13 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     if (typeof productConnection === 'string') {
       // Check if it's HTML
       if (productConnection.includes('<') && productConnection.includes('>')) {
+        // Extract Knack ID from class attribute (e.g., class="692e7261392bfc02f0730548")
+        const classMatch = productConnection.match(/class="([a-f0-9]{24})"/)
+        if (classMatch && classMatch[1]) {
+          extractedValues.push(classMatch[1])
+        }
+        
+        // Also extract text content as fallback
         const match = productConnection.match(/data-kn="connection-value">([^<]+)</) || 
                      productConnection.match(/>([^<]+)</)
         if (match && match[1]) extractedValues.push(match[1].trim())

@@ -13,7 +13,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # LLM translation will be added via OpenAI API
 import json
-from typing import List, Dict
+from typing import List, Dict, Optional
+
+# Import variant engine and price resolver for structured extraction
+from variant_engine import extract_variants, VariantExtractionResult, SKUVariant
+from price_resolver import PriceResolver, resolve_price_for_selection
 
 ## --- Removed all OCR and price extraction logic ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -65,13 +69,32 @@ def apply_media_counts(row: Dict, media_files: List[Dict]):
     row['Detail Images'] = detail_count
     row['Catalogue Images'] = catalogue_count
 
-def populate_price_fields(row: Dict):
-    """Initialize price fields to empty/0 - prices will be manually input via admin panel."""
-    row['Price'] = ''
-    row['Price CNY'] = 0
+def populate_price_fields(row: Dict, price_cny: Optional[float] = None):
+    """Initialize price fields. If price_cny is provided, use it; otherwise default to 0."""
+    row['Price'] = f'¥{price_cny:.2f}' if price_cny and price_cny > 0 else ''
+    row['Price CNY'] = price_cny if price_cny and price_cny > 0 else 0
     row['Price CAD'] = 0
     row['Shipping CAD'] = 0
     row['Final CAD'] = 0
+
+def populate_option_fields(row: Dict, option_values: Optional[Dict[str, str]] = None):
+    """Populate multi-dimensional option fields (Option 1-3 Name/Value)."""
+    # Initialize all option fields to empty
+    for i in range(1, 4):
+        row[f'Option {i} Name'] = ''
+        row[f'Option {i} Value'] = ''
+    
+    if option_values:
+        sorted_dimensions = list(option_values.items())
+        for i, (dim_name, dim_value) in enumerate(sorted_dimensions[:3], 1):
+            row[f'Option {i} Name'] = dim_name
+            row[f'Option {i} Value'] = dim_value
+
+def populate_sku_fields(row: Dict, sku_key: str = '', in_stock: bool = True, needs_review: bool = False):
+    """Populate SKU-related fields."""
+    row['SKU Key'] = sku_key
+    row['In Stock'] = 'Yes' if in_stock else 'No'
+    row['Needs Review'] = 'Yes' if needs_review else 'No'
 
 # Naming convention:
 # {product-slug}_main_{index}.jpg - Main product photos (front page)
@@ -90,18 +113,18 @@ def contains_chinese(s: str) -> bool:
         return False
     return any('\u4e00' <= ch <= '\u9fff' for ch in s)
 
-def get_product_title(driver):
-    """Robustly extract the product title. Prefer DOM text; OCR fallback if mojibake/empty."""
+def get_product_title(driver) -> tuple:
+    """Robustly extract the product title from the page.
+    
+    Returns:
+        Tuple of (title, source) where source is 'dom', 'alt_dom', or 'document_title'
+    """
     # 1) Try configured selector
     try:
         el = driver.find_element(By.CSS_SELECTOR, TITLE_SELECTOR)
         txt = (el.text or '').strip() or (el.get_attribute('title') or '').strip()
-        if not txt or _seems_mojibake(txt):
-            ocr_txt = _ocr_text_from_element(driver, el, lang_primary='eng', include_chi=True, psm=6)
-            if ocr_txt:
-                return ocr_txt
         if txt:
-            return txt
+            return (txt, 'dom')
     except Exception:
         pass
     # 2) Common alternatives
@@ -115,19 +138,15 @@ def get_product_title(driver):
         try:
             el = driver.find_element(By.CSS_SELECTOR, sel)
             txt = (el.text or '').strip()
-            if not txt or _seems_mojibake(txt):
-                ocr_txt = _ocr_text_from_element(driver, el, lang_primary='eng', include_chi=True, psm=6)
-                if ocr_txt:
-                    return ocr_txt
             if txt:
-                return txt
+                return (txt, 'alt_dom')
         except Exception:
             continue
     # 3) Fallback to document.title
     try:
-        return (driver.title or '').strip()
+        return ((driver.title or '').strip(), 'document_title')
     except Exception:
-        return ''
+        return ('', 'failed')
 
 def download_image(url, save_path):
     """Download image from URL to save_path"""
@@ -417,7 +436,7 @@ def get_taobao_urls(file_path):
     return urls
 
 def scrape_product_variants(driver, url, product_index):
-    """Scrape product variants and download all associated media"""
+    """Scrape product variants and download all associated media using structured extraction."""
     driver.get(url)
     print(f"Scraping variants from: {url}")
     product_variants = []
@@ -429,8 +448,8 @@ def scrape_product_variants(driver, url, product_index):
         return []
 
     try:
-        product_title = get_product_title(driver)
-        print(f" -> Found product: {product_title}")
+        product_title, title_source = get_product_title(driver)
+        print(f" -> Found product: {product_title} (source: {title_source})")
         
         slug_title = slugify(product_title)[:50]
         product_media_dir = os.path.join(MEDIA_DIR, f"product_{product_index}_{slug_title}")
@@ -442,63 +461,119 @@ def scrape_product_variants(driver, url, product_index):
 
         variant_rows: List[Dict] = []
 
-        def build_variant_row(option_label: str) -> Dict:
-            return {
-                'URL': url,  # Base product URL
-                'Product Title': product_title,  # Chinese product name (stays in Chinese)
+        def build_variant_row(option_label: str, option_values: Optional[Dict[str, str]] = None) -> Dict:
+            """Build a variant row with multi-dimensional option support."""
+            row = {
+                'URL': url,
+                'Product Title': product_title,
                 'Product Title ZH': product_title if contains_chinese(product_title) else product_title,
-                'Option Name': option_label,  # Chinese variant name (stays in Chinese)
+                'Title Source': title_source,  # Track extraction method
+                'Option Name': option_label,  # Legacy field for backwards compatibility
                 'Option Name ZH': option_label,
-                'Variant URL': '',  # Variant-specific purchase URL (captured after clicking)
                 'Media Folder': os.path.basename(product_media_dir)
             }
+            populate_option_fields(row, option_values)
+            return row
 
-        option_buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
-
-        if not option_buttons:
-            print(" -> No option buttons found.")
-            row = build_variant_row('Default')
-            populate_price_fields(row)
-            variant_rows.append(row)
-        else:
-            print(f" -> Found {len(option_buttons)} options.")
-            for i in range(len(option_buttons)):
-                buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
-                if i >= len(buttons):
-                    break
-                button = buttons[i]
-
-                option_name = button.text.strip()
-                if not option_name:
-                    continue
-
-                print(f"    -> Recording variant: {option_name}")
-                try:
-                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
-                except Exception:
-                    pass
-
-                try:
-                    button.click()
-                except Exception as e:
-                    print(f"      -> Failed to click variant '{option_name}': {e}")
-                    continue
-
-                time.sleep(0.6)  # Wait for page to update after clicking variant
-
-                # Capture variant-specific URL after clicking
-                variant_url = driver.current_url
-                print(f"      -> Variant URL: {variant_url}")
-
-                row = build_variant_row(option_name)
-                row['Variant URL'] = variant_url  # Add variant-specific purchase URL
-                populate_price_fields(row)
+        # Use the variant engine for structured extraction
+        print(" -> Extracting variants with VariantEngine...")
+        variant_result = extract_variants(driver=driver)
+        
+        if variant_result.confidence > 0 and variant_result.variants:
+            # Structured extraction successful
+            print(f" -> VariantEngine: Found {len(variant_result.variants)} SKUs via {variant_result.method} (confidence: {variant_result.confidence:.2f})")
+            
+            # Log discovered dimensions
+            if variant_result.options:
+                print(f" -> Dimensions: {', '.join(opt.name for opt in variant_result.options)}")
+            
+            # Create a row for each SKU
+            for sku in variant_result.variants:
+                # Build option label from option values (e.g., "Black / Large")
+                option_values_list = list(sku.option_values.values())
+                option_label = ' / '.join(option_values_list) if option_values_list else 'Default'
+                
+                row = build_variant_row(option_label, sku.option_values)
+                
+                # Add extraction metadata
+                row['Variant Method'] = variant_result.method
+                row['Variant Confidence'] = variant_result.confidence
+                
+                # Price from SKU map
+                price_cny = sku.price_cny if sku.price_cny and sku.price_cny > 0 else None
+                populate_price_fields(row, price_cny)
+                
+                # SKU fields
+                populate_sku_fields(
+                    row, 
+                    sku_key=sku.sku_id or sku.prop_path or '',
+                    in_stock=sku.available and (sku.stock is None or sku.stock > 0),
+                    needs_review=(price_cny is None or price_cny == 0) or variant_result.needs_review
+                )
+                
                 variant_rows.append(row)
+                print(f"    -> Variant: {option_label} | ¥{price_cny or 0:.2f} | SKU: {sku.sku_id or 'N/A'}")
+        
+        else:
+            # Fallback to legacy click-based extraction
+            print(f" -> VariantEngine: No structured data found (confidence: {variant_result.confidence:.2f})")
+            print(" -> Falling back to click-based variant detection...")
+            
+            option_buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
+            price_resolver = PriceResolver()
+
+            if not option_buttons:
+                print(" -> No option buttons found.")
+                row = build_variant_row('Default')
+                row['Variant Method'] = 'fallback'
+                row['Variant Confidence'] = 0.0
+                populate_price_fields(row)
+                populate_sku_fields(row, needs_review=True)
+                variant_rows.append(row)
+            else:
+                print(f" -> Found {len(option_buttons)} options.")
+                for i in range(len(option_buttons)):
+                    buttons = driver.find_elements(By.CSS_SELECTOR, OPTION_BUTTONS_SELECTOR)
+                    if i >= len(buttons):
+                        break
+                    button = buttons[i]
+
+                    option_name = button.text.strip()
+                    if not option_name:
+                        continue
+
+                    print(f"    -> Recording variant: {option_name}")
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+                    except Exception:
+                        pass
+
+                    try:
+                        button.click()
+                    except Exception as e:
+                        print(f"      -> Failed to click variant '{option_name}': {e}")
+                        continue
+
+                    time.sleep(0.6)
+                    
+                    # Try to get price after clicking
+                    price_result = price_resolver.resolve_price_for_selection(driver)
+                    price_cny = price_result.price
+
+                    row = build_variant_row(option_name)
+                    row['Variant Method'] = 'click'
+                    row['Variant Confidence'] = 0.5
+                    populate_price_fields(row, price_cny)
+                    populate_sku_fields(row, needs_review=(price_cny is None or price_cny == 0))
+                    variant_rows.append(row)
 
         if not variant_rows:
             print(" -> No variants recorded after scanning; adding default entry.")
             fallback_row = build_variant_row('Default')
+            fallback_row['Variant Method'] = 'fallback'
+            fallback_row['Variant Confidence'] = 0.0
             populate_price_fields(fallback_row)
+            populate_sku_fields(fallback_row, needs_review=True)
             variant_rows.append(fallback_row)
         
         # STEP 1 (M2): Get HERO image - first image unless it's a video (then second)
@@ -1030,17 +1105,30 @@ def export_products_manifest(all_scraped_data):
                     if detail_count > 0:
                         products_map[url]["detailLongImage"] = f"/images/{media_slug}-Details_Long.jpg"
             
-            # Add variant
+            # Add variant with multi-dimensional options
             option = row.get('Option Name', '')
             price_cny = row.get('Price CNY') or 0
             price_cad = row.get('Price CAD') or 0
             
             if option:
-                products_map[url]["variants"].append({
-                    "option": option,
+                # Build options dict from multi-dimensional fields
+                options_dict = {}
+                for i in range(1, 4):
+                    opt_name = row.get(f'Option {i} Name', '')
+                    opt_value = row.get(f'Option {i} Value', '')
+                    if opt_name and opt_value:
+                        options_dict[opt_name] = opt_value
+                
+                variant_data = {
+                    "option": option,  # Legacy field for backwards compatibility
+                    "options": options_dict if options_dict else None,  # New multi-dimensional
+                    "sku_key": row.get('SKU Key', ''),
+                    "in_stock": row.get('In Stock', 'Yes') == 'Yes',
                     "price_cny": price_cny,
-                    "price_cad": price_cad
-                })
+                    "price_cad": price_cad,
+                    "needs_review": row.get('Needs Review', 'No') == 'Yes'
+                }
+                products_map[url]["variants"].append(variant_data)
         
         # Create manifest
         manifest = {
@@ -1058,6 +1146,110 @@ def export_products_manifest(all_scraped_data):
     except Exception as e:
         print(f"\n❌ Error exporting manifest: {e}")
         return False
+
+def generate_validation_report(all_scraped_data):
+    """Generate a validation report summarizing extraction quality."""
+    try:
+        report_path = os.path.join(SCRIPT_DIR, 'validation_report.json')
+        
+        # Count statistics
+        total_variants = len(all_scraped_data)
+        unique_urls = set(row.get('URL', '') for row in all_scraped_data)
+        total_products = len(unique_urls)
+        
+        # Title source distribution
+        title_sources = {}
+        for row in all_scraped_data:
+            src = row.get('Title Source', 'unknown')
+            title_sources[src] = title_sources.get(src, 0) + 1
+        
+        # Variant method distribution
+        variant_methods = {}
+        for row in all_scraped_data:
+            method = row.get('Variant Method', 'unknown')
+            variant_methods[method] = variant_methods.get(method, 0) + 1
+        
+        # Price extraction stats
+        with_price = sum(1 for row in all_scraped_data if row.get('Price CNY', 0) > 0)
+        without_price = total_variants - with_price
+        price_rate = (with_price / total_variants * 100) if total_variants > 0 else 0
+        
+        # Needs review count
+        needs_review = sum(1 for row in all_scraped_data if row.get('Needs Review') == 'Yes')
+        
+        # Multi-dimensional options usage
+        has_option1 = sum(1 for row in all_scraped_data if row.get('Option 1 Name'))
+        has_option2 = sum(1 for row in all_scraped_data if row.get('Option 2 Name'))
+        has_option3 = sum(1 for row in all_scraped_data if row.get('Option 3 Name'))
+        
+        # In-stock stats
+        in_stock = sum(1 for row in all_scraped_data if row.get('In Stock') == 'Yes')
+        out_of_stock = sum(1 for row in all_scraped_data if row.get('In Stock') == 'No')
+        
+        # Confidence distribution
+        confidence_buckets = {'high': 0, 'medium': 0, 'low': 0}
+        for row in all_scraped_data:
+            conf = row.get('Variant Confidence', 0)
+            if isinstance(conf, (int, float)):
+                if conf >= 0.8:
+                    confidence_buckets['high'] += 1
+                elif conf >= 0.5:
+                    confidence_buckets['medium'] += 1
+                else:
+                    confidence_buckets['low'] += 1
+        
+        report = {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "summary": {
+                "total_products": total_products,
+                "total_variants": total_variants,
+                "variants_per_product_avg": round(total_variants / total_products, 2) if total_products > 0 else 0
+            },
+            "title_extraction": {
+                "sources": title_sources,
+                "dom_success_rate": round(title_sources.get('dom', 0) / total_products * 100, 1) if total_products > 0 else 0
+            },
+            "variant_extraction": {
+                "methods": variant_methods,
+                "json_success_rate": round(variant_methods.get('json', 0) / total_variants * 100, 1) if total_variants > 0 else 0,
+                "confidence": confidence_buckets
+            },
+            "price_extraction": {
+                "with_price": with_price,
+                "without_price": without_price,
+                "success_rate": round(price_rate, 1)
+            },
+            "multi_dimensional_options": {
+                "with_option1": has_option1,
+                "with_option2": has_option2,
+                "with_option3": has_option3,
+                "multi_option_rate": round(has_option2 / total_variants * 100, 1) if total_variants > 0 else 0
+            },
+            "inventory": {
+                "in_stock": in_stock,
+                "out_of_stock": out_of_stock
+            },
+            "quality": {
+                "needs_review": needs_review,
+                "clean_rate": round((total_variants - needs_review) / total_variants * 100, 1) if total_variants > 0 else 0
+            }
+        }
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # Print summary
+        print(f"\n📊 Validation Report: {report_path}")
+        print(f"   Products: {total_products} | Variants: {total_variants}")
+        print(f"   Price Success: {price_rate:.1f}% | Needs Review: {needs_review}")
+        print(f"   Multi-Option Rate: {report['multi_dimensional_options']['multi_option_rate']}%")
+        print(f"   JSON Extraction Rate: {report['variant_extraction']['json_success_rate']}%")
+        
+        return report
+        
+    except Exception as e:
+        print(f"\n❌ Error generating validation report: {e}")
+        return None
 
 def main():
     os.makedirs(MEDIA_DIR, exist_ok=True)
@@ -1077,21 +1269,14 @@ def main():
     options.add_argument('--no-first-run')
     options.add_argument('--disable-extensions')
     options.add_argument('--window-size=1920,1080')  # High-res for better screenshots
-    options.add_argument('--remote-debugging-port=9222')  # Allow remote debugging
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])  # Reduce logging noise
     
     print("🚀 Starting Chrome with persistent profile (Selenium Manager)...")
     print(f"   Profile: {SELENIUM_PROFILE_DIR}")
-    print("   Waiting for Chrome to launch...")
     
-    try:
-        driver = webdriver.Chrome(options=options)
-        driver.set_page_load_timeout(60)
-        print("✓ Chrome started successfully")
-    except Exception as e:
-        print(f"❌ Failed to start Chrome: {e}")
-        print("   Make sure Chrome is installed and ChromeDriver is available")
-        return
+    driver = webdriver.Chrome(options=options)
+    driver.set_page_load_timeout(60)
+    
+    print("✓ Chrome started successfully")
     print(f"   Note: Session persists in {SELENIUM_PROFILE_DIR}")
     all_scraped_data = []
     
@@ -1113,11 +1298,8 @@ def main():
         print("\nNo data was scraped. Please check your URLs and CSS selectors.")
         return
 
-    # NOTE: Translation removed - Comet will handle translation with context from Taobao page
-    # Product and variant names stay in Chinese for Comet to translate
-    print("\n✅ Scraping complete - names kept in Chinese for Comet translation")
-    
-    # Keep translation functions commented out for reference (not used)
+    print("\nTranslating titles...")
+    # Apply lightweight translations for titles and variants (rule-based)
     def _clean_text(s: str) -> str:
         return (s or '').strip()
 
@@ -1212,28 +1394,62 @@ def main():
             result = re.sub(r"[【】\[\]（）()]", "", zh).strip()
         return result
 
-    # Keep names in Chinese - Comet will translate with context from Taobao page
-    # No translation applied here - Comet handles all translation
+    # Cache title translations by Chinese title
+    title_cache = {}
+    print("\n🔤 Translating titles and variant names...")
+    for idx, row in enumerate(all_scraped_data):
+        zh_title = _clean_text(row.get('Product Title'))
+        if zh_title not in title_cache:
+            en_title = translate_title_simple(zh_title)
+            title_cache[zh_title] = en_title
+            # Show first 3 translations for debugging
+            if len(title_cache) <= 3:
+                print(f"  Title {len(title_cache)}: {zh_title[:60]}... → {en_title[:60]}...")
+        row['Translated Title'] = title_cache[zh_title]
+        # Translate variant option name
+        zh_opt = _clean_text(row.get('Option Name'))
+        en_opt = translate_variant_simple(zh_opt)
+        row['Option Name'] = en_opt
+        # Show first 5 variant translations for debugging
+        if idx < 5:
+            print(f"  Variant {idx+1}: {zh_opt} → {en_opt}")
 
     fieldnames = [
-        'URL',  # Base product URL
-        'Product Title',  # Chinese product name (stays in Chinese - Comet will translate)
-        'Product Title ZH',  # Chinese product name
-        'Option Name',  # Chinese variant name (stays in Chinese - Comet will translate)
-        'Option Name ZH',  # Chinese variant name
-        'Variant URL',  # Variant-specific purchase URL (captured when variant is clicked)
+        'URL',
+        'Product Title',
+        'Product Title ZH',
+        'Translated Title',
+        'Title Source',  # Track extraction method: dom, alt_dom, document_title
+        'Option Name',
+        'Option Name ZH',
+        # New multi-dimensional option fields
+        'Option 1 Name',
+        'Option 1 Value',
+        'Option 2 Name',
+        'Option 2 Value',
+        'Option 3 Name',
+        'Option 3 Value',
+        # SKU and inventory fields
+        'SKU Key',
+        'In Stock',
+        'Needs Review',
+        # Extraction metadata
+        'Variant Method',  # json, network, click, fallback
+        'Variant Confidence',  # 0.0 to 1.0
+        # Price fields
         'Price',
         'Price CNY',
         'Price CAD',
         'Shipping CAD',
         'Final CAD',
+        # Media fields
         'Media Folder',
         'Main Images',
         'Detail Images',
         'Catalogue Images'
     ]
     with open(CSV_OUTPUT_FILE, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(all_scraped_data)
 
@@ -1248,22 +1464,8 @@ def main():
     # M5: Export products manifest for shop integration
     export_products_manifest(all_scraped_data)
     
-    print("\n" + "="*60)
-    print("⏸️  PAUSE: Please review and filter images before continuing")
-    print("="*60)
-    print("\n📋 Next steps:")
-    print("  1. Review images in scraper/media/ folders")
-    print("  2. Delete unwanted images (ads, unrelated content) from Details/ folders")
-    print("  3. Run: python3 stitch-details.py (to stitch detail images)")
-    print("  4. Run: python3 translate.py (to enhance translations)")
-    print("  5. Run: cd ../shared/scripts && node csv-to-knack.js (to import to Knack)")
-    print("\nPress Enter when ready to continue, or Ctrl+C to exit...")
-    try:
-        input()
-    except (EOFError, KeyboardInterrupt):
-        print("\nExiting. You can run the next steps manually when ready.")
-        driver.quit()
-        return
+    # M6: Generate validation report
+    generate_validation_report(all_scraped_data)
 
 if __name__ == "__main__":
     # Allow a login-setup mode to help users log into Taobao once and persist session

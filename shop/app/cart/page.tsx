@@ -202,6 +202,11 @@ export default function CartPage() {
                                 {item.variantTitle}
                               </p>
                             )}
+                            {item.selectedOption && (
+                              <p className="text-sm text-[#A1A1A1] mb-1">
+                                Size/Option: <span className="text-[#F5F5F5] font-medium">{item.selectedOption}</span>
+                              </p>
+                            )}
                             {item.category && (
                               <p className="text-sm text-[#A1A1A1] mb-2">{item.category}</p>
                             )}

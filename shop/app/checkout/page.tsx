@@ -202,6 +202,7 @@ export default function CheckoutPage() {
           sku: item.sku || '',
           quantity: item.quantity,
           unitPriceCad: price,
+          selectedSize: item.selectedOption || undefined, // Map selectedOption to selectedSize for API
           isAddon,
           regularPrice: item.regularPrice,
           addonPrice: item.addonPrice,
@@ -733,6 +734,9 @@ export default function CheckoutPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[#F5F5F5] truncate">{item.productTitle}</p>
                         <p className="text-xs text-[#A1A1A1]">{item.variantTitle}</p>
+                        {item.selectedOption && (
+                          <p className="text-xs text-[#3D9A6C]">Size: {item.selectedOption}</p>
+                        )}
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-[#A1A1A1]">Qty: {item.quantity}</span>
                           {isAddon && (

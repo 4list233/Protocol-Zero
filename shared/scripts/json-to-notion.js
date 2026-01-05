@@ -34,8 +34,10 @@ async function uploadImageToNotion(imagePath, productId) {
   
   // Resolve full path for local files
   if (!path.isAbsolute(imagePath)) {
-    // Try multiple possible locations
+    // Try multiple possible locations - prioritize shop/public/images
     const possiblePaths = [
+      path.resolve(__dirname, '../../shop/public/images', imagePath),
+      path.resolve(__dirname, '../../scraper/ai_scraper_output/media', imagePath),
       path.resolve(__dirname, '../../scraper/media', imagePath),
       path.resolve(__dirname, '../../scraper', imagePath),
       path.resolve(imagePath)

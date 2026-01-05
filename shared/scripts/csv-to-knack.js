@@ -47,6 +47,8 @@ const PRODUCT_FIELDS = {
 const VARIANT_FIELDS = {
   product: process.env.KNACK_FIELD_VARIANTS_PRODUCT || 'field_61',
   variantName: process.env.KNACK_FIELD_VARIANTS_VARIANT_NAME || 'field_62',
+  // New: English/display name for variants (use this instead of field_62)
+  variantNameEn: process.env.KNACK_FIELD_VARIANTS_VARIANT_NAME_EN || 'field_149',
   sku: process.env.KNACK_FIELD_VARIANTS_SKU || 'field_63',
   priceCny: process.env.KNACK_FIELD_VARIANTS_PRICE_CNY || 'field_64',
   priceCadOverride: process.env.KNACK_FIELD_VARIANTS_PRICE_CAD_OVERRIDE || 'field_65',
@@ -491,7 +493,10 @@ async function importToKnack() {
         // Connection field: Use array format with product record ID
         // Knack connection fields require the record ID in array format
         variantData[VARIANT_FIELDS.product] = [productRecordId];
-        variantData[VARIANT_FIELDS.variantName] = variant.variantName;
+        // Populate the new display name field (field_149) instead of field_62
+        variantData[VARIANT_FIELDS.variantNameEn] = variant.variantName;
+        // Leave the original variantName field empty to avoid overwriting untranslated text
+        variantData[VARIANT_FIELDS.variantName] = null;
         variantData[VARIANT_FIELDS.sku] = null;
         variantData[VARIANT_FIELDS.priceCny] = variant.price_cny || 0;
         variantData[VARIANT_FIELDS.priceCadOverride] = variant.price_cad || null;

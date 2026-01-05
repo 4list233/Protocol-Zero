@@ -40,9 +40,10 @@ For each variant in the list:
 
 7. CALCULATE margins:
    - Reference Price = Canadian Price × 0.85
-   - Cost = (CNY Price + 65) / 5.2 - (Reference Price × 0.1)
+   - Cost = (CNY Price + 20) / 5.2 - (Reference Price × 0.1)
    - Margins = (Reference Price - Cost) ÷ Reference Price
    - Round to 2 decimal places (e.g., 0.82)
+   - Note: Shipping cost is 20 CNY (updated from 65 CNY)
 
 8. EDIT VARIANT (separate form):
    - Scroll down to variant fields

@@ -63,3 +63,4 @@
 - Missing image falls back gracefully.
 - Checkout response totals match server recomputation; mismatches are rejected.
 
+

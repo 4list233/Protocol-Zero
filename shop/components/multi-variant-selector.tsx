@@ -21,6 +21,8 @@ export interface MultiVariantSelectorProps {
   variants: MultiVariant[]
   selectedVariantId: string
   onChange: (variantId: string) => void
+  onOption2Change?: (selectedOption: string) => void // For storing selected option (size/color) separately
+  selectedOption2?: string // Currently selected option from Option Value 2
 }
 
 /**
@@ -69,6 +71,8 @@ export default function MultiVariantSelector({
   variants,
   selectedVariantId,
   onChange,
+  onOption2Change,
+  selectedOption2,
 }: MultiVariantSelectorProps) {
   // Check if we have structured multi-dimensional options
   const isMultiDimensional = useMemo(() => hasStructuredOptions(variants), [variants])
@@ -116,13 +120,25 @@ export default function MultiVariantSelector({
     })
   }, [variants])
   
+  // Check if Option 2 contains available options as comma-separated list
+  const isAvailableOptionsList = useMemo(() => {
+    return optionType2?.toLowerCase().includes('available') || false
+  }, [optionType2])
+
   // Filter option2 values based on selected option1
   const option2Values = useMemo(() => {
     if (!optionType2) return []
+    
+    // If it's an "Available Options" list, parse from comma-separated string
+    if (isAvailableOptionsList && selectedVariant?.optionValue2) {
+      return selectedVariant.optionValue2.split(',').map(s => s.trim()).filter(Boolean)
+    }
+    
+    // Otherwise, get unique values from variants
     const selectedOption1 = selectedVariant?.optionValue1
     const filtered = variants.filter(v => !selectedOption1 || v.optionValue1 === selectedOption1)
     return getUniqueOptions(filtered, 'optionValue2')
-  }, [variants, optionType2, selectedVariant])
+  }, [variants, optionType2, selectedVariant, isAvailableOptionsList])
 
   // Handle option1 selection
   const handleOption1Change = (value: string) => {
@@ -223,38 +239,60 @@ export default function MultiVariantSelector({
         </div>
       )}
 
-      {/* Option 2 (e.g., Size) */}
+      {/* Option 2 (e.g., Size) - Show as dropdown if it's an "Available Options" list */}
       {optionType2 && option2Values.length > 0 && (
         <div>
           <label className="block text-sm font-medium text-[#A1A1A1] mb-2">
-            {optionType2}
-            {selectedVariant?.optionValue2 && (
-              <span className="ml-2 text-[#F5F5F5]">: {selectedVariant.optionValue2}</span>
+            {optionType2.replace('Available ', '')}
+            {selectedOption2 && (
+              <span className="ml-2 text-[#F5F5F5]">: {selectedOption2}</span>
             )}
           </label>
-          <div className="flex gap-2 flex-wrap">
-            {option2Values.map((value) => {
-              const isSelected = selectedVariant?.optionValue2 === value
-              const isAvailable = isOption2Available(value)
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleOption2Change(value)}
-                  disabled={!isAvailable}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
-                    isSelected
-                      ? "bg-[#3D9A6C] text-black border-[#3D9A6C] shadow-md"
-                      : isAvailable
-                        ? "bg-[#1E1E1E] text-[#F5F5F5] border-[#2C2C2C] hover:border-[#3D9A6C]/50 hover:bg-[#2C2C2C]"
-                        : "bg-[#1E1E1E] text-[#666] border-[#2C2C2C] opacity-50 cursor-not-allowed line-through"
-                  }`}
-                >
+          {isAvailableOptionsList ? (
+            // Dropdown for available options list
+            <select
+              value={selectedOption2 || ''}
+              onChange={(e) => {
+                const value = e.target.value
+                if (onOption2Change) {
+                  onOption2Change(value)
+                }
+              }}
+              className="w-full px-4 py-2 rounded-lg text-sm font-medium bg-[#1E1E1E] text-[#F5F5F5] border border-[#2C2C2C] hover:border-[#3D9A6C]/50 focus:border-[#3D9A6C] focus:outline-none transition-all"
+            >
+              <option value="">Select {optionType2.replace('Available ', '')}</option>
+              {option2Values.map((value) => (
+                <option key={value} value={value}>
                   {value}
-                </button>
-              )
-            })}
-          </div>
+                </option>
+              ))}
+            </select>
+          ) : (
+            // Button list for regular option values
+            <div className="flex gap-2 flex-wrap">
+              {option2Values.map((value) => {
+                const isSelected = selectedVariant?.optionValue2 === value
+                const isAvailable = isOption2Available(value)
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => handleOption2Change(value)}
+                    disabled={!isAvailable}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                      isSelected
+                        ? "bg-[#3D9A6C] text-black border-[#3D9A6C] shadow-md"
+                        : isAvailable
+                          ? "bg-[#1E1E1E] text-[#F5F5F5] border-[#2C2C2C] hover:border-[#3D9A6C]/50 hover:bg-[#2C2C2C]"
+                          : "bg-[#1E1E1E] text-[#666] border-[#2C2C2C] opacity-50 cursor-not-allowed line-through"
+                    }`}
+                  >
+                    {value}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 

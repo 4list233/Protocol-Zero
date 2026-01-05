@@ -40,6 +40,7 @@ type CheckoutItem = {
   sku: string
   quantity: number
   unitPriceCad: number
+  selectedSize?: string // Selected size from multi-select dropdown (e.g., "L", "M", "XS")
   isAddon?: boolean
   regularPrice?: number
   addonPrice?: number
@@ -312,7 +313,7 @@ export async function POST(request: Request) {
       await trackPromoCodeUsage(body.promoCode, body.promoDiscountCad)
     }
     
-    // Build order items JSON with quantities
+    // Build order items JSON with quantities and selected size
     const orderItemsJson = body.items.map(item => ({
       variantId: item.variantId,
       productId: item.productId,
@@ -321,6 +322,7 @@ export async function POST(request: Request) {
       sku: item.sku,
       quantity: item.quantity,
       unitPriceCad: item.unitPriceCad,
+      selectedSize: item.selectedSize || null, // Selected size from dropdown (visible in Knack dashboard)
       isAddon: item.isAddon || false,
       regularPrice: item.regularPrice,
       addonPrice: item.addonPrice,

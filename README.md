@@ -11,12 +11,33 @@
 ```
 protocol-zero/
 ├── scraper/          # Python Selenium scraper for Taobao/Tmall
-├── shop/            # Next.js 14 e-commerce storefront
+│   ├── scraper.py              # Main scraping logic
+│   └── classify_variants.py    # Variant classification & linking
+├── shop/            # Next.js 15 e-commerce storefront
 └── shared/          # Data bridge between scraper and shop
     ├── media/       # Product images (source of truth)
     ├── data/        # JSON manifests and sync files
     └── scripts/     # Automation scripts
 ```
+
+## 🎯 Variant Management System
+
+**Key Architecture:** Archived variants are the source of truth for options. Active variants extract and display options from linked archived variants.
+
+**Quick Overview:**
+- **Scraper** → Captures ALL clickable options as individual variants
+- **Classification** → Groups into base models (Active) + options (Archived)
+- **Product Linking** → Both active and archived variants connect to SAME product
+- **Field Inheritance** → Archived variants duplicate ALL pricing/media fields from base
+- **Database** → Archived variants link to active variants (bidirectional)
+- **Frontend** → Reads only active variants, displays extracted options
+- **Orders** → Stores base variant ID + selected option for full traceability
+
+📚 **Documentation:**
+- **[Full Architecture](VARIANT_ARCHITECTURE_VISUAL.md)** - Visual workflow and data flow
+- **[Linking System](VARIANT_LINKING_REFERENCE.md)** - Bidirectional linking details
+- **[Field Inheritance](FIELD_INHERITANCE_GUIDE.md)** - Product linking and field duplication
+- **[Workflow Guide](COMPLETE_VARIANT_WORKFLOW.md)** - End-to-end technical workflow
 
 ## 🚀 Quick Start
 
