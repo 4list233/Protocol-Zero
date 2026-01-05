@@ -20,6 +20,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true)
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [selectedOption2, setSelectedOption2] = useState<string>('') // Selected size/color from available options
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const detailsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch(`/api/products/${id}`)
@@ -72,10 +74,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     product.primaryImage,
     ...(product.images || [])
   ].filter(Boolean)))
-
-  // State for selected main image
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const detailsRef = useRef<HTMLDivElement>(null)
 
   const scrollToDetails = () => {
     detailsRef.current?.scrollIntoView({ behavior: 'smooth' })
