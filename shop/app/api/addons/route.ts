@@ -19,13 +19,21 @@ if (process.env.NODE_ENV === 'development') {
 function isRequestFromAllowedOrigin(request: Request): boolean {
   const origin = request.headers.get('origin')
   const referer = request.headers.get('referer')
+  const host = request.headers.get('host')
   
-  // Check origin header
+  // Always allow same-origin requests (when host matches request URL)
+  // This handles Next.js internal API calls and direct browser requests
+  if (!origin && host) {
+    // Same-origin request - no origin header means it's from the same domain
+    return true
+  }
+  
+  // Check origin header (CORS requests)
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     return true
   }
   
-  // Check referer header (for same-origin requests, origin might be null)
+  // Check referer header (for some browsers/scenarios)
   if (referer) {
     try {
       const refererUrl = new URL(referer)
