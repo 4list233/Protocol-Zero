@@ -29,15 +29,27 @@ function getNotionClient(): Client | null {
 }
 
 // Generate image URLs directly from product ID (no Notion API calls needed)
-// Images follow the pattern: /images/[product-id]-Main.jpg and /images/[product-id]-Details_Long.jpg
+// Hero images: /images/[product-id]-hero-01.jpg through hero-07.jpg (Taobao-style carousel)
+// Detail image: /images/[product-id]-details.jpg (long stitched scroll image)
 function getProductImages(productId: string): { images: string[]; detailImage?: string } {
-  // Generate direct paths to static images in public folder
-  const mainImage = `/images/${productId}-Main.jpg`
-  const detailImage = `/images/${productId}-Details_Long.jpg`
+  // Generate paths for up to 7 hero images (Taobao-style)
+  const heroImages: string[] = []
+  for (let i = 1; i <= 7; i++) {
+    const num = i.toString().padStart(2, '0')
+    heroImages.push(`/images/${productId}-hero-${num}.jpg`)
+  }
+  
+  // Detail image for infinite scroll section
+  const detailImage = `/images/${productId}-details.jpg`
+  
+  // Also try legacy naming for backwards compatibility
+  const legacyMain = `/images/${productId}-Main.jpg`
+  const legacyDetail = `/images/${productId}-Details_Long.jpg`
   
   return {
-    images: [mainImage],
+    images: [...heroImages, legacyMain], // Include legacy as fallback
     detailImage: detailImage,
+    legacyDetailImage: legacyDetail, // Fallback for old naming
   }
 }
 
@@ -88,7 +100,17 @@ function fixImageUrl(url: string): string {
 // Get images using direct paths (fast - no API calls)
 async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{ images: string[]; detailImage?: string }> {
   // Use direct image paths - no Notion API needed
-  return getProductImages(productId)
+  const result = getProductImages(productId)
+  
+  // Use legacy detail image as fallback if new one doesn't exist
+  const detailImage = result.detailImage
+  const legacyDetailImage = (result as any).legacyDetailImage
+  
+  return {
+    images: result.images,
+    detailImage: detailImage,
+    legacyDetailImage: legacyDetailImage,
+  }
 }
 
 // Create or update product images in Notion (linked by ID/SKU)
@@ -301,12 +323,15 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     : (sku || knackRecordId)
   
   // Fetch images from cache (preloaded from Notion)
-  const { images: notionImages, detailImage: notionDetailImage } = await fetchImagesFromNotion(productId, sku)
+  const imageData = await fetchImagesFromNotion(productId, sku) as any
+  const notionImages = imageData.images || []
+  const notionDetailImage = imageData.detailImage
+  const legacyDetailImage = imageData.legacyDetailImage
   
   // Use Notion images if available, otherwise fallback to placeholder
   const images = notionImages.length > 0 ? notionImages : ['/images/placeholder.png']
   const primaryImage = images[0] || '/images/placeholder.png'
-  const detailLongImage = notionDetailImage
+  const detailLongImage = notionDetailImage || legacyDetailImage
 
   // Get status directly from record - no price-based overrides
   const status = (getFieldValue(record, PRODUCT_FIELDS.status, 'Status') || 'Active') as ProductRuntime['status']

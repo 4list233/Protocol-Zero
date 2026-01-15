@@ -34,10 +34,10 @@ protocol-zero/
 - **Orders** → Stores base variant ID + selected option for full traceability
 
 📚 **Documentation:**
-- **[Full Architecture](VARIANT_ARCHITECTURE_VISUAL.md)** - Visual workflow and data flow
-- **[Linking System](VARIANT_LINKING_REFERENCE.md)** - Bidirectional linking details
-- **[Field Inheritance](FIELD_INHERITANCE_GUIDE.md)** - Product linking and field duplication
-- **[Workflow Guide](COMPLETE_VARIANT_WORKFLOW.md)** - End-to-end technical workflow
+- **[Full Architecture](docs/variants/VARIANT_ARCHITECTURE_VISUAL.md)** - Visual workflow and data flow
+- **[Linking System](docs/variants/VARIANT_LINKING_REFERENCE.md)** - Bidirectional linking details
+- **[Field Inheritance](docs/variants/FIELD_INHERITANCE_GUIDE.md)** - Product linking and field duplication
+- **[Workflow Guide](docs/workflows/COMPLETE_VARIANT_WORKFLOW.md)** - End-to-end technical workflow
 
 ## 🚀 Quick Start
 
@@ -50,7 +50,7 @@ protocol-zero/
 ### Setup Scraper
 ```bash
 cd scraper
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install selenium requests pillow
 ```
@@ -83,10 +83,10 @@ npm run dev
 ```bash
 cd scraper
 # One-time: Login to Taobao
-python scraper.py --login-setup
+python3 scraper.py --login-setup
 
 # Add URLs to taobao_links.txt, then run:
-python scraper.py
+python3 scraper.py
 ```
 
 **Outputs**:
@@ -134,20 +134,20 @@ npm start
 1. **Scrape Products**
    ```bash
    cd scraper
-   python scraper.py
+   python3 scraper.py
    ```
    Outputs: `shared/data/products_manifest.json` + media files
 
 2. **Sync Media to Shop**
    ```bash
    cd shared/scripts
-   node sync-media.js
+   npm run sync-media
    ```
    Copies images from `shared/media/` → `shop/public/images/`
 
 3. **Generate TypeScript Products**
    ```bash
-   node generate-products.js
+   npm run generate-products
    ```
    Creates `shop/lib/products.generated.ts` from JSON manifest
 
@@ -171,8 +171,8 @@ npm start
 
 ### Manual Sync
 ```bash
-cd scraper && python scraper.py
-cd ../shared/scripts && node sync-media.js && node generate-products.js
+cd scraper && python3 scraper.py
+cd ../shared/scripts && npm run sync-media && npm run generate-products
 cd ../../shop && npm run build
 ```
 
@@ -204,8 +204,8 @@ media/
 - `catalog_index.json` - Duplicate detection index
 
 ### `shared/scripts/`
-- `sync-media.js` - Copy media → shop/public/images/
-- `generate-products.js` - JSON → products.generated.ts
+- `media/sync-media.js` - Copy media → shop/public/images/
+- `products/generate-products.js` - JSON → products.generated.ts
 - `watch-queue.py` - Monitor scrape_queue.json (optional)
 
 ## 🛠️ Development
@@ -254,7 +254,7 @@ type Product = {
 
 - [Scraper README](scraper/README.md) - Detailed scraper documentation
 - [Shop README](shop/README.md) - Shop setup and features
-- [Integration Plan](scraper/INTEGRATION_PLAN.md) - Architecture details
+- [Integration Plan](scraper/docs/INTEGRATION_PLAN.md) - Architecture details
 - [Scraper Requirements](shop/SCRAPER_REQUIREMENTS.md) - Original requirements
 
 ## 🤝 Contributing
@@ -279,7 +279,7 @@ type Product = {
 
 ### Shop Issues
 - **Database errors**: Run `npx prisma db push` to sync schema
-- **Images not showing**: Run `cd shared/scripts && node sync-media.js`
+- **Images not showing**: Run `cd shared/scripts && npm run sync-media`
 - **Products not updating**: Check `shop/lib/products.generated.ts` was created
 
 ## 📞 Support

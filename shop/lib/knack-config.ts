@@ -145,6 +145,7 @@ export const KNACK_CONFIG = {
       addonCostCad: 'field_160',     // Cost with reduced shipping
       addonMargin: 'field_161',      // Margin at add-on price (50%)
       minCartForAddon: 'field_162',  // Min cart value to unlock ($30)
+      imageIdsJson: 'field_176',     // JSON array of image IDs bound to this variant
     },
 
     // Orders Object Fields (object_10)

@@ -9,7 +9,7 @@ export function CartDrawer() {
   const { itemCount } = useCart()
 
   return (
-    <Link href="/cart">
+    <Link href="/cart" data-cart-icon>
       <Button 
         variant="outline" 
         className="relative h-12 w-12 p-0 flex items-center justify-center"

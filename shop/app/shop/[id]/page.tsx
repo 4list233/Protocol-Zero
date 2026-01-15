@@ -10,8 +10,18 @@ import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
 import { ArrowLeft, ShoppingCart, ChevronDown } from "lucide-react"
 import MultiVariantSelector from "@/components/multi-variant-selector"
+import { WishlistButton } from "@/components/wishlist-button"
+import { StockUrgency } from "@/components/stock-urgency"
+import { PriceAlertButton } from "@/components/price-alert-button"
+import { RecentlyViewed } from "@/components/recently-viewed"
+import { BigImageMode } from "@/components/big-image-mode"
+import { CompareVariants } from "@/components/compare-variants"
+import { SizeGuideModal } from "@/components/size-guide-modal"
+import { BundleDeals } from "@/components/bundle-deals"
+import { useAddToCartAnimation, AddToCartAnimation } from "@/components/add-to-cart-animation"
+import { addRecentlyViewed } from "@/lib/recently-viewed"
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProductDetailPageEnhanced({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { addToast } = useToast()
   const { addItem, addonsUnlocked } = useCart()
@@ -21,7 +31,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [selectedOption2, setSelectedOption2] = useState<string>('') // Selected size/color from available options
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [validImages, setValidImages] = useState<string[]>([]) // Filtered list of valid images
+  const [galleryImages, setGalleryImages] = useState<string[]>([]) // Images for selected variant
   const detailsRef = useRef<HTMLDivElement>(null)
+  const addToCartButtonRef = useRef<HTMLButtonElement>(null)
+  const { flyingProducts, triggerAnimation } = useAddToCartAnimation()
+
+  // Track recently viewed
+  useEffect(() => {
+    if (product) {
+      addRecentlyViewed(product.id)
+    }
+  }, [product])
 
   useEffect(() => {
     fetch(`/api/products/${id}`)
@@ -31,6 +52,32 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         if (data.variants && data.variants.length > 0) {
           setSelectedVariantId(data.variants[0].id)
         }
+        
+        // Filter out invalid images (404s) and duplicates
+        if (data.images && data.images.length > 0) {
+          const uniqueImages = Array.from(new Set(data.images.filter(Boolean)))
+          
+          // Validate images exist (check if they load)
+          Promise.all(
+            uniqueImages.map(async (url) => {
+              try {
+                const response = await fetch(url, { method: 'HEAD' })
+                return response.ok ? url : null
+              } catch {
+                return null
+              }
+            })
+          ).then(results => {
+            const valid = results.filter((url): url is string => url !== null)
+            // If no valid images, use placeholder
+            setValidImages(valid.length > 0 ? valid : ['/images/placeholder.png'])
+            setGalleryImages(valid.length > 0 ? valid : ['/images/placeholder.png'])
+          })
+        } else {
+          setValidImages(['/images/placeholder.png'])
+          setGalleryImages(['/images/placeholder.png'])
+        }
+        
         setLoading(false)
       })
       .catch(err => {
@@ -38,6 +85,34 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         setLoading(false)
       })
   }, [id])
+
+  // IMAGE FILTERING BASED ON STYLE SELECTION
+  // This is the critical feature that was missing from V0
+  useEffect(() => {
+    if (!product || !selectedVariantId) return
+
+    const selectedVariant = product.variants?.find(v => v.id === selectedVariantId)
+    if (!selectedVariant) return
+
+    // TODO: In the future, implement proper image binding to variants
+    // For now, we'll use all available images
+    // When you add variant-specific images to Knack, update this logic:
+    // 1. Filter validImages by variant.optionValue1 (style)
+    // 2. Show variant-specific images first, then generic images
+    
+    // Example of future implementation:
+    // const variantImages = validImages.filter(img => 
+    //   img.includes(selectedVariant.optionValue1?.toLowerCase() || '')
+    // )
+    // const genericImages = validImages.filter(img => 
+    //   !variantImages.includes(img)
+    // )
+    // setGalleryImages([...variantImages, ...genericImages])
+
+    // For now, use all valid images
+    setGalleryImages(validImages)
+    setSelectedImageIndex(0) // Reset to first image when variant changes
+  }, [selectedVariantId, product, validImages])
 
   if (loading) {
     return (
@@ -64,16 +139,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   
   // Always use variant pricing (all products should have variants)
   const displayPrice = selectedVariant?.price_cad || 0
-  const displayStock = selectedVariant?.stock ?? product.stock
+  const displayStock = selectedVariant?.stock ?? product.stock ?? 0
   
   // Update selected variant ID if we defaulted to first variant
   if (!selectedVariantId && defaultVariant) {
     setSelectedVariantId(defaultVariant.id)
   }
-  const images = Array.from(new Set([
-    product.primaryImage,
-    ...(product.images || [])
-  ].filter(Boolean)))
+  
+  // Use gallery images (which update based on variant selection)
+  const images = galleryImages.length > 0 ? galleryImages : ['/images/placeholder.png']
 
   const scrollToDetails = () => {
     detailsRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -81,6 +155,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return
+    
+    // Trigger flying animation
+    if (addToCartButtonRef.current) {
+      triggerAnimation(
+        product.primaryImage || product.images?.[0] || '/images/placeholder.png',
+        addToCartButtonRef.current
+      )
+    }
     
     // Add to cart using new cart context
     const variant = selectedVariant as any // Type assertion for add-on fields
@@ -114,6 +196,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
+      {/* Add to Cart Animation */}
+      <AddToCartAnimation flyingProducts={flyingProducts} />
+
       <header className="sticky top-0 z-50 border-b border-[#2C2C2C] bg-[#1E1E1E]/95 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/shop" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -124,13 +209,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <Link href="/" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Home</Link>
             <Link href="/clips" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Clips</Link>
             <Link href="/account" className="text-sm font-medium hover:text-[#3D9A6C] transition-colors">Account</Link>
-            <CartDrawer />
+            <div data-cart-icon>
+              <CartDrawer />
+            </div>
           </nav>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Product Section - Taobao Style Layout */}
+        {/* Product Section - Enhanced Taobao Style Layout */}
         <div className="grid lg:grid-cols-[auto_1fr_1fr] gap-6 mb-8">
           
           {/* Left: Thumbnail Gallery (Catalog Images) */}
@@ -155,7 +242,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             ))}
           </div>
 
-          {/* Center: Main Image Display */}
+          {/* Center: Main Image Display with Big Image Mode */}
           <div className="relative">
             {/* Main Image */}
             <div className="relative aspect-square rounded-xl overflow-hidden border border-[#2C2C2C] bg-[#1E1E1E]">
@@ -165,6 +252,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 fill
                 className="object-contain"
                 priority
+              />
+              {/* Big Image Mode Trigger */}
+              <BigImageMode 
+                images={images} 
+                initialIndex={selectedImageIndex}
+                productTitle={product.title}
               />
             </div>
             
@@ -204,15 +297,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Right: Product Info */}
           <div className="flex flex-col gap-6">
-            <div>
-              <h1 className="text-3xl font-heading font-bold tracking-wide uppercase md:text-4xl text-[#F5F5F5]">
-                {product.title}
-              </h1>
-              {product.category && (
-                <span className="inline-block mt-2 text-xs px-3 py-1 bg-[#3D9A6C]/10 text-[#3D9A6C] rounded-full font-medium font-heading uppercase tracking-wide">
-                  {product.category}
-                </span>
-              )}
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-heading font-bold tracking-wide uppercase md:text-4xl text-[#F5F5F5]">
+                  {product.title}
+                </h1>
+                {product.category && (
+                  <span className="inline-block mt-2 text-xs px-3 py-1 bg-[#3D9A6C]/10 text-[#3D9A6C] rounded-full font-medium font-heading uppercase tracking-wide">
+                    {product.category}
+                  </span>
+                )}
+              </div>
+              <WishlistButton 
+                productId={product.id}
+                productTitle={product.title}
+              />
             </div>
 
             <div className="flex items-center gap-4">
@@ -231,15 +330,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
-            {displayStock !== undefined && (
-              <div className="text-sm">
-                {displayStock > 0 ? (
-                  <span className="text-[#3D9A6C]">✓ In Stock</span>
-                ) : (
-                  <span className="text-red-500">✗ Out of Stock</span>
-                )}
-              </div>
-            )}
+            {/* Stock Urgency Component */}
+            <StockUrgency stock={displayStock} />
 
             {product.variants && product.variants.length > 0 && (
               <div className="mt-4">
@@ -266,20 +358,46 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
+            {/* Action Buttons Row */}
+            <div className="flex gap-3">
+              {product.variants && product.variants.length > 1 && (
+                <CompareVariants
+                  variants={product.variants}
+                  productTitle={product.title}
+                  productImage={product.primaryImage || product.images?.[0]}
+                />
+              )}
+              <SizeGuideModal category={product.category} />
+            </div>
+
             <button
+              ref={addToCartButtonRef}
               onClick={handleAddToCart}
               disabled={displayStock === 0}
-              className="w-full py-3 px-4 bg-[#3D9A6C] text-black hover:bg-[#3D9A6C]-hover rounded-2xl font-medium font-heading uppercase tracking-wide transition-all flex items-center justify-center gap-2 hover:gap-3 hover:shadow-glow mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-[#3D9A6C] text-black hover:bg-[#3D9A6C]-hover rounded-2xl font-medium font-heading uppercase tracking-wide transition-all flex items-center justify-center gap-2 hover:gap-3 hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingCart className="h-5 w-5" />
               {displayStock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
+
+            {/* Price Alert */}
+            <PriceAlertButton
+              productId={product.id}
+              productTitle={product.title}
+              currentPrice={displayPrice}
+            />
           </div>
         </div>
 
+        {/* Bundle Deals Section */}
+        <BundleDeals 
+          currentProductId={product.id}
+          currentCategory={product.category}
+        />
+
         {/* Detail Images Section - Infinite Scroll Style */}
         {product.detailLongImage && (
-          <div ref={detailsRef} className="border-t border-[#2C2C2C] pt-8">
+          <div ref={detailsRef} className="border-t border-[#2C2C2C] pt-8 mt-12">
             <div className="text-center mb-6">
               <h2 className="text-xl font-heading font-bold tracking-wide uppercase text-[#F5F5F5]">
                 Product Details
@@ -298,6 +416,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
         )}
+
+        {/* Recently Viewed Products */}
+        <RecentlyViewed currentProductId={product.id} />
       </main>
     </div>
   )

@@ -8,11 +8,11 @@ End-to-end automation:
 4. SEED     - Push to Knack database via REST API
 
 Usage:
-    python ai_scraper.py --login              # One-time login setup
-    python ai_scraper.py --test               # Test on first URL only
-    python ai_scraper.py                      # Full run from taobao_links.txt
-    python ai_scraper.py --dry-run            # Simulate Knack updates
-    python ai_scraper.py --skip-knack         # Scrape only, no Knack push
+    python3 ai_scraper.py --login              # One-time login setup
+    python3 ai_scraper.py --test               # Test on first URL only
+    python3 ai_scraper.py                      # Full run from taobao_links.txt
+    python3 ai_scraper.py --dry-run            # Simulate Knack updates
+    python3 ai_scraper.py --skip-knack         # Scrape only, no Knack push
 """
 
 import os
@@ -346,21 +346,29 @@ Return ONLY the complete price number. Example: 56.9 or 128 or 89"""
         delay = INTERNAL_DELAY if use_short_delay else TRANSLATION_DELAY
         self._rate_limit_wait(delay)
         
-        prompt = f"""Translate this Chinese tactical/airsoft product text to English.
+        prompt = f"""You are a product title + variant localization assistant for an airsoft/tactical gear e-commerce store.
+
 Context: {context}
 
-CRITICAL RULES:
-1. KEEP all model numbers and codes (e.g., HL-ACC-73-T, L4G24, NVG, MK18, 6094)
-2. KEEP all alphanumeric identifiers exactly as-is
-3. REMOVE only Chinese brand names (WUKONG, WOSPORT)
-4. KEEP English brand names if present
-5. Translate material descriptions: Metal, Aluminum
-6. Translate colors: Black, Tan, OD Green
-7. Use tactical/military terminology (Plate Carrier, MOLLE, Pouch, Holster)
-8. Keep measurements and sizes as-is
+CORE RULES:
+1. KEEP true identifiers (DO NOT remove):
+   - Real model numbers/codes (L4G24, HL-ACC-73-T, PEQ-15, MK18, 6094)
+   - Platform names (M4, AK, Glock, 1911, AR-15)
+   - Camo pattern names (MultiCam, M81, AOR1, Flecktarn)
+   - Interface standards (Picatinny, M-LOK, KeyMod, QD)
+   - Rail specs, mount types, NV/IR terms
+   - Material standards (Cordura, 500D Nylon, 6061 Aluminum)
 
-Example: "HL-ACC-73-T Metal Tan" (NOT just "Tan")
-Example: "L4G24 Night Vision Mount (Aluminum)"
+2. REMOVE generic seller branding + marketing fluff:
+   - Store names, "factory direct", "OEM/ODM", "hot sale", "premium", "high quality"
+   - "tactical" when used as empty marketing, "military grade", "same as", "1:1", "replica"
+   - Chinese: 爆款, 正品, 外贸, 高品质, 热销, 同款
+   - Random brand words (悟空, WOSPORT, 骏马, 战狼) unless clearly real identifier
+
+3. Apply milsim naming conventions:
+   - Colors: 黑色→Black, 沙色/卡其/土黄→Tan/Coyote Brown, 泥色→FDE, 军绿→OD Green, 狼灰→Wolf Grey, 游骑兵绿→Ranger Green
+   - Terms: 快拆→QD, 导轨→Picatinny, 织带→MOLLE, 背心→Plate Carrier, 夜视仪→NVG
+   - Format: [Identifier] + [Item Type] + [Key Specs]
 
 Text: {text}
 
@@ -432,22 +440,31 @@ English translation only (no quotes, no explanation):"""
         # Build numbered list for prompt
         text_list = "\n".join([f"{i+1}. {t}" for i, t in enumerate(chinese_texts)])
         
-        prompt = f"""You are translating tactical/airsoft product variant names from Chinese to English.
+        prompt = f"""You are a product localization assistant for airsoft/tactical gear e-commerce.
 
 ## TEXTS TO TRANSLATE:
 {text_list}
 
-## CRITICAL TRANSLATION RULES:
-1. KEEP all model numbers and codes exactly (e.g., HL-ACC-73-T, L4G24, NVG, MK18, 6094)
-2. KEEP all alphanumeric identifiers - these are important product references
-3. REMOVE only Chinese brand names (悟空/WUKONG, 战术者/WOSPORT, 骏马/JUNMA)
-4. Translate materials: 金属 = Metal, 铝合金 = Aluminum, 塑料 = Polymer, 尼龙 = Nylon
-5. Translate colors: Black, Tan, OD Green
-6. Translate patterns: Multicam, CP Camo, Python
-7. Use tactical terminology (Plate Carrier, MOLLE, Pouch, Holster, Mount)
+## TRANSLATION RULES:
 
-EXAMPLE: "HL-ACC-73-T Metal Tan" (NOT just "Tan")
-EXAMPLE: "L4G24 Mount" (remove brand, keep model)
+KEEP true identifiers (DO NOT remove):
+- Real model numbers/codes (L4G24, HL-ACC-73-T, PEQ-15, MK18, 6094)
+- Platform names (M4, AK, Glock, AR-15)
+- Camo patterns (MultiCam, M81, AOR1, Flecktarn)
+- Interface standards (Picatinny, M-LOK, KeyMod, QD)
+- Material standards (Cordura, 500D Nylon, 6061 Aluminum)
+
+REMOVE generic seller branding + marketing:
+- Store names, "factory direct", "OEM", "hot sale", "premium", "high quality"
+- "tactical" as empty marketing, "military grade", "1:1", "replica"
+- Chinese: 爆款, 正品, 外贸, 高品质, 热销, 同款
+- Random brands: 悟空, WOSPORT, 骏马, 战狼 (unless real identifier)
+
+APPLY milsim naming conventions:
+- Colors: 黑色→Black, 沙色/卡其→Tan/Coyote Brown, 泥色→FDE, 军绿→OD Green, 狼灰→Wolf Grey, 游骑兵绿→Ranger Green
+- Materials: 金属→Metal, 铝合金→Aluminum, 尼龙→Nylon, 考度拉→Cordura
+- Terms: 快拆→QD, 导轨→Picatinny, 织带→MOLLE, 背心→Plate Carrier, 夜视仪→NVG
+- Format: [Identifier] + [Item Type] + [Key Specs]
 
 ## RESPONSE FORMAT (numbered list only):
 1. [Translation 1]
@@ -670,6 +687,494 @@ EXAMPLE: "L4G24 Mount" (remove brand, keep model)"""
         
         return result
 
+    def batch_extract_all_variant_data(self, variant_states: List[Dict], title_zh: str) -> Dict:
+        """
+        Send ALL variant screenshots to Gemini Vision in ONE API call.
+        Extract prices, variant names, and validate for all variants.
+        
+        This is the CORE innovation: Instead of N separate API calls,
+        we batch process everything in one comprehensive Vision request.
+        
+        Args:
+            variant_states: List of variant state dicts with screenshot paths
+            title_zh: Product title in Chinese
+            
+        Returns:
+            {
+                'title_en': 'Translated title',
+                'variants': [
+                    {
+                        'index': 1,
+                        'price_cny': 202.5,
+                        'variant_name_zh': '黑色 / S',
+                        'variant_name_en': 'Black / S',
+                        'confidence': 'high'
+                    },
+                    ...
+                ]
+            }
+        """
+        if not self.api_key:
+            print("      ⚠️  No API key - using fallback")
+            return self._fallback_extract_variant_data(variant_states, title_zh)
+        
+        if not variant_states:
+            return {'title_en': title_zh, 'variants': []}
+        
+        print(f"      → 🚀 Batch processing {len(variant_states)} variants with Gemini Vision...")
+        
+        # Rate limit
+        self._rate_limit_wait()
+        
+        try:
+            # Encode ALL screenshots
+            image_parts = []
+            for i, state in enumerate(variant_states):
+                if not os.path.exists(state['screenshot_path']):
+                    continue
+                
+                with open(state['screenshot_path'], 'rb') as f:
+                    image_data = base64.b64encode(f.read()).decode('utf-8')
+                    image_parts.append({
+                        "inline_data": {
+                            "mime_type": "image/png",
+                            "data": image_data
+                        }
+                    })
+            
+            if not image_parts:
+                print("      ⚠️  No valid screenshots to process")
+                return {'title_en': title_zh, 'variants': []}
+            
+            # Build comprehensive prompt with milsim/tactical translation guidelines
+            prompt = f"""You are a product data extraction + localization assistant for a tactical/airsoft e-commerce store.
+
+PRODUCT TITLE (Chinese): {title_zh}
+
+TASK: Analyze {len(image_parts)} Taobao product screenshots and extract price + variant data.
+
+Each screenshot shows ONE variant with:
+1. Main product image (the item in selected color/style)
+2. Price in CNY (large orange-red number near ¥ symbol, typically ¥20-500)
+3. Selected variant options (highlighted buttons)
+
+=== EXTRACTION RULES ===
+
+**PRICE EXTRACTION:**
+- Find the large orange/red price number (near "已售" or "¥")
+- Read the COMPLETE number (56.9 = 56.9, NOT 5 or 6.9)
+- Return as number (202.5, not "202.5")
+
+**VARIANT NAME EXTRACTION:**
+- Extract Chinese text from HIGHLIGHTED/SELECTED option buttons
+- Format: "Option1 / Option2" if multiple dimensions
+
+=== TRANSLATION RULES (Milsim/Tactical Style) ===
+
+**KEEP true identifiers (DO NOT remove):**
+- Real model numbers/codes (L4G24, HL-ACC-73-T, PEQ-15, DBAL-A3, MK18, 6094)
+- Platform names (M4, AK, Glock, 1911, AR-15)
+- Camo pattern names (MultiCam, M81 Woodland, AOR1, Flecktarn, CP Camo)
+- Interface standards (Picatinny (1913), M-LOK, KeyMod, QD)
+- Rail specs, mount types (Wilcox, Ops-Core, ARC, Unity, Reptilia)
+- NV/IR terms (NVG, Night Vision, IR, Laser, PEQ)
+- Material standards (Cordura, 500D Nylon, 6061 Aluminum)
+
+**REMOVE generic seller branding + marketing fluff:**
+- Store names, "factory direct", "OEM/ODM", "hot sale", "premium", "high quality"
+- "tactical" when used as empty marketing, "military grade", "same as", "1:1", "replica"
+- "top", "best", marketing superlatives
+- Chinese: 爆款, 正品, 外贸, 高品质, 热销, 同款
+- Random brand words: 悟空, WOSPORT, 骏马, 战狼 (unless clearly real identifier)
+- Never invent a brand. If uncertain, omit it.
+
+**MILSIM NAMING CONVENTIONS:**
+
+Colors (normalize):
+- 黑色/黑 → "Black", 消光黑 → "Matte Black"
+- 沙色/土黄/黄褐 → "Tan" or "Coyote Brown" (pick best match)
+- 卡其 → "Khaki", 泥色 → "FDE"
+- 狼棕 → "Coyote Brown" (if brown) or "Wolf Grey" (if grey)
+- 军绿/橄榄绿 → "OD Green", 游骑兵绿 → "Ranger Green"
+- 灰色/狼灰 → "Wolf Grey"
+- 迷彩 → specify camo name if present; otherwise "Camo"
+- CP迷彩 → "CP Camo", 暗夜迷彩 → "Black Camo", 丛林迷彩 → "Jungle Camo"
+- multicam/MC → "MultiCam"
+
+Sizes (normalize):
+- Standard: XXS, XS, S, M, L, XL, XXL, XXXL, 2XL, 3XL, 4XL
+- 均码 → "One Size", 通用 → "Universal"
+- 大款 → "Large", 小款 → "Small", 短款 → "Short", 矮款 → "Low Profile"
+- Keep numeric sizes exactly: 80-110, 85-125cm, 20cm, 30mm
+- Quantity: 一个/一块 → "1 pc", 两个 → "2 pcs", 一套 → "1 Set"
+
+Materials/Style (normalize):
+- 金属 → "Metal", 铝合金 → "Aluminum", 尼龙 → "Nylon", 考度拉 → "Cordura"
+- CNC → "CNC", 标准 → "Standard", 升级版 → "Upgraded", 套装 → "Set"
+- 单 → "Single", 双 → "Dual", 左 → "Left", 右 → "Right"
+
+Terms (translate):
+- 快拆 → "QD"
+- 导轨/皮轨/20mm/21mm/1913 → "Picatinny (1913)" when applicable
+- 织带/MOLLE/PALS → "MOLLE (PALS)"
+- 背心 → "Plate Carrier" (if tactical) or "Vest"
+- 挂载/支架 → "Mount"
+- 夜视仪 → "NVG" or "Night Vision"
+- Drop "战术" as generic adjective unless it distinguishes category
+
+**TITLE FORMAT:**
+[True Identifier/Model if real] + [Item Type] + [Key Specs] + [Compatibility] + [Color/Pattern if important]
+- Keep concise; remove filler
+- Use Title Case
+Example: "L4G24 NVG Mount - Aluminum - Wilcox Compatible"
+
+=== OUTPUT FORMAT ===
+
+Return ONLY valid JSON with double-quoted keys and string values:
+
+{{
+  "title_en": "Clean English Title in Title Case",
+  "variants": [
+    {{
+      "index": 1,
+      "price_cny": 215.0,
+      "variant_name_zh": "HL-ACC-73-T 金属泥色",
+      "variant_name_en": "HL-ACC-73-T / Tan",
+      "confidence": "high"
+    }},
+    {{
+      "index": 2,
+      "price_cny": 215.0,
+      "variant_name_zh": "HL-ACC-73-BK 金属黑色",
+      "variant_name_en": "HL-ACC-73-BK / Black",
+      "confidence": "high"
+    }}
+  ]
+}}
+
+CRITICAL REQUIREMENTS:
+- Process ALL {len(image_parts)} screenshots
+- Return data for EACH screenshot in order (index 1, 2, 3...)
+- Use exact price numbers (no rounding)
+- ALL keys and string values MUST be in double quotes
+- confidence: "high", "medium", or "low"
+- Do NOT add comments or extra text outside the JSON"""
+
+            # Build payload
+            payload_parts = [{"text": prompt}] + image_parts
+            
+            payload = {
+                "contents": [{
+                    "parts": payload_parts
+                }],
+                "generationConfig": {
+                    "temperature": 0.1,
+                    "maxOutputTokens": 4000
+                }
+            }
+            
+            # Try models
+            for model in GEMINI_MODELS:
+                if model in self.failed_models:
+                    continue
+                
+                success, result = self._try_model(model, payload)
+                if success:
+                    # Parse JSON with robust cleaning
+                    parsed = self._parse_gemini_json(result, model)
+                    if parsed and 'variants' in parsed and len(parsed['variants']) > 0:
+                        print(f"      ✅ Extracted {len(parsed['variants'])} variants via Vision")
+                        return parsed
+                    else:
+                        print(f"      ⚠️  Invalid response format from {model}")
+                        continue
+            
+            # All models failed
+            print("      ⚠️  All models failed - using fallback")
+            return self._fallback_extract_variant_data(variant_states, title_zh)
+            
+        except Exception as e:
+            print(f"      ⚠️  Batch Vision error: {e}")
+            import traceback
+            traceback.print_exc()
+            return self._fallback_extract_variant_data(variant_states, title_zh)
+
+    def _parse_gemini_json(self, result: str, model: str) -> Optional[Dict]:
+        """
+        Robustly parse JSON from Gemini API responses.
+        
+        Handles common Gemini quirks:
+        - Markdown code blocks (```json ... ```)
+        - JavaScript object literals (unquoted keys)
+        - JavaScript comments (// and /* */)
+        - Trailing commas
+        - Single quotes instead of double quotes
+        - Extra text before/after JSON
+        """
+        if not result:
+            return None
+        
+        import re
+        
+        try:
+            text = result.strip()
+            
+            # Step 1: Remove markdown code blocks
+            if '```' in text:
+                code_block_pattern = r'```(?:json)?\s*([\s\S]*?)\s*```'
+                matches = re.findall(code_block_pattern, text)
+                if matches:
+                    text = matches[0]
+                else:
+                    lines = text.split('\n')
+                    if lines[0].strip().startswith('```'):
+                        lines = lines[1:]
+                    if lines and lines[-1].strip() == '```':
+                        lines = lines[:-1]
+                    text = '\n'.join(lines)
+            
+            # Step 2: Find JSON object boundaries
+            start_idx = -1
+            end_idx = -1
+            
+            for i, char in enumerate(text):
+                if char == '{':
+                    start_idx = i
+                    break
+            
+            if start_idx >= 0:
+                brace_count = 0
+                for i in range(start_idx, len(text)):
+                    if text[i] == '{':
+                        brace_count += 1
+                    elif text[i] == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_idx = i + 1
+                            break
+            
+            if start_idx >= 0 and end_idx > start_idx:
+                text = text[start_idx:end_idx]
+            
+            # Step 3: Remove JavaScript-style comments
+            text = re.sub(r'(?<!["\'])//[^\n]*', '', text)
+            text = re.sub(r'/\*[\s\S]*?\*/', '', text)
+            
+            # Step 4: Fix trailing commas
+            text = re.sub(r',\s*}', '}', text)
+            text = re.sub(r',\s*]', ']', text)
+            
+            # Step 5: Try to parse as-is first
+            try:
+                parsed = json.loads(text)
+                return parsed
+            except json.JSONDecodeError:
+                pass
+            
+            # Step 6: FIX UNQUOTED KEYS (JavaScript object literal style)
+            # This is the main Gemini quirk: { key: value } instead of { "key": value }
+            # Pattern: word characters followed by colon (not inside strings)
+            text_fixed = text
+            
+            # Add quotes around unquoted keys
+            # Match: beginning of object or comma, optional whitespace, unquoted key, colon
+            text_fixed = re.sub(
+                r'([{,])\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:',
+                r'\1"\2":',
+                text_fixed
+            )
+            
+            # Step 7: Fix unquoted string values (except numbers, booleans, null)
+            # Match: colon, whitespace, unquoted value that's not a number/bool/null/object/array
+            # This is tricky because values can have spaces and special chars
+            # We'll handle common cases
+            
+            # Fix values that look like strings but aren't quoted
+            # Pattern: ": value," or ": value}" where value doesn't start with ", {, [, digit, true, false, null
+            def fix_unquoted_value(match):
+                prefix = match.group(1)  # : and whitespace
+                value = match.group(2)   # the unquoted value
+                suffix = match.group(3)  # , or } or ]
+                
+                # Check if it's already a valid JSON value
+                value_stripped = value.strip()
+                if value_stripped.startswith('"') or value_stripped.startswith('{') or value_stripped.startswith('['):
+                    return match.group(0)
+                if value_stripped in ('true', 'false', 'null'):
+                    return match.group(0)
+                try:
+                    float(value_stripped)
+                    return match.group(0)  # It's a number
+                except ValueError:
+                    pass
+                
+                # It's an unquoted string - add quotes
+                # Escape any existing quotes in the value
+                value_escaped = value_stripped.replace('\\', '\\\\').replace('"', '\\"')
+                return f'{prefix}"{value_escaped}"{suffix}'
+            
+            # Apply the fix - match ": value," or ": value}" patterns
+            text_fixed = re.sub(
+                r'(:\s*)([^,}\]"{\[]+?)(\s*[,}\]])',
+                fix_unquoted_value,
+                text_fixed
+            )
+            
+            try:
+                parsed = json.loads(text_fixed)
+                return parsed
+            except json.JSONDecodeError as e:
+                pass
+            
+            # Step 8: More aggressive fixing - line by line
+            lines = text.split('\n')
+            fixed_lines = []
+            for line in lines:
+                # Fix unquoted keys
+                line = re.sub(r'^(\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', line)
+                # Fix unquoted string values that aren't numbers
+                match = re.match(r'^(\s*"[^"]+"\s*:\s*)([^",\[\]{}\d][^,\[\]{}]*?)(\s*,?\s*)$', line)
+                if match:
+                    prefix, value, suffix = match.groups()
+                    value = value.strip()
+                    if value and value not in ('true', 'false', 'null') and not value.startswith('"'):
+                        value_escaped = value.replace('"', '\\"')
+                        line = f'{prefix}"{value_escaped}"{suffix}'
+                fixed_lines.append(line)
+            text_fixed = '\n'.join(fixed_lines)
+            
+            # Clean up again
+            text_fixed = re.sub(r',\s*}', '}', text_fixed)
+            text_fixed = re.sub(r',\s*]', ']', text_fixed)
+            
+            try:
+                parsed = json.loads(text_fixed)
+                return parsed
+            except json.JSONDecodeError:
+                pass
+            
+            # Step 9: Last resort - regex extraction
+            parsed = self._extract_variant_data_regex(result)
+            if parsed:
+                return parsed
+            
+            print(f"      ⚠️  JSON parse failed for {model}, raw response (first 200 chars):")
+            print(f"         {result[:200]}...")
+            return None
+            
+        except Exception as e:
+            print(f"      ⚠️  JSON parse error from {model}: {e}")
+            return None
+
+    def _extract_variant_data_regex(self, text: str) -> Optional[Dict]:
+        """
+        Last-resort extraction using regex patterns.
+        Extracts price_cny and variant names even from malformed JSON.
+        Handles both quoted AND unquoted keys/values (Gemini's JavaScript style).
+        """
+        import re
+        
+        try:
+            variants = []
+            
+            # Pattern 1: Handle both quoted and unquoted keys
+            # Matches: index: 1, price_cny: 215.0, variant_name_zh: "text" or variant_name_zh: text,
+            variant_blocks = re.split(r'\{\s*(?:")?index(?:")?\s*:', text)
+            
+            for i, block in enumerate(variant_blocks[1:], 1):  # Skip first (before any index)
+                try:
+                    # Extract index
+                    idx_match = re.match(r'\s*(\d+)', block)
+                    idx = int(idx_match.group(1)) if idx_match else i
+                    
+                    # Extract price_cny (handles both quoted and unquoted)
+                    price_match = re.search(r'(?:")?price_cny(?:")?\s*:\s*([\d.]+)', block)
+                    price = float(price_match.group(1)) if price_match else 0.0
+                    
+                    # Extract variant_name_zh (handles both quoted and unquoted values)
+                    name_zh_match = re.search(r'(?:")?variant_name_zh(?:")?\s*:\s*(?:")?([^",}\n]+?)(?:")?(?:\s*[,}\n])', block)
+                    name_zh = name_zh_match.group(1).strip() if name_zh_match else f"Variant {idx}"
+                    
+                    # Extract variant_name_en
+                    name_en_match = re.search(r'(?:")?variant_name_en(?:")?\s*:\s*(?:")?([^",}\n]+?)(?:")?(?:\s*[,}\n])', block)
+                    name_en = name_en_match.group(1).strip() if name_en_match else name_zh
+                    
+                    # Extract confidence
+                    conf_match = re.search(r'(?:")?confidence(?:")?\s*:\s*(?:")?(\w+)(?:")?', block)
+                    confidence = conf_match.group(1) if conf_match else 'medium'
+                    
+                    if price > 0:  # Only add if we got a price
+                        variants.append({
+                            'index': idx,
+                            'price_cny': price,
+                            'variant_name_zh': name_zh,
+                            'variant_name_en': name_en,
+                            'confidence': confidence
+                        })
+                except Exception:
+                    continue
+            
+            # Pattern 2: Fallback - just extract all prices and names
+            if not variants:
+                # Find all price_cny values
+                prices = re.findall(r'(?:")?price_cny(?:")?\s*:\s*([\d.]+)', text)
+                names_zh = re.findall(r'(?:")?variant_name_zh(?:")?\s*:\s*(?:")?([^",}\n]+?)(?:")?(?:\s*[,}\n])', text)
+                names_en = re.findall(r'(?:")?variant_name_en(?:")?\s*:\s*(?:")?([^",}\n]+?)(?:")?(?:\s*[,}\n])', text)
+                
+                if prices:
+                    for i, price in enumerate(prices):
+                        name_zh = names_zh[i].strip() if i < len(names_zh) else f"Variant {i+1}"
+                        name_en = names_en[i].strip() if i < len(names_en) else name_zh
+                        variants.append({
+                            'index': i + 1,
+                            'price_cny': float(price),
+                            'variant_name_zh': name_zh,
+                            'variant_name_en': name_en,
+                            'confidence': 'low'
+                        })
+            
+            if variants:
+                # Extract title_en (handles both quoted and unquoted)
+                title_match = re.search(r'(?:")?title_en(?:")?\s*:\s*(?:")?([^",}\n]+?)(?:")?(?:\s*[,}\n])', text)
+                title_en = title_match.group(1).strip() if title_match else ""
+                
+                print(f"      📝 Extracted {len(variants)} variants via regex fallback")
+                return {
+                    'title_en': title_en,
+                    'variants': variants
+                }
+            
+            return None
+            
+        except Exception as e:
+            print(f"      ⚠️  Regex extraction error: {e}")
+            return None
+
+    def _fallback_extract_variant_data(self, variant_states: List[Dict], title_zh: str) -> Dict:
+        """
+        Fallback when Vision API fails.
+        Uses rule-based translation.
+        """
+        variants = []
+        
+        for state in variant_states:
+            # Rule-based translation
+            name_en = self._rule_based_translate(state['name_zh'])
+            
+            # Return 0 price to indicate missing data
+            variants.append({
+                'index': state['index'],
+                'price_cny': 0.0,
+                'variant_name_zh': state['name_zh'],
+                'variant_name_en': name_en,
+                'confidence': 'low'
+            })
+        
+        return {
+            'title_en': self._rule_based_translate(title_zh),
+            'variants': variants
+        }
+
 
 class VariantParser:
     """Parse variant text into structured Option Type/Value pairs"""
@@ -878,6 +1383,8 @@ class ScrapedVariant:
     price_cad: float = 0.0
     margin_standard: float = 0.0
     margin_promo: float = 0.0
+    # Image binding (links to product.images via IDs)
+    image_ids: List[str] = field(default_factory=list)
 
 
 @dataclass 
@@ -912,10 +1419,9 @@ class AIScraper:
         self.pending_translations: List[dict] = []  # For batch translation mode
         
     def setup_driver(self):
-        """Initialize Chrome with persistent profile"""
+        """Initialize Chrome and load cookies"""
         options = webdriver.ChromeOptions()
         options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_argument(f"--user-data-dir={CHROME_PROFILE}")
         options.add_argument('--window-size=1920,1080')
         
         if self.headless:
@@ -924,6 +1430,21 @@ class AIScraper:
         print("🚀 Starting Chrome...")
         self.driver = webdriver.Chrome(options=options)
         self.driver.set_page_load_timeout(30)
+        
+        # Load saved cookies if available
+        cookies_file = os.path.join(SCRIPT_DIR, 'taobao_cookies.json')
+        if os.path.exists(cookies_file):
+            print("🍪 Loading saved Taobao cookies...")
+            self.driver.get('https://www.taobao.com/')
+            time.sleep(2)
+            with open(cookies_file, 'r') as f:
+                cookies = json.load(f)
+                for cookie in cookies:
+                    try:
+                        self.driver.add_cookie(cookie)
+                    except:
+                        pass
+            print("✅ Cookies loaded")
         
     def setup_knack(self):
         """Initialize Knack API"""
@@ -956,19 +1477,28 @@ class AIScraper:
         self.driver.quit()
     
     def scrape_product(self, url: str, index: int) -> Optional[ScrapedProduct]:
-        """Scrape a single product with full pipeline"""
+        """
+        Scrape a single product with IMPROVED V2 variant-image-price binding.
+        
+        V2 Workflow:
+        1. Capture generic images (hero + details)
+        2. Detect variants
+        3. Click EACH variant → Screenshot (captures image + price)
+        4. ONE batch Vision call to extract all prices + translate names
+        5. Download variant-specific images
+        6. Bind correct images to correct variants
+        7. Push to Knack
+        """
         print(f"\n{'='*60}")
         print(f"📦 Product {index}: {url[:70]}...")
         print(f"{'='*60}")
         
-        # Reset failed models for each new product - start fresh with priority order
+        # Reset failed models for each new product
         self.translator.reset_failed_models()
         
-        # Create media folder
+        # Create folders
         product_folder = os.path.join(MEDIA_DIR, f"product_{index:03d}")
         os.makedirs(product_folder, exist_ok=True)
-        
-        downloader = ImageDownloader(product_folder)
         
         try:
             # Load page
@@ -984,100 +1514,131 @@ class AIScraper:
                 print("   ⚠️  Page timeout - may need login")
                 return None
             
-            # Extract product ID from URL
+            # Extract basics
             product_id = self._extract_product_id(url)
-            
-            # Extract Chinese title (translation will be done in batch with variants)
             title_zh = self._extract_title()
             print(f"   📝 Title (ZH): {title_zh[:50]}...")
             
-            # Create product (title_en will be updated by batch processing)
+            # Create product
             product = ScrapedProduct(
                 url=url,
                 product_id=product_id,
                 title_zh=title_zh,
-                title_en=title_zh,  # Placeholder, will be updated by batch
-                images={'Main': [], 'Catalogue': [], 'Details': []},
+                title_en=title_zh,  # Will be updated by Vision
+                images={'Main': [], 'Details': []},
                 timestamp=datetime.now().isoformat()
             )
             
-            # === STEP 1: CAPTURE IMAGES ===
-            print("   📸 Capturing images...")
+            # === PHASE 1: CAPTURE GENERIC IMAGES ===
+            print("   📸 Capturing generic images...")
+            downloader = ImageDownloader(product_folder)
             
-            # Main/Hero image
+            # Hero image (before clicking variants)
             main_urls = self._get_main_image_urls()
-            for i, img_url in enumerate(main_urls[:1]):  # First one is hero
-                path = downloader.download(img_url, f"main_{i+1:02d}", 'Main')
+            for i, img_url in enumerate(main_urls[:1]):
+                path = downloader.download(img_url, f"hero_{i+1:02d}", 'Main')
                 if path:
                     product.images['Main'].append(path)
-            print(f"      → Main: {len(product.images['Main'])} captured")
-            
-            # Gallery/Catalogue images
-            gallery_urls = self._get_gallery_urls()
-            for i, img_url in enumerate(gallery_urls[:15]):
-                path = downloader.download(img_url, f"catalogue_{i+1:02d}", 'Catalogue')
-                if path:
-                    product.images['Catalogue'].append(path)
-            print(f"      → Gallery: {len(product.images['Catalogue'])} captured")
+            print(f"      → Hero: {len(product.images['Main'])} captured")
             
             # Detail images (scroll down)
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)
-            
             detail_urls = self._get_detail_image_urls()
-            for i, img_url in enumerate(detail_urls[:30]):
+            for i, img_url in enumerate(detail_urls[:20]):
                 path = downloader.download(img_url, f"detail_{i+1:02d}", 'Details')
                 if path:
                     product.images['Details'].append(path)
             print(f"      → Details: {len(product.images['Details'])} captured")
             
-            # Scroll back up
+            # Scroll back to top
             self.driver.execute_script("window.scrollTo(0, 0);")
             time.sleep(1)
             
-            # === STEP 2: EXTRACT VARIANTS ===
-            print("   🔍 Extracting variants...")
+            # === PHASE 2: DETECT VARIANTS ===
+            print("   🔍 Detecting variants...")
+            dimensions = self._find_variant_dimensions()
             
-            variant_result = extract_variants(driver=self.driver)
+            if not dimensions:
+                print("      → No variants found, using base product")
+                product.base_price_cny = self._extract_base_price()
+                # Still push to Knack if enabled
+                if self.knack_api and not self.skip_knack:
+                    print("   📤 Pushing to Knack...")
+                    self._push_to_knack(product)
+                return product
             
-            if variant_result.variants:
-                print(f"      → Found {len(variant_result.variants)} variants via {variant_result.method}")
-                
-                for v in variant_result.variants:
-                    # Get Chinese variant name
-                    variant_zh = ' / '.join(v.option_values_zh.values()) if v.option_values_zh else v.prop_path
-                    
-                    # Translate (skip if batch mode - will translate at end)
-                    if self.batch_translate:
-                        variant_en = variant_zh  # Placeholder, will be translated later
-                        parsed = {'normalized': variant_zh, 'optionType1': '', 'optionValue1': '', 'optionType2': '', 'optionValue2': ''}
-                    else:
-                        variant_en = self.translator.translate(variant_zh)
-                        parsed = self.parser.parse(variant_en)
-                    
-                    scraped_variant = ScrapedVariant(
-                        variant_name_zh=variant_zh,
-                        variant_name_en=parsed['normalized'],
-                        option_type_1=parsed['optionType1'],
-                        option_value_1=parsed['optionValue1'],
-                        option_type_2=parsed['optionType2'],
-                        option_value_2=parsed['optionValue2'],
-                        price_cny=v.price_cny or 0.0,
-                        sku_key=v.sku_id or v.prop_path,
-                        in_stock=v.available
-                    )
-                    product.variants.append(scraped_variant)
-                    
-                    if not self.batch_translate:
-                        print(f"         → {variant_zh} → {parsed['normalized']}")
-                    else:
-                        print(f"         → {variant_zh} (pending translation)")
-            else:
-                # Fallback: click-based variant detection with screenshot price extraction
-                print("      → No structured variants, trying click detection...")
+            print(f"      → Found {len(dimensions)} dimension(s)")
+            
+            # === PHASE 3: CAPTURE ALL VARIANT STATES ===
+            print(f"   📸 Capturing variant states...")
+            variant_states = self._capture_all_variant_states(product, dimensions, product_folder)
+            
+            if not variant_states:
+                print("      → No variant states captured, using fallback")
+                # Fallback to old method
                 self._extract_variants_by_click(product, product_folder)
+                if product.variants:
+                    product.base_price_cny = product.variants[0].price_cny
+                if self.knack_api and not self.skip_knack:
+                    self._push_to_knack(product)
+                return product
             
-            # Base price (from first variant or DOM)
+            # === PHASE 4: BATCH VISION PROCESSING (1 API CALL!) ===
+            print(f"   🤖 Batch processing {len(variant_states)} variants with Vision...")
+            batch_result = self.translator.batch_extract_all_variant_data(
+                variant_states=variant_states,
+                title_zh=title_zh
+            )
+            
+            # Update title
+            if batch_result.get('title_en'):
+                product.title_en = batch_result['title_en']
+                print(f"      → 📝 Title (EN): {product.title_en[:50]}...")
+            
+            # === PHASE 5: DOWNLOAD VARIANT-SPECIFIC IMAGES ===
+            print("   🖼️  Downloading variant-specific images...")
+            variant_images = self._download_variant_images(variant_states, product_folder)
+            
+            # === PHASE 6: CREATE VARIANT RECORDS ===
+            print("   📦 Creating variant records...")
+            for variant_data in batch_result.get('variants', []):
+                idx = variant_data['index']
+                
+                # Find corresponding state
+                state = next((s for s in variant_states if s['index'] == idx), None)
+                if not state:
+                    continue
+                
+                # Skip out-of-stock variants
+                if not state.get('in_stock', True):
+                    print(f"      ❌ Skipping out-of-stock: {variant_data['variant_name_en'][:30]}")
+                    continue
+                
+                # Parse options from English name
+                parsed = self.parser.parse(variant_data['variant_name_en'])
+                
+                # Create variant
+                variant = ScrapedVariant(
+                    variant_name_zh=variant_data['variant_name_zh'],
+                    variant_name_en=parsed['normalized'] or variant_data['variant_name_en'],
+                    option_type_1=parsed['optionType1'] or 'Color',
+                    option_value_1=parsed['optionValue1'] or variant_data['variant_name_en'],
+                    option_type_2=parsed['optionType2'],
+                    option_value_2=parsed['optionValue2'],
+                    price_cny=variant_data['price_cny'],
+                    sku_key=f"variant_{idx}",
+                    in_stock=state.get('in_stock', True)
+                )
+                
+                product.variants.append(variant)
+                
+                # Show with confidence indicator
+                conf = variant_data.get('confidence', 'unknown')
+                conf_icon = "✓" if conf == "high" else "⚠" if conf == "medium" else "?"
+                print(f"      {conf_icon} {variant_data['variant_name_en'][:35]} @ ¥{variant_data['price_cny']}")
+            
+            # Set base price from first variant
             if product.variants:
                 product.base_price_cny = product.variants[0].price_cny
             else:
@@ -1085,11 +1646,16 @@ class AIScraper:
             
             print(f"   💰 Base price: ¥{product.base_price_cny}")
             
-            # === STEP 3: PUSH TO KNACK ===
+            # === PHASE 7: BIND IMAGES TO VARIANTS ===
+            print("   🔗 Binding images to variants...")
+            self._bind_variant_specific_images(product, variant_images)
+            
+            # === PHASE 8: PUSH TO KNACK ===
             if self.knack_api and not self.skip_knack:
                 print("   📤 Pushing to Knack...")
                 self._push_to_knack(product)
             
+            print(f"   ✅ Product complete: {len(product.variants)} variants")
             return product
             
         except Exception as e:
@@ -1288,6 +1854,304 @@ class AIScraper:
         
         print(f"      → Found {len(urls)} detail image URLs")
         return urls
+    
+    def _get_current_main_image_url(self) -> Optional[str]:
+        """
+        Extract the currently displayed main product image URL from DOM.
+        This changes when user clicks different variant options.
+        
+        Returns:
+            High-resolution image URL or None
+        """
+        try:
+            # Try multiple selectors for main image
+            selectors = [
+                'img.mainPic--vMTLgVPN',  # Common Taobao main image
+                'div[class*="mainPic"] img',
+                'div[class*="PicGallery"] img[class*="mainPic"]',
+                'img[class*="ImageView"]',
+                'div[class*="gallery"] img',
+            ]
+            
+            for sel in selectors:
+                try:
+                    img = self.driver.find_element(By.CSS_SELECTOR, sel)
+                    src = img.get_attribute('src') or img.get_attribute('data-src')
+                    
+                    if src and 'alicdn' in src and not src.startswith('data:'):
+                        # Clean URL to get full resolution
+                        src = self._clean_image_url(src)
+                        return src
+                except:
+                    continue
+            
+            # Fallback: Use JavaScript to find largest image in viewport
+            largest_img_url = self.driver.execute_script("""
+                var imgs = Array.from(document.querySelectorAll('img'));
+                var visibleImgs = imgs.filter(function(img) {
+                    var rect = img.getBoundingClientRect();
+                    return rect.width > 200 && rect.height > 200 && 
+                           rect.top >= 0 && rect.left >= 0 &&
+                           img.src && img.src.includes('alicdn');
+                });
+                
+                if (visibleImgs.length === 0) return null;
+                
+                // Find largest
+                var largest = visibleImgs.reduce(function(max, img) {
+                    var maxSize = max.width * max.height;
+                    var imgSize = img.width * img.height;
+                    return imgSize > maxSize ? img : max;
+                });
+                
+                return largest.src || largest.getAttribute('data-src');
+            """)
+            
+            if largest_img_url and 'alicdn' in largest_img_url:
+                return self._clean_image_url(largest_img_url)
+            
+            return None
+            
+        except Exception as e:
+            print(f"         ⚠️  Could not extract main image URL: {e}")
+            return None
+    
+    def _clean_image_url(self, url: str) -> str:
+        """Remove size restrictions from Taobao CDN URLs to get full resolution"""
+        url = re.sub(r'_\d+x\d+\.[a-z]+$', '', url)
+        url = re.sub(r'\?.*$', '', url)
+        if 'alicdn.com' in url and not url.endswith(('.jpg', '.png', '.webp')):
+            url = url + '.jpg'
+        return url
+    
+    def _capture_all_variant_states(self, product: ScrapedProduct, dimensions: List[Dict], product_folder: str) -> List[Dict]:
+        """
+        Click through ALL variant combinations and capture complete state.
+        
+        Each captured state includes:
+        - Screenshot showing variant image + price
+        - Main image URL (for high-res download)
+        - Variant name in Chinese
+        - Option values
+        
+        Returns:
+            List of variant state dictionaries
+        """
+        variant_states = []
+        screenshots_folder = os.path.join(product_folder, 'variant_screenshots')
+        os.makedirs(screenshots_folder, exist_ok=True)
+        
+        print(f"      → Capturing variant states for {len(dimensions)} dimension(s)...")
+        
+        # Generate all combinations
+        if len(dimensions) == 1:
+            # Single dimension (e.g., just colors)
+            combinations = self._generate_single_dimension_combos(dimensions[0])
+        else:
+            # Multi-dimensional (e.g., color × size)
+            combinations = self._generate_multi_dimension_combos(dimensions)
+        
+        print(f"      → Total combinations: {len(combinations)}")
+        
+        # Click through each combination
+        for i, combo in enumerate(combinations):
+            try:
+                # Click all buttons for this combination
+                for button in combo['buttons']:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+                    time.sleep(0.2)
+                    button.click()
+                    time.sleep(0.2)
+                
+                # CRITICAL: Wait for BOTH image AND price to update
+                time.sleep(1.0)
+                
+                # Scroll to top to capture price in viewport
+                self.driver.execute_script("window.scrollTo(0, 0);")
+                time.sleep(0.3)
+                
+                # Take full screenshot
+                screenshot_path = os.path.join(screenshots_folder, f'variant_{i+1:03d}.png')
+                self.driver.save_screenshot(screenshot_path)
+                
+                # Extract current main image URL
+                main_image_url = self._get_current_main_image_url()
+                
+                # Check if variant is in stock
+                in_stock = not any(
+                    self._is_button_disabled(btn) for btn in combo['buttons']
+                )
+                
+                variant_states.append({
+                    'index': i + 1,
+                    'name_zh': combo['name_zh'],
+                    'screenshot_path': screenshot_path,
+                    'main_image_url': main_image_url,
+                    'option_values': combo['option_values'],
+                    'in_stock': in_stock,
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+                # Show progress
+                status = "✓" if main_image_url else "⚠"
+                stock = "📦" if in_stock else "❌"
+                print(f"         {status} {stock} Captured {i+1}/{len(combinations)}: {combo['name_zh'][:30]}")
+                
+            except Exception as e:
+                print(f"         ⚠️  Error capturing variant {i+1}: {e}")
+                continue
+        
+        print(f"      → Successfully captured {len(variant_states)}/{len(combinations)} variants")
+        return variant_states
+    
+    def _generate_single_dimension_combos(self, dimension: Dict) -> List[Dict]:
+        """Generate combinations for single dimension (e.g., just colors)"""
+        combinations = []
+        buttons = dimension['buttons']
+        label = dimension['label']
+        
+        seen_names = set()
+        for btn in buttons[:30]:  # Limit to 30
+            text = btn.text.strip()
+            if text and text not in seen_names and '\n' not in text[:30]:
+                seen_names.add(text)
+                combinations.append({
+                    'name_zh': text,
+                    'buttons': [btn],
+                    'option_values': {label: text}
+                })
+        
+        return combinations
+    
+    def _generate_multi_dimension_combos(self, dimensions: List[Dict]) -> List[Dict]:
+        """Generate all combinations for multiple dimensions (e.g., color × size)"""
+        combinations = []
+        
+        dim1 = dimensions[0]
+        dim2 = dimensions[1]
+        
+        # Get unique options for each dimension
+        dim1_options = []
+        seen1 = set()
+        for btn in dim1['buttons']:
+            text = btn.text.strip()
+            if text and text not in seen1 and '\n' not in text[:20]:
+                seen1.add(text)
+                dim1_options.append({'button': btn, 'name': text})
+        
+        dim2_options = []
+        seen2 = set()
+        for btn in dim2['buttons']:
+            text = btn.text.strip()
+            if text and text not in seen2 and '\n' not in text[:20]:
+                seen2.add(text)
+                dim2_options.append({'button': btn, 'name': text})
+        
+        # Generate all combinations
+        for opt1 in dim1_options:
+            for opt2 in dim2_options:
+                combinations.append({
+                    'name_zh': f"{opt1['name']} / {opt2['name']}",
+                    'buttons': [opt1['button'], opt2['button']],
+                    'option_values': {
+                        dim1['label']: opt1['name'],
+                        dim2['label']: opt2['name']
+                    }
+                })
+        
+        return combinations
+    
+    def _download_variant_images(self, variant_states: List[Dict], product_folder: str) -> Dict[int, List[str]]:
+        """
+        Download high-resolution variant-specific images.
+        
+        Args:
+            variant_states: List with image URLs per variant
+            product_folder: Base folder
+            
+        Returns:
+            {1: ['/path/img1.jpg'], 2: ['/path/img2.jpg'], ...}
+        """
+        variant_images = {}
+        downloader = ImageDownloader(product_folder)
+        
+        print(f"      → Downloading {len(variant_states)} variant-specific images...")
+        
+        for state in variant_states:
+            idx = state['index']
+            img_url = state.get('main_image_url')
+            
+            if not img_url:
+                print(f"         ⚠️  Variant {idx}: No image URL")
+                continue
+            
+            # Download to variant-specific subfolder
+            subfolder = f'variant_{idx:03d}'
+            filename = 'main'
+            
+            downloaded_path = downloader.download(img_url, filename, subfolder)
+            
+            if downloaded_path:
+                if idx not in variant_images:
+                    variant_images[idx] = []
+                variant_images[idx].append(downloaded_path)
+                print(f"         ✓ Variant {idx}: {os.path.basename(downloaded_path)}")
+            else:
+                print(f"         ⚠️  Variant {idx}: Download failed")
+        
+        print(f"      → Downloaded {len(variant_images)}/{len(variant_states)} variant images")
+        return variant_images
+    
+    def _bind_variant_specific_images(self, product: ScrapedProduct, variant_images: Dict[int, List[str]]):
+        """
+        Bind downloaded images to specific variants.
+        
+        Strategy:
+        - Generic images (hero, details) → ALL variants
+        - Variant-specific images → Only that variant
+        
+        Args:
+            product: Product with variants list
+            variant_images: Dict mapping variant index → image paths
+        """
+        print(f"      → Binding variant-specific images...")
+        
+        # Generic images shown for ALL variants
+        generic_image_ids = []
+        image_counter = 1
+        
+        # Add hero image (generic)
+        for img_path in product.images.get('Main', [])[:1]:
+            img_id = f"img_hero_{image_counter:03d}"
+            generic_image_ids.append(img_id)
+            image_counter += 1
+        
+        # Add detail images (generic)
+        for img_path in product.images.get('Details', [])[:10]:
+            img_id = f"img_detail_{image_counter:03d}"
+            generic_image_ids.append(img_id)
+            image_counter += 1
+        
+        print(f"         → Generic images: {len(generic_image_ids)}")
+        
+        # Bind images to each variant
+        variant_specific_count = 0
+        
+        for i, variant in enumerate(product.variants):
+            variant_idx = i + 1
+            
+            # Start with generic images
+            variant.image_ids = list(generic_image_ids)
+            
+            # Add variant-specific images if available
+            if variant_idx in variant_images:
+                for img_path in variant_images[variant_idx]:
+                    img_id = f"img_var_{variant_idx:03d}"
+                    variant.image_ids.append(img_id)
+                    variant_specific_count += 1
+        
+        print(f"         → Variant-specific: {variant_specific_count}")
+        print(f"         → Total per variant: {len(generic_image_ids)} generic + 1 variant-specific")
     
     def _extract_variants_by_click(self, product: ScrapedProduct, product_folder: str):
         """
@@ -1779,6 +2643,67 @@ class AIScraper:
         
         return 0.0
     
+    def _bind_images_to_variants(self, product: ScrapedProduct):
+        """
+        Bind images to variants based on their primary option (Color/Style).
+        
+        Strategy:
+        1. Hero/Main images → ALL variants (generic product images)
+        2. Gallery images → Try to match by primary option (Color/Style)
+        3. Detail images → ALL variants (product specs/features)
+        
+        Image IDs are generated from file paths for tracking.
+        """
+        # Generate image IDs from file paths
+        all_image_ids = []
+        image_id_map = {}  # path → id
+        
+        idx = 1
+        for category in ['Main', 'Catalogue', 'Details']:
+            for img_path in product.images.get(category, []):
+                img_id = f"img_{idx:03d}"
+                all_image_ids.append(img_id)
+                image_id_map[img_path] = img_id
+                idx += 1
+        
+        if not all_image_ids:
+            print("      → No images to bind")
+            return
+        
+        # Generic images (shown for all variants)
+        generic_image_ids = []
+        
+        # Main/Hero images are always generic
+        for img_path in product.images.get('Main', []):
+            if img_path in image_id_map:
+                generic_image_ids.append(image_id_map[img_path])
+        
+        # Detail images are always generic (specs, features, etc.)
+        for img_path in product.images.get('Details', []):
+            if img_path in image_id_map:
+                generic_image_ids.append(image_id_map[img_path])
+        
+        print(f"      → Generic images: {len(generic_image_ids)} (shown for all variants)")
+        
+        # TODO: Implement smart variant-specific image detection
+        # For now, assign all gallery images as generic too
+        # Future enhancement: Use AI to detect which gallery images match which colors/styles
+        for img_path in product.images.get('Catalogue', []):
+            if img_path in image_id_map:
+                generic_image_ids.append(image_id_map[img_path])
+        
+        # Assign images to each variant
+        for variant in product.variants:
+            # Start with generic images
+            variant.image_ids = list(generic_image_ids)
+            
+            # TODO: Add variant-specific images based on option_value_1 (Color/Style)
+            # This would require AI vision to detect which images show which colors
+            # For MVP, all variants get all images
+        
+        print(f"      → Assigned {len(generic_image_ids)} images to {len(product.variants)} variants")
+        print(f"      → Image IDs: {', '.join(generic_image_ids[:5])}{'...' if len(generic_image_ids) > 5 else ''}")
+    
     def _push_to_knack(self, product: ScrapedProduct):
         """Push product and variants to Knack database with pricing"""
         if not self.knack_api:
@@ -1842,6 +2767,10 @@ class AIScraper:
                 variant_data[VARIANT_FIELDS['costCad']] = v.cost_cad
                 variant_data[VARIANT_FIELDS['marginStandard']] = v.margin_standard  # As percentage (30.5)
                 variant_data[VARIANT_FIELDS['marginPromo']] = v.margin_promo  # As percentage (14.2)
+                
+                # Add image IDs (serialize as JSON array)
+                if v.image_ids:
+                    variant_data[VARIANT_FIELDS['imageIdsJson']] = json.dumps(v.image_ids)
                 
                 if self.dry_run:
                     print(f"         → [DRY RUN] Would create variant: {v.variant_name_en} @ ${v.price_cad}")
@@ -2131,11 +3060,13 @@ def main():
     parser.add_argument('--skip-knack', action='store_true', help='[DEPRECATED] Use default behavior instead')
     parser.add_argument('--no-api', action='store_true', help='No API calls (DOM/rule-based only)')
     parser.add_argument('--batch-translate', action='store_true', help='Batch all translations at end (more efficient)')
+    parser.add_argument('--links', type=str, help='Custom links file (default: taobao_links.txt)')
+    parser.add_argument('--limit', type=int, help='Limit number of URLs to process')
     args = parser.parse_args()
-    
+
     # Default is now to skip Knack unless --push-knack is specified
     skip_knack = not args.push_knack
-    
+
     scraper = AIScraper(
         headless=args.headless,
         dry_run=args.dry_run,
@@ -2143,23 +3074,29 @@ def main():
         no_api=args.no_api,
         batch_translate=args.batch_translate
     )
-    
+
     if args.login:
         scraper.login_setup()
         return
-    
-    # Read URLs
-    if not os.path.exists(LINK_FILE):
-        print(f"❌ No URL file: {LINK_FILE}")
+
+    # Read URLs from custom or default file
+    links_file = args.links if args.links else LINK_FILE
+    if not os.path.exists(links_file):
+        print(f"❌ No URL file: {links_file}")
         return
-    
-    with open(LINK_FILE) as f:
+
+    with open(links_file) as f:
         urls = [l.strip() for l in f if l.strip() and not l.startswith('#')]
     
     if not urls:
-        print(f"❌ No URLs in {LINK_FILE}")
+        print(f"❌ No URLs in {links_file}")
         return
-    
+
+    # Apply limit if specified
+    if args.limit and args.limit > 0:
+        urls = urls[:args.limit]
+        print(f"📋 Limiting to first {len(urls)} URLs")
+
     scraper.run(urls, test_mode=args.test)
 
 
