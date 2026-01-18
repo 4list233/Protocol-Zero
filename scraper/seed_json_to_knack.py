@@ -35,6 +35,7 @@ def seed_json_to_knack(json_path):
             # Create product in Knack
             product_data = {
                 PRODUCT_FIELDS['id']: product['product_id'],
+                PRODUCT_FIELDS['sku']: product['product_id'],  # Use product ID as SKU
                 PRODUCT_FIELDS['title']: product['title_en'],
                 PRODUCT_FIELDS['titleOriginal']: product['title_zh'],
                 PRODUCT_FIELDS['url']: product['url'],
@@ -52,8 +53,8 @@ def seed_json_to_knack(json_path):
             
             for v_idx, variant in enumerate(variants, 1):
                 try:
-                    # Generate unique SKU using product ID + variant index
-                    unique_sku = variant.get('sku_key', f"{product['product_id']}_v{v_idx}")
+                    # Generate unique SKU using product ID + variant index (ALWAYS unique)
+                    unique_sku = f"{product['product_id']}_v{v_idx}"
                     
                     variant_data = {
                         VARIANT_FIELDS['product']: [product_knack_id],  # Connection to product
