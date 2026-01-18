@@ -346,7 +346,7 @@ async function importToKnack() {
         detailLongImage: detailImage,
         price_cad: 0, // Will be set manually in Knack
         margin: 0.5,
-        status: 'Inactive',
+        status: 'Active',
         variants: []
       });
     }
@@ -362,7 +362,7 @@ async function importToKnack() {
         price_cny: parseFloat(row['Price CNY'] || 0),
         price_cad: parseFloat(row['Price CAD'] || 0) || undefined,
         stock: undefined,
-        status: 'Inactive',
+        status: 'Active',
         sortOrder: product.variants.length
       });
     }
@@ -413,7 +413,7 @@ async function importToKnack() {
       productData[PRODUCT_FIELDS.titleOriginal] = product.title_original || null;
       productData[PRODUCT_FIELDS.description] = null;
       productData[PRODUCT_FIELDS.category] = null;
-      productData[PRODUCT_FIELDS.status] = product.status || 'Inactive';
+      productData[PRODUCT_FIELDS.status] = product.status || 'Active';
       productData[PRODUCT_FIELDS.priceCadBase] = product.price_cad || 0;
       productData[PRODUCT_FIELDS.margin] = product.margin || 0.5;
       productData[PRODUCT_FIELDS.stock] = null;
@@ -502,7 +502,7 @@ async function importToKnack() {
         variantData[VARIANT_FIELDS.priceCny] = variant.price_cny || 0;
         variantData[VARIANT_FIELDS.priceCadOverride] = variant.price_cad || null;
         variantData[VARIANT_FIELDS.stock] = variant.stock || null;
-        variantData[VARIANT_FIELDS.status] = variant.status || 'Inactive';
+        variantData[VARIANT_FIELDS.status] = variant.status || 'Active';
         variantData[VARIANT_FIELDS.sortOrder] = variant.sortOrder || 0;
         
         await createKnackRecord(VARIANTS_OBJECT_KEY, variantData);
