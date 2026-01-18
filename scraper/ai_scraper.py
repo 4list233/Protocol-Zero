@@ -2536,6 +2536,31 @@ class AIScraper:
         
         # Use JavaScript to find the price - simpler regex for reliability
         js_price_scripts = [
+            # Script 0: Tmall-specific price extraction (try first)
+            """
+            // Tmall uses different selectors
+            var selectors = [
+                '[class*="tm-price"]',
+                '[class*="tmPrice"]', 
+                '[class*="tm-promo-price"]',
+                '[class*="J_PromoPriceNum"]',
+                'span[class*="tm-promo-price-num"]',
+                'em[class*="tm-price"]',
+                'strong[class*="tm-price"]'
+            ];
+            for (var i = 0; i < selectors.length; i++) {
+                var el = document.querySelector(selectors[i]);
+                if (el) {
+                    var text = el.textContent || el.innerText;
+                    var nums = text.match(/[0-9]+\\.?[0-9]*/g);
+                    if (nums && nums.length > 0) {
+                        var num = parseFloat(nums[0]);
+                        if (num >= 5 && num <= 5000) return num;
+                    }
+                }
+            }
+            return 0;
+            """,
             # Script 1: Look for highlightPrice (current selected variant price)
             """
             var el = document.querySelector('[class*="highlightPrice"]');
@@ -2600,10 +2625,17 @@ class AIScraper:
             except:
                 continue
         
-        # Fallback: CSS selectors
+        # Fallback: CSS selectors (Taobao + Tmall)
         selectors = [
+            # Taobao selectors
             'span.Price--priceInt--ZlsSi_M',
             'span[class*="Price--priceInt"]',
+            # Tmall selectors
+            'span[class*="tm-price"]',
+            'span[class*="tm-promo-price-num"]',
+            'em[class*="tm-price"]',
+            'strong[class*="tm-price"]',
+            '[class*="J_PromoPriceNum"]',
         ]
         
         for sel in selectors:
