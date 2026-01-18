@@ -82,9 +82,12 @@ def process_product_folder(product_folder: Path, skip_confirm=False):
         print(f"  ⏭️  No Details/ folder found")
         return False
     
-    # Find all Detail_XX.jpg files (not Details_Long.jpg)
+    # Find all detail_XX.jpg files (not Details_Long.jpg) - case insensitive
     detail_files = sorted([
-        f for f in details_dir.glob("Detail_*.jpg")
+        f for f in details_dir.glob("[Dd]etail_*.jpg")
+        if f.name != "Details_Long.jpg"
+    ] + [
+        f for f in details_dir.glob("[Dd]etail_*.png")
         if f.name != "Details_Long.jpg"
     ])
     
