@@ -6,25 +6,18 @@ This guide walks you through importing new Taobao products into your shop via Kn
 
 ```bash
 # 1. Add links to taobao_links.txt
-# 2. Run scraper
+# 2. Run AI scraper (scrapes, translates, calculates pricing, uploads to Knack)
 cd scraper
-python3 scraper.py
+python3 ai_scraper.py
 
-# 3. (OPTIONAL) Translate with Gemini AI - SKIP if using Comet Browser for translation
-# python3 translate.py
-
-# 4. Sync media to shop
+# 3. Sync media to shop
 cd ../shared/scripts
 npm run sync-media
 
-# 5. Seed to Notion (images)
+# 4. Seed to Notion (images)
 npm run seed-notion
 
-# 6. Import to Knack (products + variants)
-node csv-to-knack.js
-
-# 7. Complete pricing in Comet Browser (translates product titles & variant names)
-# Follow COMET_BROWSER_INSTRUCTIONS.md
+# 5. Verify products are live on shop
 ```
 
 ---
@@ -45,75 +38,49 @@ https://item.taobao.com/item.htm?id=987654321
 
 ---
 
-### Step 2: Run Scraper
+### Step 2: Run AI Scraper
 
 ```bash
 cd scraper
-python3 scraper.py
+python3 ai_scraper.py
 ```
 
-**What it does**:
+**What it does (all automated)**:
 - Scrapes all products from `taobao_links.txt`
 - Downloads product images (Main, Catalogue, Details)
-- Captures variants (colors/sizes) and prices
-- Applies basic rule-based translation
-- Exports `protocol_zero_variants.csv`
-- Exports `shared/data/products_manifest.json`
+- Captures variants (colors/sizes) and CNY prices
+- Translates Chinese → English with Gemini AI
+- **Calculates CAD pricing with margins** (see Pricing section below)
+- Filters out out-of-stock variants
+- Exports CSV and JSON
+- **Uploads to Knack with status = 'Active'**
+
+**Pricing Calculation (Built-in)**:
+```
+Cost CAD = (Price CNY + 30 shipping) × 0.19 exchange rate
+Price CAD = Cost CAD ÷ (1 - 0.10 salesperson - 0.30 margin)
+```
 
 **Output**:
-- `scraper/protocol_zero_variants.csv` - All variant data
+- `scraper/ai_scraper_output/products.csv` - All variant data with pricing
+- `scraper/ai_scraper_output/products.json` - Structured JSON
 - `scraper/media/product_X_slug/` - Product images
-- `shared/data/products_manifest.json` - Shop-compatible JSON
-
-**If login required**:
-```bash
-python3 scraper.py --login-setup
-```
-
----
-
-### Step 3: (OPTIONAL) Enhance Translations with Gemini AI
-
-**⚠️ SKIP THIS STEP if you're using Comet Browser for translation!**
-
-Comet Browser will translate both product titles and variant names during the pricing workflow, so this step is optional.
-
-If you want to pre-translate product titles before importing:
-
-```bash
-cd scraper
-python3 translate.py
-```
-
-**What it does**:
-- Reads `protocol_zero_variants.csv`
-- Uses Gemini 2.5 Pro for high-quality translation
-- Updates `Translated Title` column
-- Caches results in `translation_cache.json`
-
-**Translation features**:
-- ✅ Removes brand names (WOSPORT, FMA, TMC, Emerson)
-- ✅ Removes proprietary model numbers
-- ✅ Keeps military designations (PVS-14, AN/PEQ-15, MICH 2000)
-- ✅ Keeps standard models (6094, JPC, AVS)
-- ✅ Airsoft/military terminology context
 
 **Options**:
 ```bash
-python3 translate.py              # Translate only untranslated titles
-python3 translate.py --force      # Re-translate all titles
+python3 ai_scraper.py --skip-knack  # Scrape only, don't upload to Knack
+python3 ai_scraper.py --test        # Process only first product (testing)
+python3 ai_scraper.py --dry-run     # Show what would be done without changes
 ```
 
-**Note**: Comet Browser workflow (`COMET_BROWSER_INSTRUCTIONS.md`) will translate:
-- Product titles (Step 3)
-- Variant names (Step 6)
-- Option types and values
-
-So you can skip this step and let Comet Browser handle all translation.
+**If login required**:
+```bash
+python3 ai_scraper.py --login-setup
+```
 
 ---
 
-### Step 3 (or 4): Sync Media to Shop
+### Step 3: Sync Media to Shop
 
 ```bash
 cd ../shared/scripts
@@ -130,7 +97,7 @@ npm run sync-media
 
 ---
 
-### Step 4 (or 5): Seed to Notion (Images)
+### Step 4: Seed to Notion (Images)
 
 ```bash
 npm run seed-notion
@@ -141,7 +108,6 @@ npm run seed-notion
 - Creates product pages in Notion Products database
 - Creates variant pages in Notion Variants database
 - Uploads images as Notion Files (external URLs)
-- Auto-translates any remaining Chinese text (fallback)
 
 **Prerequisites**:
 - `NOTION_API_KEY` in `.env`
@@ -151,54 +117,49 @@ npm run seed-notion
 
 ---
 
-### Step 5 (or 6): Import to Knack
+### Step 5: Verify on Shop
 
-```bash
-node csv-to-knack.js
-```
+Products should now be visible on the shop! The AI scraper automatically:
+- Sets product status to `Active`
+- Sets variant status to `Active` (if in stock)
+- Calculates and populates all pricing fields
 
-**What it does**:
-- Reads `scraper/protocol_zero_variants.csv`
-- Creates products in Knack Products object (`object_6`)
-- Creates variants in Knack Variants object (`object_7`)
-- Links variants to products via connection field
-- Fetches Notion image URLs and updates Knack product records
-- Sets initial status to `Inactive` (you'll activate after pricing)
-
-**Prerequisites**:
-- `KNACK_APPLICATION_ID` in `.env`
-- `KNACK_REST_API_KEY` in `.env`
-- Products must be seeded to Notion first (Step 5)
-
-**Output**:
-- Products created in Knack with:
-  - Product ID (field_45)
-  - SKU (field_46)
-  - Title (field_47)
-  - Taobao URL (field_55)
-  - Notion image URLs (field_57, field_140, field_141)
-- Variants created with:
-  - Variant Name (field_62) - Chinese names initially
-  - Price CNY (field_64) - from scraper
-  - Status (field_67) - set to `Inactive`
-
-**Note**: The script will pause before uploading images so you can review them first.
+**Check**:
+1. Visit your shop website
+2. Products should appear in the product listing
+3. Each product should have calculated CAD prices and margins
 
 ---
 
-## After Import: Complete Pricing Workflow
+## Pricing Formula (Built into Scraper)
 
-After products are imported to Knack, follow the **Comet Browser workflow** (`COMET_BROWSER_INSTRUCTIONS.md`) to:
+The `ai_scraper.py` automatically calculates all pricing during the scraping step:
 
-1. **Translate product titles** (Chinese → English) - removes brands, keeps military terms
-2. **Translate variant names** (Chinese → English) - colors, sizes, styles
-3. **Scrape updated prices** from Taobao for each variant
-4. **Find Canadian competitor products** and record prices
-5. **Calculate margins** using 85% of Canadian price as reference
-6. **Update variant options** (Option Type 1/2, Option Value 1/2)
-7. **Set status to "Margins Added"**
+### Configuration
+```python
+PRICING_CONFIG = {
+    'exchange_rate': 0.19,        # 1 CNY = 0.19 CAD
+    'shipping_cny': 30,           # Fixed shipping per item (CNY)
+    'salesperson_cut': 0.10,      # 10% of revenue to salesperson
+    'promoter_cut': 0.10,         # 10% to promoter (if promo code)
+    'target_margin': 0.30,        # 30% target margin on sale price
+}
+```
 
-This workflow handles all translation, so you don't need to run `translate.py` separately.
+### Formulas
+| Field | Formula |
+|-------|---------|
+| **Cost CAD** | (Price CNY + 30) × 0.19 |
+| **Price CAD** | Cost CAD ÷ 0.60 (then rounded to .99) |
+| **Margin Standard** | (Price × 0.90 - Cost) ÷ Price |
+| **Margin Promo** | (Price × 0.90 × 0.80 - Cost) ÷ (Price × 0.90) |
+
+### Example
+For a ¥100 CNY item:
+- Cost CAD = (100 + 30) × 0.19 = **$24.70**
+- Price CAD = $24.70 ÷ 0.60 = $41.17 → **$40.99**
+- Margin Standard = **29.7%**
+- Margin Promo = **13.0%**
 
 ---
 
@@ -208,7 +169,7 @@ This workflow handles all translation, so you don't need to run `translate.py` s
 
 **Login required**:
 ```bash
-python3 scraper.py --login-setup
+python3 ai_scraper.py --login-setup
 ```
 
 **Missing images**:
@@ -218,8 +179,7 @@ python3 scraper.py --login-setup
 
 **Translation failures**:
 - Check `GEMINI_API_KEY` in `scraper/.env`
-- Review `translation_cache.json` for cached results
-- Run `python3 translate.py --force` to retry
+- Review logs for Gemini API errors
 
 ---
 
@@ -265,9 +225,10 @@ python3 scraper.py --login-setup
 protocol-zero/
 ├── scraper/
 │   ├── taobao_links.txt          # ← Add new links here
-│   ├── scraper.py                 # Main scraper
-│   ├── translate.py              # Gemini AI translation
-│   ├── protocol_zero_variants.csv # Scraper output
+│   ├── ai_scraper.py             # Main scraper (does everything)
+│   ├── ai_scraper_output/
+│   │   ├── products.csv          # Output with pricing
+│   │   └── products.json
 │   └── media/                    # Product images
 │       └── product_X_slug/
 │           ├── Main/
@@ -278,8 +239,7 @@ protocol-zero/
 │   │   └── products_manifest.json # Shop-compatible JSON
 │   └── scripts/
 │       ├── sync-media.js         # Copy images to shop
-│       ├── json-to-notion.js     # Seed to Notion
-│       └── csv-to-knack.js       # Import to Knack
+│       └── json-to-notion.js     # Seed to Notion
 └── shop/
     └── public/
         └── images/               # Images for Next.js
@@ -292,6 +252,8 @@ protocol-zero/
 ### Scraper (`scraper/.env`):
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
+KNACK_APPLICATION_ID=your_knack_app_id
+KNACK_REST_API_KEY=your_knack_api_key
 ```
 
 ### Shop/Shared (`.env` or `shop/.env.local`):
@@ -309,12 +271,10 @@ KNACK_REST_API_KEY=your_knack_api_key
 
 ## Next Steps After Import
 
-1. **Review products in Knack**: Check that all products and variants were created
-2. **Follow Comet Browser workflow**: Complete pricing and margin calculations
-3. **Activate products**: Set status to `Active` in Knack after pricing is complete
-4. **Verify in shop**: Check that products appear correctly on your shop website
+1. **Review products in Knack**: Check that all products and variants were created with correct pricing
+2. **Verify on shop**: Products should appear automatically (status is set to Active)
+3. **Check images**: Ensure images display correctly on product pages
 
 ---
 
-**Last Updated**: [Current Date]
-
+**Last Updated**: January 2026

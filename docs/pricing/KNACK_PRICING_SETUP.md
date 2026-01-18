@@ -1,208 +1,131 @@
-# Knack Database Modifications for Pricing System
+# Knack Database Fields for Pricing System
 
 ## Overview
 
-This document outlines the fields needed in your Knack database to support automated pricing calculations based on the ratio-scaling model.
+This document outlines the Knack database fields used by the automated pricing system. Pricing is calculated during the scraping step and uploaded directly to Knack.
 
 ---
 
-## Required Field Additions
+## Pricing Fields in Variants Object (object_7)
 
-### Variants Object (object_7) - NEW FIELDS NEEDED
+These fields are populated automatically by the `ai_scraper.py`:
 
-| Field Name | Field Type | Description | Required |
-|------------|------------|-------------|----------|
-| **Cost CNY** | Number | Actual cost to purchase from Taobao (may differ from listed price) | Yes |
-| **Shipping CNY** | Number | Shipping cost allocation (default: 70) | No |
-| **Is Base Variant** | Yes/No | Mark ONE variant per product as the base for ratio calculations | Yes |
-| **Competitor Price CAD** | Number | Research price from Canadian competitors | No |
-| **Price Ratio** | Number | Auto-calculated ratio vs base variant | Auto |
-| **Total Cost CAD** | Number | Auto-calculated: (Cost CNY + Shipping) × Exchange Rate | Auto |
-| **Margin Standard** | Number | Auto-calculated margin % for regular sales | Auto |
-| **Margin Promo** | Number | Auto-calculated margin % with promo | Auto |
-| **Is Bundle** | Yes/No | Mark variants that are bundles | No |
-| **Bundle Components** | Text | What's included in bundle (e.g., "Holster + Belt") | No |
-
-### Products Object (object_6) - OPTIONAL ADDITIONS
-
-| Field Name | Field Type | Description |
-|------------|------------|-------------|
-| **Base Price CAD** | Number | The calculated base price for ratio scaling |
-| **Exchange Rate** | Number | CNY→CAD rate used (default: 0.20) |
+| Field Name | Field Key | Field Type | Description |
+|------------|-----------|------------|-------------|
+| **Price CNY** | field_64 | Number | Item price from Taobao |
+| **Shipping CNY** | field_151 | Number | Shipping cost (default: 30) |
+| **Cost CAD** | field_173 | Number | Calculated: (Price CNY + Shipping) × 0.19 |
+| **Price CAD** | field_138 | Number | Calculated selling price |
+| **Margin Standard** | field_154 | Number (%) | Margin after salesperson cut |
+| **Margin Promo** | field_155 | Number (%) | Margin after all promo cuts |
+| **Status** | field_67 | Text | Active / Out of Stock |
 
 ---
 
-## Knack Field Setup Instructions
+## How Pricing is Populated
 
-### Step 1: Add New Fields to Variants Object
-
-In Knack Builder:
-
-1. Go to **Data** → **Objects** → **Variants (object_7)**
-2. Click **Add Field** for each new field:
-
-#### Cost CNY
-- **Field Name:** Cost CNY
-- **Field Type:** Number
-- **Description:** Actual cost to buy from Taobao
-- **Default Value:** (leave empty - copy from Price CNY initially)
-
-#### Shipping CNY
-- **Field Name:** Shipping CNY  
-- **Field Type:** Number
-- **Default Value:** 70
-- **Description:** Shipping cost per item in CNY
-
-#### Is Base Variant
-- **Field Name:** Is Base Variant
-- **Field Type:** Yes/No
-- **Default Value:** No
-- **Description:** Check this for the main/core variant that others scale from
-
-#### Competitor Price CAD
-- **Field Name:** Competitor Price CAD
-- **Field Type:** Number (Currency)
-- **Description:** Research price from Canadian competitors
-
-#### Total Cost CAD
-- **Field Name:** Total Cost CAD
-- **Field Type:** Number (Currency)
-- **Description:** Auto-calculated by pricing script
-
-#### Margin Standard
-- **Field Name:** Margin Standard
-- **Field Type:** Number (%)
-- **Description:** Profit margin on regular sales
-
-#### Margin Promo  
-- **Field Name:** Margin Promo
-- **Field Type:** Number (%)
-- **Description:** Profit margin with promo code applied
-
-#### Is Bundle
-- **Field Name:** Is Bundle
-- **Field Type:** Yes/No
-- **Default Value:** No
-
-#### Bundle Components
-- **Field Name:** Bundle Components
-- **Field Type:** Short Text
-- **Description:** e.g., "Holster + Belt + Mag Pouch"
-
-### Step 2: Note the Field Keys
-
-After creating each field, note the **Field Key** (e.g., `field_150`, `field_151`, etc.).
-
-You'll need to add these to your environment or `knack-config.ts`:
-
-```typescript
-// Add to variants fields in knack-config.ts
-variants: {
-  // ... existing fields ...
-  costCny: 'field_XXX',           // Replace XXX with actual key
-  shippingCny: 'field_XXX',
-  isBaseVariant: 'field_XXX',
-  competitorPriceCad: 'field_XXX',
-  totalCostCad: 'field_XXX',
-  marginStandard: 'field_XXX',
-  marginPromo: 'field_XXX',
-  isBundle: 'field_XXX',
-  bundleComponents: 'field_XXX',
-}
-```
-
----
-
-## Data Migration
-
-### Initial Setup for Existing Variants
-
-For existing variants, you'll need to:
-
-1. **Copy Price CNY → Cost CNY** (for items where Taobao price = cost)
-2. **Set Shipping CNY = 70** for all variants
-3. **Mark one base variant per product** (usually the core/standalone item)
-4. **Enter Competitor Price CAD** for base variants (from market research)
-
----
-
-## Pricing Flow
+Pricing is calculated and uploaded **automatically** during the scraping process:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        PRICING FLOW                                  │
+│                     AUTOMATED PRICING FLOW                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  1. SETUP (Manual)                                                   │
-│     ├─ Set Cost CNY for each variant                                │
-│     ├─ Set Shipping CNY (default 70)                                │
-│     ├─ Mark ONE base variant per product                            │
-│     └─ Enter Competitor Price CAD for base variant                  │
+│  1. SCRAPE (ai_scraper.py)                                          │
+│     └─ Extracts Price CNY from Taobao                               │
 │                                                                      │
-│  2. CALCULATE BASE PRICE (Script)                                   │
-│     └─ Base Price CAD = Competitor Price × 0.85                     │
+│  2. CALCULATE (calculate_price_cad function)                        │
+│     ├─ Cost CAD = (Price CNY + 30) × 0.19                           │
+│     ├─ Price CAD = Cost CAD ÷ 0.60                                  │
+│     ├─ Margin Standard = (Price × 0.90 - Cost) ÷ Price              │
+│     └─ Margin Promo = (Price × 0.72 - Cost) ÷ (Price × 0.90)        │
 │                                                                      │
-│  3. CALCULATE VARIANT PRICES (Script)                               │
-│     └─ Variant CAD = Base Price × (Variant CNY / Base CNY)          │
-│                                                                      │
-│  4. CALCULATE COSTS (Script)                                        │
-│     └─ Total Cost = (Cost CNY + Shipping CNY) × Exchange Rate       │
-│                                                                      │
-│  5. CALCULATE MARGINS (Script)                                      │
-│     ├─ Standard = 1 - 0.10 - (Cost / Price)                         │
-│     └─ Promo = 0.80 - (Cost / Net Revenue)                          │
-│                                                                      │
-│  6. UPDATE DATABASE (Script)                                        │
-│     └─ Write Price CAD, Total Cost, Margins to Knack                │
+│  3. UPLOAD TO KNACK                                                  │
+│     ├─ Price CNY → field_64                                         │
+│     ├─ Cost CAD → field_173                                         │
+│     ├─ Price CAD → field_138                                        │
+│     ├─ Margin Standard → field_154                                  │
+│     ├─ Margin Promo → field_155                                     │
+│     └─ Status → field_67 (Active if in stock)                       │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Example Workflow
+## Pricing Configuration
 
-### Product: 2011 Holster Set
+Located in `scraper/ai_scraper.py`:
 
-**Step 1: Researcher enters data in Knack:**
-
-| Variant | Cost CNY | Price CNY | Is Base | Competitor CAD |
-|---------|----------|-----------|---------|----------------|
-| Holster only | ¥45 | ¥59 | ✓ YES | $45 |
-| Belt only | ¥28 | ¥35 | No | |
-| Belt + Holster | ¥68 | ¥89 | No | |
-
-**Step 2: Script calculates and writes:**
-
-| Variant | Price CAD | Cost CAD | Margin Std | Margin Promo |
-|---------|-----------|----------|------------|--------------|
-| Holster only | $38.25 | $23.00 | 29.8% | 12.6% |
-| Belt only | $22.69 | $19.60 | -3.5% | -24.0% ❌ |
-| Belt + Holster | $57.70 | $27.60 | 42.2% | 26.5% |
-
-**Step 3: Admin reviews flagged variants (negative margins)**
+```python
+PRICING_CONFIG = {
+    'exchange_rate': 0.19,        # 1 CNY = 0.19 CAD
+    'shipping_cny': 30,           # Fixed shipping per item (CNY)
+    'salesperson_cut': 0.10,      # 10% of revenue to salesperson
+    'promoter_cut': 0.10,         # 10% to promoter (if promo code)
+    'target_margin': 0.30,        # 30% target margin on sale price
+}
+```
 
 ---
 
-## Validation Rules
+## Field Keys Reference
 
-The pricing script should enforce:
+### Products Object (object_6)
 
-1. **Every product must have exactly ONE base variant marked**
-2. **Base variant must have Competitor Price CAD set**
-3. **All variants must have Cost CNY > 0**
-4. **Warn if any margin < 15% (standard) or < 0% (promo)**
+| Field | Key | Description |
+|-------|-----|-------------|
+| ID | field_45 | Product ID (from Taobao URL) |
+| SKU | field_46 | Generated SKU |
+| Title | field_47 | English product title |
+| Status | field_51 | Active / Inactive |
+| Price CAD Base | field_138 | Base price (from first variant) |
+
+### Variants Object (object_7)
+
+| Field | Key | Description |
+|-------|-----|-------------|
+| Product | field_61 | Connection to product |
+| Variant Name | field_62 | English variant name |
+| Price CNY | field_64 | Taobao price |
+| Price CAD | field_138 | Selling price |
+| Cost CAD | field_173 | Landed cost |
+| Margin Standard | field_154 | Margin % (standard sale) |
+| Margin Promo | field_155 | Margin % (promo sale) |
+| Status | field_67 | Active / Out of Stock |
+| Option Type 1 | field_142 | First option type (Color/Size) |
+| Option Value 1 | field_143 | First option value |
+| Option Type 2 | field_144 | Second option type |
+| Option Value 2 | field_145 | Second option value |
 
 ---
 
-## Next Steps
+## Recalculating Prices
 
-1. **Add the new fields in Knack Builder**
-2. **Record the field keys**
-3. **Update `knack-config.ts` with new field keys**
-4. **Run the pricing script to calculate and update prices**
+If you need to recalculate prices (e.g., after changing exchange rate):
 
-See `shared/scripts/knack-pricing-update.js` for the automated pricing script.
+### Option 1: Re-run Scraper
+```bash
+cd scraper
+python3 ai_scraper.py
+```
 
+### Option 2: Use CSV to Knack Script
+```bash
+cd scraper
+python3 csv_to_knack.py
+```
 
+This will recalculate prices for all products in the CSV and update Knack.
 
+---
+
+## Updating Pricing Configuration
+
+1. Edit `PRICING_CONFIG` in `scraper/ai_scraper.py`
+2. Re-run the scraper or csv_to_knack.py
+3. All prices will be recalculated and updated
+
+---
+
+**Last Updated**: January 2026

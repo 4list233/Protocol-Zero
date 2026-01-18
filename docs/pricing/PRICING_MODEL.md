@@ -2,109 +2,75 @@
 
 ## Overview
 
-This document outlines the pricing strategy for Protocol Zero, addressing bundle pricing, cost structure, margin calculations, and profit analysis.
+This document outlines the automated pricing strategy for Protocol Zero. Pricing is calculated automatically during the scraping process based on CNY costs, exchange rates, and target margins.
 
 ---
 
-## 1. The Bundle Pricing Problem
+## 1. Pricing Formula
 
-Many Taobao products have variants that are **bundles** of items sold together:
+All pricing is calculated automatically by the `ai_scraper.py` during the scraping step.
 
-| Variant | What's Included |
-|---------|-----------------|
-| `2011快拔套可带灯款` | Holster only |
-| `外腰带` | Belt only |
-| `外腰带+2011快拔套可带灯款` | Belt + Holster |
-| `外腰带+2011快拔套可带灯款+单排夹套` | Belt + Holster + Single Mag Pouch |
-| `外腰带+2011快拔套带灯款+双排夹套` | Belt + Holster + Double Mag Pouch |
+### Configuration
 
-### The Problem
-
-If we price by finding the **lowest Canadian competitor price** and deducting 15%, we get a good base price for the **core item**. But bundles don't add up correctly because:
-
-- Each bundle has a different competitor price (or no direct competitor)
-- A "Belt + Holster" bundle should roughly equal "Belt price + Holster price - bundle discount"
-- Simply applying competitor analysis to each variant separately creates inconsistent pricing
-
----
-
-## 2. Bundle Pricing Solution: Ratio-Based Scaling
-
-### Core Concept
-
-1. **Establish a BASE PRICE (CAD)** for the core/primary item using competitor analysis
-2. **Use Taobao's CNY price ratios** to scale all other variants proportionally
-3. Taobao sellers have already done the math for reasonable bundle pricing ratios
-
-### Formula
-
-```
-Variant_CAD = BASE_CAD × (Variant_CNY / Base_CNY)
+```python
+PRICING_CONFIG = {
+    'exchange_rate': 0.19,        # 1 CNY = 0.19 CAD
+    'shipping_cny': 30,           # Fixed shipping per item (CNY)
+    'salesperson_cut': 0.10,      # 10% of revenue to salesperson
+    'promoter_cut': 0.10,         # 10% to promoter (if promo code)
+    'target_margin': 0.30,        # 30% target margin on sale price
+}
 ```
 
-### Example: 2011 Holster Set
+### Core Formulas
 
-Let's say Taobao prices are:
-| Variant | CNY Price |
-|---------|-----------|
-| Holster only (BASE) | ¥59 |
-| Belt only | ¥35 |
-| Belt + Holster | ¥89 |
-| Belt + Holster + Single Mag | ¥109 |
-| Belt + Holster + Double Mag | ¥119 |
+| Calculation | Formula |
+|-------------|---------|
+| **Cost CAD** | `(Price CNY + 30 shipping) × 0.19` |
+| **Price CAD** | `Cost CAD ÷ (1 - 0.10 - 0.30)` = `Cost CAD ÷ 0.60` |
+| **Margin Standard** | `(Price × 0.90 - Cost) ÷ Price` |
+| **Margin Promo** | `(Price × 0.90 × 0.80 - Cost) ÷ (Price × 0.90)` |
 
-If competitor analysis gives us **BASE_CAD = $35** for the holster:
+### Example Calculation
 
-| Variant | CNY | Ratio | CAD Price |
-|---------|-----|-------|-----------|
-| Holster (BASE) | ¥59 | 1.00 | $35.00 |
-| Belt only | ¥35 | 0.59 | $20.76 |
-| Belt + Holster | ¥89 | 1.51 | $52.85 |
-| Belt + Holster + Single Mag | ¥109 | 1.85 | $64.69 |
-| Belt + Holster + Double Mag | ¥119 | 2.02 | $70.61 |
+For a ¥100 CNY item:
 
-### Why This Works
-
-- Taobao sellers already calculated sensible pricing ratios for bundles
-- Bundles include a natural "bundle discount" built into the Chinese pricing
-- All variant prices stay proportionally consistent
-- Canadian buyers see logical price progression for bundles
-
-### Implementation Notes
-
-- **Base variant selection**: Usually the most commonly purchased standalone item
-- **Verify ratios**: Check that the math makes sense (bundle should cost less than sum of parts)
-- **Override capability**: Some variants may need manual adjustment
+```
+Cost CAD = (100 + 30) × 0.19 = $24.70
+Price CAD = $24.70 ÷ 0.60 = $41.17 → rounded to $40.99
+Margin Standard = (40.99 × 0.90 - 24.70) ÷ 40.99 = 29.7%
+Margin Promo = (40.99 × 0.90 × 0.80 - 24.70) ÷ (40.99 × 0.90) = 13.0%
+```
 
 ---
 
-## 3. Cost Structure
+## 2. Cost Structure
 
 ### Per-Item Costs
 
 | Cost Component | Value | Notes |
 |----------------|-------|-------|
 | **Item Cost (CNY)** | Varies | From Taobao listing |
-| **Shipping (CNY)** | ¥70 | Fixed per item (TBD through operations) |
-| **CNY → CAD Rate** | ~0.19 | Variable, use current rate |
+| **Shipping (CNY)** | ¥30 | Fixed per item |
+| **CNY → CAD Rate** | 0.19 | Fixed rate |
 
 ```
-Total_Cost_CAD = (Item_CNY + 70) × CNY_to_CAD_rate
+Total_Cost_CAD = (Item_CNY + 30) × 0.19
 ```
 
 ### Example Cost Calculation
 
-For a ¥59 holster:
+For a ¥59 item:
 ```
 Item Cost:     ¥59 × 0.19 = $11.21
-Shipping:      ¥70 × 0.19 = $13.30
+Shipping:      ¥30 × 0.19 = $5.70
 ──────────────────────────────────
-Total Cost:                 $24.51
+Total Cost:                $16.91
 ```
 
 ---
 
-## 4. Revenue Structure & Cuts
+## 3. Revenue Structure & Cuts
 
 ### Revenue Split
 
@@ -118,234 +84,117 @@ Total Cost:                 $24.51
 
 #### Scenario A: Standard Sale (no promo code)
 ```
-Sale Price (Revenue):     $35.00
-├─ Salesperson (10%):     -$3.50
-├─ Cost:                  -$24.51
-└─ Gross Profit:          $6.99  (20.0% margin)
+Sale Price (Revenue):     $40.99
+├─ Salesperson (10%):     -$4.10
+├─ Cost:                  -$24.70
+└─ Gross Profit:          $12.19  (29.7% margin)
 ```
 
 #### Scenario B: Promo Code Sale
 ```
-Original Price:           $35.00
-├─ Customer Discount (10%): -$3.50
-└─ Net Revenue:           $31.50
+Original Price:           $40.99
+├─ Customer Discount (10%): -$4.10
+└─ Net Revenue:           $36.89
 
-Net Revenue:              $31.50
-├─ Salesperson (10%):     -$3.15
-├─ Promoter Cut (10%):    -$3.15
-├─ Cost:                  -$24.51
-└─ Gross Profit:          $0.69  (2.2% margin)
+Net Revenue:              $36.89
+├─ Salesperson (10%):     -$3.69
+├─ Promoter Cut (10%):    -$3.69
+├─ Cost:                  -$24.70
+└─ Gross Profit:          $4.81  (13.0% margin)
 ```
-
-**⚠️ Warning**: With full promo stack, margins are extremely thin!
 
 ---
 
-## 5. Margin Analysis
+## 4. Margin Analysis
 
 ### Target Margins
 
-| Scenario | Minimum Viable | Target | Comfortable |
-|----------|---------------|--------|-------------|
-| Standard Sale | 15% | 25-30% | 35%+ |
-| Promo Code Sale | 5% | 10-15% | 20%+ |
+| Scenario | Target | With 30% Target Margin |
+|----------|--------|------------------------|
+| Standard Sale | 30% | ~30% after salesperson cut |
+| Promo Code Sale | 10%+ | ~13% after all cuts |
 
-### Calculating Required Sale Price
+### Pricing Achieves Target Margins
 
-To achieve target margins, work backwards:
-
-```
-Required_Price = Cost / (1 - salesperson% - target_margin%)
-
-For 25% target margin on standard sale:
-Required_Price = $24.51 / (1 - 0.10 - 0.25) = $24.51 / 0.65 = $37.71
-```
-
-### Margin Calculator
-
-Given:
-- `C` = Total Cost (CAD)
-- `S` = Salesperson % (0.10)
-- `D` = Promo Discount % (0.10, if applicable)
-- `P` = Promoter Cut % (0.10, if promo)
-- `R` = Revenue (sale price or discounted price)
-
-**Standard Sale Margin:**
-```
-Margin = (R - R×S - C) / R
-       = (R × (1 - S) - C) / R
-       = 1 - S - C/R
-```
-
-**Promo Sale Margin:**
-```
-Net_Revenue = Original_Price × (1 - D)
-Margin = (Net_Revenue - Net_Revenue×S - Net_Revenue×P - C) / Net_Revenue
-       = 1 - S - P - C/Net_Revenue
-       = 1 - 0.10 - 0.10 - C/Net_Revenue
-       = 0.80 - C/Net_Revenue
-```
+The formula `Price = Cost ÷ 0.60` is designed to achieve:
+- **30% margin** on the sale price after 10% salesperson cut
+- **~13% margin** on promo sales after all cuts
 
 ---
 
-## 6. Pricing Decision Framework
-
-### Step-by-Step Process
-
-1. **Research competitor price** for the base/core item
-2. **Set BASE_CAD** = Competitor price × 0.85 (15% undercut)
-3. **Get Taobao CNY prices** for all variants
-4. **Calculate variant prices** using ratio scaling
-5. **Verify margins** for each variant
-6. **Adjust if necessary** (raise prices if margins too thin)
-
-### Sanity Checks
-
-- [ ] Bundle price < sum of individual items
-- [ ] All variants have >15% margin on standard sales
-- [ ] All variants have >0% margin on promo sales
-- [ ] Prices feel reasonable for Canadian market
-- [ ] Price progression makes intuitive sense
-
----
-
-## 7. Data Model Additions
-
-### Suggested Fields for Products/Variants
-
-```typescript
-type PricingData = {
-  // Cost side
-  cost_cny: number          // Item cost from Taobao
-  shipping_cny: number      // Shipping cost (default 70)
-  total_cost_cad: number    // Calculated total cost
-  
-  // Pricing side
-  base_variant_id?: string  // Reference to base variant for ratio calc
-  competitor_price_cad?: number  // Research reference
-  price_cny: number         // Taobao selling price
-  price_cad: number         // Our selling price
-  
-  // Analysis
-  margin_standard: number   // Margin % without promo
-  margin_promo: number      // Margin % with full promo stack
-  is_bundle: boolean        // Flag for bundle variants
-  bundle_components?: string[]  // What's included
-}
-```
-
----
-
-## 8. Quick Reference Formulas
+## 5. Quick Reference Formulas
 
 ### Cost
 ```
-Total_Cost_CAD = (Item_CNY + Shipping_CNY) × Exchange_Rate
+Total_Cost_CAD = (Item_CNY + 30) × 0.19
 ```
 
-### Pricing (Ratio-Based)
+### Pricing
 ```
-Variant_Price_CAD = Base_Price_CAD × (Variant_CNY / Base_CNY)
+Price_CAD = Total_Cost_CAD ÷ 0.60
 ```
 
 ### Margin (Standard)
 ```
-Margin = 1 - Salesperson% - (Cost / Revenue)
-       = 1 - 0.10 - (Cost / Price)
+Margin = 1 - 0.10 - (Cost / Price)
+       = 0.90 - (Cost / Price)
 ```
 
 ### Margin (With Promo)
 ```
 Net_Revenue = Price × 0.90  (after 10% customer discount)
-Margin = 1 - Salesperson% - Promoter% - (Cost / Net_Revenue)
-       = 1 - 0.10 - 0.10 - (Cost / Net_Revenue)
+Margin = 1 - 0.10 - 0.10 - (Cost / Net_Revenue)
        = 0.80 - (Cost / Net_Revenue)
 ```
 
-### Break-Even Price (Standard)
-```
-Break_Even = Cost / (1 - Salesperson%)
-           = Cost / 0.90
-```
+---
 
-### Break-Even Price (With Promo)
-```
-Break_Even_Net = Cost / (1 - Salesperson% - Promoter%)
-               = Cost / 0.80
-Break_Even_Original = Break_Even_Net / (1 - Discount%)
-                    = Break_Even_Net / 0.90
-```
+## 6. Exchange Rate Considerations
+
+Current setting: **1 CNY = 0.19 CAD**
+
+To update the exchange rate, modify `PRICING_CONFIG` in:
+- `scraper/ai_scraper.py`
+- `scraper/csv_to_knack.py`
 
 ---
 
-## 9. Exchange Rate Considerations
+## 7. Adjusting Pricing Parameters
 
-Current assumption: **1 CNY ≈ 0.19 CAD**
+### To Change Target Margin
 
-This rate fluctuates. Options:
-1. **Fixed rate buffer**: Use 0.20 CAD/CNY to build in currency risk buffer
-2. **Weekly updates**: Adjust prices weekly based on actual rate
-3. **Threshold updates**: Only update when rate changes >5%
+Edit `PRICING_CONFIG` in `ai_scraper.py`:
 
-Recommendation: Use a **fixed buffer rate of 0.20** for simplicity and margin protection.
+```python
+PRICING_CONFIG = {
+    ...
+    'target_margin': 0.30,  # Change this value (0.30 = 30%)
+}
+```
 
----
+### To Change Shipping Cost
 
-## 10. Example: Complete Pricing Workflow
+```python
+PRICING_CONFIG = {
+    ...
+    'shipping_cny': 30,  # Change this value
+}
+```
 
-### Product: 2011 Combat Master Holster Set
+### To Change Exchange Rate
 
-**Step 1: Gather Taobao Data**
-| Variant | CNY Price |
-|---------|-----------|
-| Holster only | ¥59 |
-| Belt only | ¥35 |
-| Belt + Holster | ¥89 |
-| Belt + Holster + Single Mag | ¥109 |
-| Belt + Holster + Double Mag | ¥119 |
+```python
+PRICING_CONFIG = {
+    ...
+    'exchange_rate': 0.19,  # Change this value
+}
+```
 
-**Step 2: Competitor Research**
-- Similar holster found at $45 CAD on Canadian retailer
-- Apply 15% undercut: $45 × 0.85 = **$38.25** (round to $38)
-
-**Step 3: Calculate Variant Prices**
-Base = Holster at ¥59 → $38
-
-| Variant | CNY | Ratio | CAD |
-|---------|-----|-------|-----|
-| Holster | ¥59 | 1.00 | $38.00 |
-| Belt | ¥35 | 0.59 | $22.53 → $23 |
-| Belt + Holster | ¥89 | 1.51 | $57.36 → $57 |
-| Belt + Holster + Single Mag | ¥109 | 1.85 | $70.24 → $70 |
-| Belt + Holster + Double Mag | ¥119 | 2.02 | $76.68 → $77 |
-
-**Step 4: Calculate Costs & Margins**
-
-Using exchange rate of 0.20 CAD/CNY:
-
-| Variant | Cost CNY | Cost CAD | Price CAD | Margin (Std) | Margin (Promo) |
-|---------|----------|----------|-----------|--------------|----------------|
-| Holster | ¥59 + ¥70 = ¥129 | $25.80 | $38 | 22.1% | 4.5% |
-| Belt | ¥35 + ¥70 = ¥105 | $21.00 | $23 | -1.3% ❌ | -18.5% ❌ |
-
-**Step 5: Adjust**
-Belt-only variant has negative margin! Options:
-- Raise belt price to $27 → Margin: 12.2% (std), -5.6% (promo)
-- Or flag belt as "only sold in bundles"
-- Or accept loss-leader on belt to drive bundle sales
-
-**Final Prices:**
-| Variant | Price CAD | Notes |
-|---------|-----------|-------|
-| Holster | $38 | Base item, 22% margin |
-| Belt | $27 | Adjusted, 12% margin |
-| Belt + Holster | $57 | Bundle pricing intact |
-| Belt + Holster + Single Mag | $70 | Good margin |
-| Belt + Holster + Double Mag | $77 | Good margin |
+After changing, re-run the scraper or use `csv_to_knack.py` to recalculate prices.
 
 ---
 
-## Appendix: Promo Code Economics
+## 8. Promo Code Economics
 
 ### When is a promo code profitable?
 
@@ -362,3 +211,22 @@ Break-even analysis:
 3. **Tiered promoter rates**: Start at 5%, increase to 10% at volume
 4. **Track conversion lift** to validate promo effectiveness
 
+---
+
+## 9. Where Pricing Happens
+
+Pricing is calculated automatically in the **ai_scraper.py** during:
+
+1. **Export step** (`_export()` method) - calculates pricing for CSV/JSON output
+2. **Knack upload step** - ensures pricing is set before uploading variants
+
+No manual pricing step is required. All variants get:
+- Price CAD (calculated)
+- Cost CAD (calculated)
+- Margin Standard % (calculated)
+- Margin Promo % (calculated)
+- Status: Active (if in stock)
+
+---
+
+**Last Updated**: January 2026
