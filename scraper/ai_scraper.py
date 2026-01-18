@@ -2011,7 +2011,7 @@ class AIScraper:
         label = dimension['label']
         
         seen_names = set()
-        for btn in buttons[:30]:  # Limit to 30
+        for btn in buttons:  # No limit - capture all variants
             text = btn.text.strip()
             if text and text not in seen_names and '\n' not in text[:30]:
                 seen_names.add(text)
