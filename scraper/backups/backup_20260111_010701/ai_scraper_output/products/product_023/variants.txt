@@ -1,0 +1,9 @@
+# Variants for Outdoor M67 Grenade Smoke Model Prop, Detachable with Functional Pull-Ring, Cosplay Replica Prop.
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Grenade Single Pendant [Black] | 25.0 | 16.99 | 28.5% | Active
+Grenade Single Pendant [Tan] | 25.0 | 16.99 | 28.5% | Active
+Smoke Grenade Single Pendant [Black] | 25.0 | 16.99 | 28.5% | Active
+Smoke Grenade Single Pendant [Tan] | 54.0 | 26.99 | 30.9% | Active
+For sets or models, please contact customer service or visit the store. | 25.0 | 16.99 | 28.5% | Active

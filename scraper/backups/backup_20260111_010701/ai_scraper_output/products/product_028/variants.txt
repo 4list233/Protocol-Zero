@@ -1,0 +1,10 @@
+# Variants for TC Tactical Headset Adapter, Civilian PTT for Two-way Radios, Kenwood Interface, Supports Z-Tactical.
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Kenwood Connector, compatible only with Z-Tactical | 49.9 | 24.99 | 29.3% | Active
+Motorola M1 Single Plug - Z-Tactical Compatible Only | 88.0 | 36.99 | 29.4% | Active
+Motorola M2 Dual Plug - Z-Tactical Compatible Only | 49.9 | 24.99 | 29.3% | Active
+Yaesu YA Single Plug - Z-Tactical Compatible Only | 88.0 | 36.99 | 29.4% | Active
+Icom IC Dual Plug - Z-Tactical Compatible Only | 88.0 | 36.99 | 29.4% | Active
+Midland MIL Dual Plug - Z-Tactical Compatible Only | 49.9 | 24.99 | 29.3% | Active

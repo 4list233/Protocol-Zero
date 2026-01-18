@@ -1,0 +1,14 @@
+# Variants for Hydra Riser Mount, UNITY Tactical GBRS All Metal Base for T1 T2 H1 H2 R5 Optic Mount.
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Black - G33 Riser Mount CNC High Quality | 145.0 | 54.99 | 29.5% | Active
+Brown - G33 Riser Mount CNC High Quality | 145.0 | 54.99 | 29.5% | Active
+Black - UNITY Riser Mount CNC High Quality | 28.0 | 17.99 | 28.7% | Active
+Black - UNIT Exps Riser Mount CNC High Quality | 20.0 | 15.99 | 30.6% | Active
+Brown - UNIT Exps Riser Mount CNC High Quality | 20.0 | 15.99 | 30.6% | Active
+Red - UNIT Exps Riser Mount | 20.0 | 15.99 | 30.6% | Active
+Pink - UNIT Exps Riser Mount, CNC High Quality | 24.0 | 16.99 | 29.6% | Active
+Blue - UNIT Exps Riser Mount, CNC High Quality | 24.0 | 16.99 | 29.6% | Active
+Black - SIG Riser Mount | 38.0 | 21.99 | 31.2% | Active
+Black - SLR Riser Mount | 38.0 | 21.99 | 31.2% | Active

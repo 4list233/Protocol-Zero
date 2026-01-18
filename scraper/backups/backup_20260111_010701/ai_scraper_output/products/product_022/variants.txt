@@ -1,0 +1,7 @@
+# Variants for KUBLAI P1N23456789/ZY Universal Intake/Exhaust Valve Wrench Key Disassembly Tool, Stainless Steel
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Wrench | 22.0 | 15.99 | 28.2% | Active
+Wrench + 2 Sets O-rings | 800.0 | 262.99 | 30.0% | Active
+1 Set O-rings | 10.0 | 12.99 | 31.5% | Active

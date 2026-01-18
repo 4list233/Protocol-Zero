@@ -1,0 +1,14 @@
+# Variants for MST201
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+MST2011 Base Plate - Black | 56.0 | 26.99 | 29.5% | Active
+MST2011 Base Plate - Silver | 56.0 | 26.99 | 29.5% | Active
+MST2011 Base Plate - Red | 56.0 | 26.99 | 29.5% | Active
+MST2011 Base Plate - Grey | 56.0 | 26.99 | 29.5% | Active
+MST2011 Magwell (Eng | 56.0 | 26.99 | 29.5% | Active
+MST2011 Mount (Engraved) - Grey | 84.0 | 35.99 | 29.8% | Active
+MST2011 Mount (Engraved) - Black | 84.0 | 35.99 | 29.8% | Active
+MST2011 Mount (Engraved) - Silver | 84.0 | 35.99 | 29.8% | Active
+MST2011 Mount - Gold | 84.0 | 35.99 | 29.8% | Active
+MST2011 Mount - Silver | 84.0 | 35.99 | 29.8% | Active

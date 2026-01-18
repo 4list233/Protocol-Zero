@@ -80,7 +80,7 @@ media/
 
 5. **Run the scraper:**
    ```bash
-   python scraper.py
+   python3 scraper.py
    ```
 
 ## Output

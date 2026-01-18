@@ -60,6 +60,7 @@ VARIANT_FIELDS = {
     'optionValue2': 'field_148',  # e.g., "M", "85-125cm" (nullable)
     'shippingCny': 'field_151',
     'competitorPriceCad': 'field_139',
+    'imageIdsJson': 'field_176',  # JSON array of image IDs bound to this variant
 }
 
 

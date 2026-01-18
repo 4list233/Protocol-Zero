@@ -42,26 +42,30 @@ def sync_media():
         title_slug = product.get('title_en', '')[:30].replace(' ', '-').replace('/', '-').lower()
         slug = f"{product_id}-{title_slug}"
         
-        # Copy main image
+        # Copy main image as hero-01 (primary hero image)
         main_dir = folder_path / 'Main'
         if main_dir.exists():
             for img in main_dir.iterdir():
                 if img.suffix.lower() in ['.jpg', '.jpeg', '.png', '.webp']:
-                    target = TARGET_DIR / f"{slug}-main{img.suffix}"
+                    # New naming: hero-01 for main image
+                    target = TARGET_DIR / f"{slug}-hero-01{img.suffix}"
                     shutil.copy2(img, target)
                     copied += 1
                     break  # Only first main image
         
-        # Copy catalogue images
+        # Copy catalogue images as hero-02 through hero-07 (additional hero images for Taobao-style carousel)
         cat_dir = folder_path / 'Catalogue'
         if cat_dir.exists():
-            for i, img in enumerate(sorted(cat_dir.iterdir()), 1):
-                if img.suffix.lower() in ['.jpg', '.jpeg', '.png', '.webp']:
-                    target = TARGET_DIR / f"{slug}-cat{i:02d}{img.suffix}"
+            hero_num = 2  # Start from hero-02 (hero-01 is the main image)
+            for img in sorted(cat_dir.iterdir()):
+                if img.suffix.lower() in ['.jpg', '.jpeg', '.png', '.webp'] and hero_num <= 7:
+                    # New naming: hero-02 through hero-07
+                    target = TARGET_DIR / f"{slug}-hero-{hero_num:02d}{img.suffix}"
                     shutil.copy2(img, target)
                     copied += 1
+                    hero_num += 1
         
-        # Copy stitched details
+        # Copy stitched details as details.jpg (long scroll image)
         details = folder_path / 'details_stitched.jpg'
         if details.exists():
             target = TARGET_DIR / f"{slug}-details.jpg"

@@ -7,7 +7,9 @@ import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
 import type { RuntimeProduct } from "@/lib/products"
 import Image from "next/image"
-import { ShoppingCart, Check } from "lucide-react"
+import { ShoppingCart, Check, Heart } from "lucide-react"
+import { QuickViewButton } from "@/components/quick-view-modal"
+import { WishlistButton } from "@/components/wishlist-button"
 
 export default function ShopPage() {
   const { addToast } = useToast()
@@ -135,7 +137,7 @@ export default function ShopPage() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (
             <div key={product.id} className="group bg-[#1E1E1E] border-2 border-[#2C2C2C] rounded-2xl overflow-hidden hover:border-[#3D9A6C] hover:shadow-card transition-all hover:scale-[1.02]">
-              <Link href={`/shop/${product.id}`} className="block">
+              <Link href={`/shop/${product.id}`} className="block relative">
                 <div className="aspect-square relative bg-[#0D0D0D] overflow-hidden">
                   <Image
                     src={product.primaryImage || product.images?.[0] || '/images/placeholder.png'}
@@ -144,16 +146,23 @@ export default function ShopPage() {
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
+                  {/* Quick View Button */}
+                  <QuickViewButton productId={product.id} />
                 </div>
               </Link>
               <div className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <Link href={`/shop/${product.id}`} className="hover:opacity-90">
+                      <h3 className="font-semibold font-body text-lg line-clamp-2 text-[#F5F5F5] group-hover:text-[#3D9A6C] transition-colors">{product.title}</h3>
+                    </Link>
+                    {product.variants && product.variants.length > 1 && (
+                      <p className="text-xs text-[#3D9A6C] font-semibold mt-1">Multiple variants available</p>
+                    )}
+                  </div>
+                  <WishlistButton productId={product.id} productTitle={product.title} className="flex-shrink-0" />
+                </div>
                 <div>
-                  <Link href={`/shop/${product.id}`} className="hover:opacity-90">
-                    <h3 className="font-semibold font-body text-lg line-clamp-2 text-[#F5F5F5] group-hover:text-[#3D9A6C] transition-colors">{product.title}</h3>
-                  </Link>
-                  {product.variants && product.variants.length > 1 && (
-                    <p className="text-xs text-[#3D9A6C] font-semibold mt-1">Multiple variants available</p>
-                  )}
                   {product.category && (
                     <span className="inline-block mt-2 text-xs px-3 py-1 bg-[#3D9A6C]/10 text-[#3D9A6C] rounded-full font-medium font-heading uppercase tracking-wide">
                       {product.category}

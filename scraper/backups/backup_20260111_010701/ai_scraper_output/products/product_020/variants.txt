@@ -1,0 +1,14 @@
+# Variants for SpeedQB Protective Gear Set, Adult Skateboard, Field Protective Knee Pads, Elbow Pads, Palm Guards, SQB Water Bullet, [Brand Name Removed] CNSQB Competition
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Kufeng Knee Pads & Elbow Pads 150-210 | 700.0 | 230.99 | 30.0% | Active
+Kufeng Knee Pads & Elbow Pads 110-150 | 66.0 | 29.99 | 29.2% | Active
+Kufeng Knee Pads & Elbow Pads 80-110 | 66.0 | 29.99 | 29.2% | Active
+Unbranded Knee, Elbow, and Palm Pads (150-210 lbs) | 66.0 | 29.99 | 29.2% | Active
+Unbranded Knee, Elbow, and Palm Pads (110-150 lbs) | 66.0 | 29.99 | 29.2% | Active
+Unbranded Knee, Elbow, and Palm Pads (80-110 lbs) | 66.0 | 29.99 | 29.2% | Active
+Unbranded Black Knee Pads (80-110 lbs) | 43.0 | 22.99 | 29.7% | Active
+Unbranded Black Knee Pads (110-160 lbs) | 700.0 | 230.99 | 30.0% | Active
+Unbranded Black Knee Pads (150-210 lbs) | 43.0 | 22.99 | 29.7% | Active
+Grey-Black Knee, Elbow, and Palm Pads (110-150 lbs) | 700.0 | 230.99 | 30.0% | Active

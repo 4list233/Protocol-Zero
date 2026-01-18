@@ -1,0 +1,10 @@
+# Variants for Universal Plate Carrier MOLLE System Mobile Phone Navigation Panel Pouch, Chest PDA Pouch, Outdoor Multi-functional Chest Pouch.
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Cordura MC Camo CP Camo | 63.0 | 28.99 | 29.0% | Active
+Cordura Night Camo BCP | 63.0 | 28.99 | 29.0% | Active
+Cordura Black BK | 53.0 | 25.99 | 29.3% | Active
+Cordura Wolf Grey WG | 53.0 | 25.99 | 29.3% | Active
+Cordura Ranger Green RG | 53.0 | 25.99 | 29.3% | Active
+Cordura Coyote Brown CB | 53.0 | 25.99 | 29.3% | Active

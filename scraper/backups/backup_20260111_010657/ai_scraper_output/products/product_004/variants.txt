@@ -1,0 +1,5 @@
+# Variants for Cross-border New Product Clay the Claymore Cute Little Square Plush Doll, Good Item for Holiday Gifts.
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Small Square / 20cm | 23.8 | 16.99 | 29.8% | Active

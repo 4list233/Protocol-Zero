@@ -1,0 +1,68 @@
+# Variants for Tactical New White 8-Piece Set (Security Patrol Duty Belt, Quick Release Locking Holster)
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+One Size Fits All / Quick Release Locking Baton, OC Spray, Flashlight, Handcuff Pouch 4-Piece Set | 160.0 | 59.99 | 29.8% | Active
+One Size Fits All / Quick Release Locking Baton, OC Spray, Flashlight Pouch 3-Piece Set | 120.0 | 46.99 | 29.3% | Active
+One Size Fits All / Quick Release 92/92G Dual Retention Belt Holster | 65.0 | 29.99 | 29.8% | Active
+One Size Fits All / Side Opening Quick Release Locking Baton Holster | 48.0 | 24.99 | 30.7% | Active
+One Size Fits All / Side Opening Quick Release Locking Flashlight Holster | 48.0 | 24.99 | 30.7% | Active
+One Size Fits All / Side Opening Quick Release Locking OC Spray Holster | 48.0 | 24.99 | 30.7% | Active
+One Size Fits All / Quick Release Universal Handcuff Pouch | 58.0 | 27.99 | 30.3% | Active
+One Size | 55.0 | 26.99 | 30.2% | Active
+One Size / Radio Pouch | 45.0 | 23.99 | 30.6% | Active
+One Size / Canteen Pouch | 58.0 | 27.99 | 30.3% | Active
+One Size / Quick Release D-Clip Pouch | 48.0 | 24.99 | 30.7% | Active
+S / Style A Set | 202.0 | 72.99 | 29.6% | Active
+S / Style B Set | 390.0 | 132.99 | 30.0% | Active
+S / Style C Set | 493.0 | 165.99 | 30.1% | Active
+S / Style D Set | 554.0 | 184.99 | 30.0% | Active
+S / Quick Release Locking Baton, Spray, Flashlight, Handcuff Pouch 4-Piece Set | 160.0 | 59.99 | 29.8% | Active
+S / Quick Release Locking Baton, Spray, Flashlight Pouch 3-Piece Set | 120.0 | 46.99 | 29.3% | Active
+S / 5cm Outer Duty Belt | 42.0 | 22.99 | 30.5% | Active
+S / Duty Belt Pad | 65.0 | 29.99 | 29.8% | Active
+S / Inner Belt | 38.0 | 21.99 | 31.2% | Active
+S / Outer Duty Belt + Duty Belt Pad | 107.0 | 42.99 | 29.5% | Active
+S / Outer Duty Belt + Duty Belt Pad + Inner Belt | 145.0 | 54.99 | 29.5% | Active
+S / Quick Release 92/92G Double Retention Holster | 65.0 | 29.99 | 29.8% | Active
+S / Side Opening Quick Release Locking Baton Pouch | 48.0 | 24.99 | 30.7% | Active
+S / Side Opening Quick Release Locking Flashlight Pouch | 48.0 | 24.99 | 30.7% | Active
+S / Side Opening Quick Release Locking Spray Pouch | 48.0 | 24.99 | 30.7% | Active
+S / Quick Release Universal Handcuff Pouch | 58.0 | 27.99 | 30.3% | Active
+S / Admin Pouch | 55.0 | 26.99 | 30.2% | Active
+S / Radio Pouch | 45.0 | 23.99 | 30.6% | Active
+S / Canteen Pouch | 58.0 | 27.99 | 30.3% | Active
+S / Quick Release D-Clip Pouch | 48.0 | 24.99 | 30.7% | Active
+M / Style A Set | 202.0 | 72.99 | 29.6% | Active
+M / Style B Set | 390.0 | 132.99 | 30.0% | Active
+M / Style C Set | 493.0 | 165.99 | 30.1% | Active
+M / Style D Set | 554.0 | 184.99 | 30.0% | Active
+M / Quick Release Locking Baton, Spray, Flashlight, Handcuff Pouch 4-Piece Set | 160.0 | 59.99 | 29.8% | Active
+M / Quick Release Locking Baton, Spray, Flashlight Pouch 3-Piece Set | 120.0 | 46.99 | 29.3% | Active
+M / 5cm Outer Duty Belt | 42.0 | 22.99 | 30.5% | Active
+M / Duty Belt Pad | 65.0 | 29.99 | 29.8% | Active
+M / Inner Belt | 38.0 | 21.99 | 31.2% | Active
+M / Outer Duty Belt + Duty Belt Pad | 107.0 | 42.99 | 29.5% | Active
+M / Outer Duty Belt + Duty Belt Pad + Inner Belt | 145.0 | 54.99 | 29.5% | Active
+M / Quick Release 92/92G Double Retention Holster | 65.0 | 29.99 | 29.8% | Active
+M / Side Opening Quick Release Locking Baton Pouch | 48.0 | 24.99 | 30.7% | Active
+M / Side Opening Quick Release Locking Flashlight Pouch | 48.0 | 24.99 | 30.7% | Active
+M / Side Opening Quick Release Locking Spray Pouch | 48.0 | 24.99 | 30.7% | Active
+M / Quick Release Universal Handcuff Pouch | 58.0 | 27.99 | 30.3% | Active
+M / Admin Pouch | 55.0 | 26.99 | 30.2% | Active
+M / Radio Pouch | 45.0 | 23.99 | 30.6% | Active
+M / Canteen Pouch | 58.0 | 27.99 | 30.3% | Active
+M / QD D-ring Pouch | 48.0 | 24.99 | 30.7% | Active
+L / Type A Set | 202.0 | 72.99 | 29.6% | Active
+L / Type B Set | 390.0 | 132.99 | 30.0% | Active
+L / Type C Set | 493.0 | 165.99 | 30.1% | Active
+L / Type D Set | 554.0 | 184.99 | 30.0% | Active
+L / QD Locking Baton, Pepper Spray, Flashlight, Handcuff 4-piece Set | 160.0 | 59.99 | 29.8% | Active
+L / QD Locking Baton, Pepper Spray, Flashlight 3-piece Set | 120.0 | 46.99 | 29.3% | Active
+L / 5cm Duty Belt | 42.0 | 22.99 | 30.5% | Active
+L / Duty Belt Pad | 65.0 | 29.99 | 29.8% | Active
+L / Inner Belt | 38.0 | 21.99 | 31.2% | Active
+L / Duty Belt + Duty Belt Pad | 107.0 | 42.99 | 29.5% | Active
+L / Duty Belt + Duty Belt Pad + Inner Belt | 145.0 | 54.99 | 29.5% | Active
+L / QD 92/92G Dual Retention Holster | 65.0 | 29.99 | 29.8% | Active
+L | 48.0 | 24.99 | 30.7% | Active

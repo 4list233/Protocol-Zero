@@ -1,0 +1,14 @@
+# Variants for Metal Riser Mount GBRS Hydra UNITY EXPS Base for T1 T2 H1 Red Dot Sights
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+Black Low Profile - GBRS Hydra Mount | 128.0 | 49.99 | 29.9% | Active
+Tan Low Profile - GBRS Hydra Mount | 128.0 | 49.99 | 29.9% | Active
+Black High Profile - GBRS Hydra Mount | 128.0 | 49.99 | 29.9% | Active
+FDE High Profile - GBRS Hydra Mount | 128.0 | 49.99 | 29.9% | Active
+Black High Profile - UNITY FAST | 68.0 | 30.99 | 29.9% | Active
+Tan High Profile - UNITY FAST | 68.0 | 30.99 | 29.9% | Active
+Black Low Profile - UNITY FAST | 68.0 | 30.99 | 29.9% | Active
+Tan Low Profile - UNITY FAST | 68.0 | 30.99 | 29.9% | Active
+Black - UNITY EXPS | 38.0 | 21.99 | 31.2% | Active
+Tan - UNITY EXPS | 38.0 | 21.99 | 31.2% | Active

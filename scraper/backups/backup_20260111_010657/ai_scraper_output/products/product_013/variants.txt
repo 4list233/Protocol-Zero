@@ -1,0 +1,27 @@
+# Variants for Scorpion Style Soft Shell Quick Release Magazine Pouch for 5.56/7.62/9mm Magazines, MOLLE Compatible
+# Format: Name | Price CNY | Price CAD | Margin | Status
+# Edit this file to modify variants, then run: python folders_to_knack.py
+
+OD Green / Large | 31.0 | 18.99 | 29.0% | Active
+OD Green / Small | 28.0 | 17.99 | 28.7% | Active
+OD Green / Short | 28.0 | 17.99 | 28.7% | Active
+Tan / Large | 31.0 | 18.99 | 29.0% | Active
+Tan / Small | 28.0 | 17.99 | 28.7% | Active
+Tan / Short | 28.0 | 17.99 | 28.7% | Active
+Black / Large | 31.0 | 18.99 | 29.0% | Active
+Black / Small | 28.0 | 17.99 | 28.7% | Active
+Black / Short | 28.0 | 17.99 | 28.7% | Active
+Ranger Green / Large | 31.0 | 18.99 | 29.0% | Active
+Ranger Green / Small | 28.0 | 17.99 | 28.7% | Active
+Ranger Green / Short | 28.0 | 17.99 | 28.7% | Active
+Black-Mud / Large | 31.0 | 18.99 | 29.0% | Active
+Black-Mud / Small | 28.0 | 17.99 | 28.7% | Active
+Black-Mud / Short | 28.0 | 17.99 | 28.7% | Active
+Black-Red / Large | 31.0 | 18.99 | 29.0% | Active
+Black-Red / Small | 28.0 | 17.99 | 28.7% | Active
+Black-Red / Short | 28.0 | 17.99 | 28.7% | Active
+Black-OD Green / Large | 31.0 | 18.99 | 29.0% | Active
+Black-OD Green / Small | 28.0 | 17.99 | 28.7% | Active
+Black-OD Green / Short | 28.0 | 17.99 | 28.7% | Active
+Parallel Clip - Universal One Size Fits All / Small | 6.0 | 10.99 | 27.8% | Active
+Parallel Clip - Universal One Size Fits All / Short | 6.0 | 10.99 | 27.8% | Active
