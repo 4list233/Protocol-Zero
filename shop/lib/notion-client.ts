@@ -8,7 +8,10 @@ export type ProductVariant = {
   variantName: string
   sku?: string
   price_cny: number
+  cost_cad?: number        // Landed cost in CAD (price + shipping converted)
   price_cad?: number
+  margin?: number          // Standard margin %
+  margin_promo?: number    // Promo margin %
   stock?: number
   status?: 'Active' | 'Out of Stock'
   sortOrder?: number

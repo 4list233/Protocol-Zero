@@ -53,8 +53,7 @@ export type ProductVariant = {
   variantName: string
   sku?: string
   price_cny: number
-  shipping_cny?: number   // Shipping allocation (¥30)
-  cost_cad?: number       // Landed cost in CAD
+  cost_cad?: number       // Landed cost in CAD (price + shipping converted)
   price_cad?: number
   margin?: number         // Standard margin % (e.g., 30.5)
   margin_promo?: number   // Promo margin % (e.g., 14.2)

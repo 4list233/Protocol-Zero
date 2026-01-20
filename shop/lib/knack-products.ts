@@ -31,26 +31,31 @@ function getNotionClient(): Client | null {
 // Generate image URLs directly from product ID (no Notion API calls needed)
 // Hero images: /images/[product-id]-hero-01.jpg through hero-07.jpg (Taobao-style carousel)
 // Detail image: /images/[product-id]-details.jpg (long stitched scroll image)
+// NOTE: We generate paths for all possible images (hero-01 through hero-07 + Main)
+// The frontend Next.js Image component will handle 404s gracefully with its built-in error handling
 function getProductImages(productId: string): { images: string[]; detailImage?: string } {
-  // Generate paths for up to 7 hero images (Taobao-style)
-  const heroImages: string[] = []
-  for (let i = 1; i <= 7; i++) {
+  // Primary images - always include these first as they're most likely to exist
+  const images: string[] = [
+    `/images/${productId}-hero-01.jpg`,  // Primary hero image (always first)
+    `/images/${productId}-Main.jpg`,     // Legacy main image (fallback)
+  ]
+  
+  // Additional hero images (hero-02 through hero-07) for Taobao-style carousel
+  // These may or may not exist - Next.js Image component handles 404s gracefully
+  for (let i = 2; i <= 7; i++) {
     const num = i.toString().padStart(2, '0')
-    heroImages.push(`/images/${productId}-hero-${num}.jpg`)
+    images.push(`/images/${productId}-hero-${num}.jpg`)
   }
   
-  // Detail image for infinite scroll section
+  // Detail images for infinite scroll section
   const detailImage = `/images/${productId}-details.jpg`
-  
-  // Also try legacy naming for backwards compatibility
-  const legacyMain = `/images/${productId}-Main.jpg`
   const legacyDetail = `/images/${productId}-Details_Long.jpg`
   
   return {
-    images: [...heroImages, legacyMain], // Include legacy as fallback
+    images: images,
     detailImage: detailImage,
-    legacyDetailImage: legacyDetail, // Fallback for old naming
-  }
+    // Legacy detail image is checked in fetchImagesFromNotion
+  } as { images: string[]; detailImage?: string; legacyDetailImage?: string }
 }
 
 // Legacy function - no longer needed, kept for compatibility
@@ -98,13 +103,13 @@ function fixImageUrl(url: string): string {
 }
 
 // Get images using direct paths (fast - no API calls)
-async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{ images: string[]; detailImage?: string }> {
+async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{ images: string[]; detailImage?: string; legacyDetailImage?: string }> {
   // Use direct image paths - no Notion API needed
-  const result = getProductImages(productId)
+  const result = getProductImages(productId) as { images: string[]; detailImage?: string; legacyDetailImage?: string }
   
   // Use legacy detail image as fallback if new one doesn't exist
   const detailImage = result.detailImage
-  const legacyDetailImage = (result as any).legacyDetailImage
+  const legacyDetailImage = result.legacyDetailImage
   
   return {
     images: result.images,
@@ -399,7 +404,8 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
       ? String(getFieldValue(record, VARIANT_FIELDS.sku, 'SKU'))
       : undefined,
     price_cny: priceCny,
-    shipping_cny: shippingCny ? Number(shippingCny) : undefined,
+    // shipping_cny is internal - used for cost calculation but not exposed
+    // cost_cad includes (price_cny + shipping_cny) * exchange_rate
     cost_cad: costCad ? Number(costCad) : undefined,
     price_cad: priceCad,
     margin: marginStandard ? Number(marginStandard) : undefined,
