@@ -28,40 +28,55 @@ function getNotionClient(): Client | null {
   return notionClient
 }
 
-// Generate image URLs directly from product ID (no Notion API calls needed)
-// Hero images: /images/[product-id]-hero-01.jpg through hero-07.jpg (Taobao-style carousel)
-// Detail image: /images/[product-id]-details.jpg (long stitched scroll image)
-// NOTE: We generate paths for all possible images (hero-01 through hero-07 + Main)
-// The frontend Next.js Image component will handle 404s gracefully with its built-in error handling
-function getProductImages(productId: string): { images: string[]; detailImage?: string } {
-  // Primary images - always include these first as they're most likely to exist
-  const images: string[] = [
-    `/images/${productId}-hero-01.jpg`,  // Primary hero image (always first)
-    `/images/${productId}-Main.jpg`,     // Legacy main image (fallback)
-  ]
-  
-  // Additional hero images (hero-02 through hero-07) for Taobao-style carousel
-  // These may or may not exist - Next.js Image component handles 404s gracefully
-  for (let i = 2; i <= 7; i++) {
-    const num = i.toString().padStart(2, '0')
-    images.push(`/images/${productId}-hero-${num}.jpg`)
+// Notion image cache - stores product ID to images mapping
+const notionImageCache = new Map<string, { images: string[]; detailImage?: string }>()
+
+// Preload all images from Notion in a single batch query
+async function preloadNotionImages(): Promise<void> {
+  const notion = getNotionClient()
+  if (!notion) return
+
+  const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
+  if (!PRODUCTS_DB) return
+
+  try {
+    // Query all products from Notion
+    const response = await notion.databases.query({
+      database_id: PRODUCTS_DB,
+      page_size: 100,
+    })
+
+    // Cache images by Product ID
+    for (const page of response.results) {
+      if (!('properties' in page)) continue
+      
+      const props = page.properties
+      
+      // Get Product ID from Notion
+      const productIdProp = props['ID'] as any
+      const productIdTexts = productIdProp?.rich_text || []
+      const productId = productIdTexts[0]?.text?.content
+      
+      if (!productId) continue
+
+      // Extract images from Notion
+      const { images, detailImage } = extractNotionImages(props)
+      
+      // Fix localhost URLs to production
+      const fixedImages = images.map(fixImageUrl)
+      const fixedDetailImage = detailImage ? fixImageUrl(detailImage) : undefined
+
+      notionImageCache.set(productId, {
+        images: fixedImages,
+        detailImage: fixedDetailImage,
+      })
+    }
+  } catch (error) {
+    console.error('Error preloading Notion images:', error)
   }
-  
-  // Detail images for infinite scroll section
-  const detailImage = `/images/${productId}-details.jpg`
-  const legacyDetail = `/images/${productId}-Details_Long.jpg`
-  
-  return {
-    images: images,
-    detailImage: detailImage,
-    // Legacy detail image is checked in fetchImagesFromNotion
-  } as { images: string[]; detailImage?: string; legacyDetailImage?: string }
 }
 
-// Legacy function - no longer needed, kept for compatibility
-async function preloadNotionImages(): Promise<void> {
-  // No-op - we now use direct image paths instead of Notion
-}
+
 
 // Helper to extract images from Notion file property
 function extractNotionImages(props: Record<string, unknown>): { images: string[]; detailImage?: string } {
@@ -102,19 +117,19 @@ function fixImageUrl(url: string): string {
   return url
 }
 
-// Get images using direct paths (fast - no API calls)
-async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{ images: string[]; detailImage?: string; legacyDetailImage?: string }> {
-  // Use direct image paths - no Notion API needed
-  const result = getProductImages(productId) as { images: string[]; detailImage?: string; legacyDetailImage?: string }
+// Get images from Notion cache (preloaded)
+async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{ images: string[]; detailImage?: string }> {
+  // Return cached images from Notion
+  const cached = notionImageCache.get(productId)
   
-  // Use legacy detail image as fallback if new one doesn't exist
-  const detailImage = result.detailImage
-  const legacyDetailImage = result.legacyDetailImage
+  if (cached && cached.images.length > 0) {
+    return cached
+  }
   
+  // Fallback to placeholder if no images found
   return {
-    images: result.images,
-    detailImage: detailImage,
-    legacyDetailImage: legacyDetailImage,
+    images: ['/images/placeholder.png'],
+    detailImage: undefined,
   }
 }
 
@@ -327,16 +342,15 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     ? String(idField) 
     : (sku || knackRecordId)
   
-  // Fetch images from cache (preloaded from Notion)
-  const imageData = await fetchImagesFromNotion(productId, sku) as any
+  // Fetch images from Notion cache (preloaded)
+  const imageData = await fetchImagesFromNotion(productId, sku)
   const notionImages = imageData.images || []
   const notionDetailImage = imageData.detailImage
-  const legacyDetailImage = imageData.legacyDetailImage
   
   // Use Notion images if available, otherwise fallback to placeholder
   const images = notionImages.length > 0 ? notionImages : ['/images/placeholder.png']
   const primaryImage = images[0] || '/images/placeholder.png'
-  const detailLongImage = notionDetailImage || legacyDetailImage
+  const detailLongImage = notionDetailImage
 
   // Get status directly from record - no price-based overrides
   const status = (getFieldValue(record, PRODUCT_FIELDS.status, 'Status') || 'Active') as ProductRuntime['status']

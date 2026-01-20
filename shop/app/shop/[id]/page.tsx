@@ -22,27 +22,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [selectedOption2, setSelectedOption2] = useState<string>('') // Selected size/color from available options
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [validImages, setValidImages] = useState<string[]>([]) // Filtered list of valid images
-  const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set()) // Track failed images
   const detailsRef = useRef<HTMLDivElement>(null)
-
-  // Handle image load errors by removing them from the valid list
-  const handleImageError = (failedUrl: string) => {
-    setImageLoadErrors(prev => {
-      const newSet = new Set(prev)
-      newSet.add(failedUrl)
-      return newSet
-    })
-    
-    // Update validImages to exclude failed images
-    setValidImages(prev => {
-      const filtered = prev.filter(url => url !== failedUrl && !imageLoadErrors.has(url))
-      // If we filtered out the current image, reset to first image
-      if (filtered.length > 0 && !filtered.includes(prev[selectedImageIndex])) {
-        setSelectedImageIndex(0)
-      }
-      return filtered.length > 0 ? filtered : ['/images/placeholder.png']
-    })
-  }
 
   useEffect(() => {
     fetch(`/api/products/${id}`)
@@ -180,7 +160,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   alt={`${product.title} thumbnail ${idx + 1}`}
                   fill
                   className="object-cover"
-                  onError={() => handleImageError(img)}
                 />
               </button>
             ))}
@@ -196,7 +175,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 fill
                 className="object-contain"
                 priority
-                onError={() => handleImageError(images[selectedImageIndex])}
               />
             </div>
             
@@ -217,7 +195,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     alt={`Thumbnail ${idx + 1}`}
                     fill
                     className="object-cover"
-                    onError={() => handleImageError(img)}
                   />
                 </button>
               ))}
