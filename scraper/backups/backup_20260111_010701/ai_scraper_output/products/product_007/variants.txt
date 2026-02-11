@@ -1,8 +1,0 @@
-# Variants for JPC 6094 CPC AVS Plate Carrier Hydration Insert, Cooling Protective Plate, Universal PE Plate.
-# Format: Name | Price CNY | Price CAD | Margin | Status
-# Edit this file to modify variants, then run: python folders_to_knack.py
-
-Black - One Piece | 69.0 | 30.99 | 29.3% | Active
-Tan - One Piece | 69.0 | 30.99 | 29.3% | Active
-Orange - One Piece | 69.0 | 30.99 | 29.3% | Active
-OD Green - One Piece | 69.0 | 30.99 | 29.3% | Active

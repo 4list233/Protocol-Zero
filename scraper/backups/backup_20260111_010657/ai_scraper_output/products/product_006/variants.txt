@@ -1,8 +1,0 @@
-# Variants for Left/Right Hand Convertible Quick Draw Holster for G17 G19 2011 VP9 P320, Universal Light-Bearing Rail Holster.
-# Format: Name | Price CNY | Price CAD | Margin | Status
-# Edit this file to modify variants, then run: python folders_to_knack.py
-
-Black (Standard) | 56.0 | 26.99 | 29.5% | Active
-Belt Buckle | 18.0 | 14.99 | 29.2% | Active
-Chest Rig Panel | 25.0 | 16.99 | 28.5% | Active
-Leg Rig Panel | 62.0 | 28.99 | 29.7% | Active

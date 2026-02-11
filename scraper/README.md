@@ -9,6 +9,75 @@ A Python-based web scraper for extracting product information and media from Tao
 - **Variant Support**: Captures all color/size options with their specific images
 - **Translation**: Automatically translates Chinese product titles to English
 - **CSV Export**: Saves all product data in a structured format
+- **🆕 Shopify Integration**: Export scraped data directly to Shopify CSV format (see [Shopify Export](#shopify-export))
+
+## Quick Links
+
+- [Setup](#setup)
+- [Usage](#output)
+- [Media Naming Convention](#media-naming-convention)
+- [**🛒 Shopify Export**](#shopify-export) ← Export to Shopify!
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Shopify Export
+
+**NEW:** Export your scraped Taobao products directly to Shopify-compatible CSV format!
+
+### Quick Start
+
+```bash
+# 1. Scrape products from Taobao
+python3 scraper.py
+
+# 2. Translate titles (recommended)
+python3 translate.py
+
+# 3. Export to Shopify format
+python3 shopify_export.py --margin 80
+
+# 4. Upload shopify_import.csv to your Shopify store
+```
+
+### Features
+
+✅ **Automated Pricing** - Calculate CAD prices with configurable margins  
+✅ **Smart Collections** - Auto-categorize into Budget/Mid-Range/Premium tiers  
+✅ **Variant Handling** - Proper Shopify variant structure with options  
+✅ **Tag Generation** - Extract relevant tags from titles and variants  
+✅ **SEO Ready** - Auto-generate meta titles and descriptions  
+
+### Tools
+
+- **`shopify_export.py`** - Main export script
+- **`shopify_pricing_calculator.py`** - Interactive pricing tool
+- **`shopify_workflow.sh`** - Automated complete workflow
+- **`shopify/`** - Complete documentation folder
+
+### Documentation
+
+📖 **[shopify/QUICK_START.md](shopify/QUICK_START.md)** - Get started in 3 steps!  
+📚 **[shopify/README.md](shopify/README.md)** - Complete Shopify export guide  
+🔄 **[shopify/SHOPIFY_FORMAT_COMPARISON.md](shopify/SHOPIFY_FORMAT_COMPARISON.md)** - Format reference  
+📋 **[shopify/INDEX.md](shopify/INDEX.md)** - Documentation index  
+
+### Example Usage
+
+```bash
+# Calculate optimal pricing
+python3 shopify_pricing_calculator.py --cost 100 --compare
+
+# Export with 80% margin
+python3 shopify_export.py --margin 80
+
+# Or use the automated workflow
+./shopify_workflow.sh
+```
+
+**Learn more:** See the [shopify/](shopify/) documentation folder for complete guides.
+
+---
 
 ## Media Naming Convention
 

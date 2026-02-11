@@ -1,8 +1,0 @@
-# Variants for Outdoor Ronin Tactical Belt Set, Multi-functional Modular Patrol Belt with Detachable Adjustable Inner Belt.
-# Format: Name | Price CNY | Price CAD | Margin | Status
-# Edit this file to modify variants, then run: python folders_to_knack.py
-
-One Size / Full Black Set (85-125cm) | 233.0 | 82.99 | 29.8% | Active
-One Size / Full OD Green Set (85-125cm) | 233.0 | 82.99 | 29.8% | Active
-One Size / Full Khaki Set (85-125cm) | 233.0 | 82.99 | 29.8% | Active
-One Size / Full MC Camo Set (85-125cm) | 233.0 | 82.99 | 29.8% | Active

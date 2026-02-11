@@ -1,8 +1,0 @@
-# Variants for Russian Little Green Man with Dustproof, Anti-Fog, Tactical, Windproof Cycling Military Fan Outdoor Headwear, Khaki, Green
-# Format: Name | Price CNY | Price CAD | Margin | Status
-# Edit this file to modify variants, then run: python folders_to_knack.py
-
-Black | 1000.0 | 325.99 | 30.0% | Active
-Tan | 1000.0 | 325.99 | 30.0% | Active
-OD Green | 26.99 | 17.99 | 29.8% | Active
-Grey | 26.99 | 17.99 | 29.8% | Active

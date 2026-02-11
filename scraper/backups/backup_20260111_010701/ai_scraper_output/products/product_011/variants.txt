@@ -1,7 +1,0 @@
-# Variants for "FPS" Action Camera Tactical Mount Arm
-# Format: Name | Price CNY | Price CAD | Margin | Status
-# Edit this file to modify variants, then run: python folders_to_knack.py
-
-Black NGD FPS | 158.0 | 59.99 | 30.5% | Active
-FDE NGD FPS | 158.0 | 59.99 | 30.5% | Active
-Specifications: Compatible with DJI, Insta360, and other universal adapter interfaces | 158.0 | 59.99 | 30.5% | Active

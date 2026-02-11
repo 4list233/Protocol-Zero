@@ -10,247 +10,247 @@ export const generatedProducts: Product[] = [
     "sku": "974743803214",
     "title": "Tactical New White 8-Piece Set (Security Patrol Duty Belt, Quick Release Locking Holster)",
     "price_cad": 0,
-    "primaryImage": "974743803214-tactical-new-white-8-piece-set-main.jpg",
+    "primaryImage": "/images/974743803214-tactical-new-white-8-piece-set-main.jpg",
     "images": [
-      "974743803214-tactical-new-white-8-piece-set-main.jpg",
-      "974743803214-tactical-new-white-8-piece-set-cat01.jpg",
-      "974743803214-tactical-new-white-8-piece-set-cat02.png",
-      "974743803214-tactical-new-white-8-piece-set-cat03.jpg",
-      "974743803214-tactical-new-white-8-piece-set-cat04.png",
-      "974743803214-tactical-new-white-8-piece-set-cat05.jpg",
-      "974743803214-tactical-new-white-8-piece-set-cat06.jpg",
-      "974743803214-tactical-new-white-8-piece-set-cat07.png",
-      "974743803214-tactical-new-white-8-piece-set-cat08.jpg",
-      "974743803214-tactical-new-white-8-piece-set-cat09.png"
+      "/images/974743803214-tactical-new-white-8-piece-set-main.jpg",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat01.jpg",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat02.png",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat03.jpg",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat04.png",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat05.jpg",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat06.jpg",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat07.png",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat08.jpg",
+      "/images/974743803214-tactical-new-white-8-piece-set-cat09.png"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "974743803214-tactical-new-white-8-piece-set-details.jpg"
+    "detailLongImage": "/images/974743803214-tactical-new-white-8-piece-set-details.jpg"
   },
   {
     "id": "969220337986",
     "sku": "969220337986",
     "title": "FPV Drone Rapid Deployment Camo Bag",
     "price_cad": 0,
-    "primaryImage": "969220337986-fpv-drone-rapid-deployment-cam-main.jpg",
+    "primaryImage": "/images/969220337986-fpv-drone-rapid-deployment-cam-main.jpg",
     "images": [
-      "969220337986-fpv-drone-rapid-deployment-cam-main.jpg",
-      "969220337986-fpv-drone-rapid-deployment-cam-cat01.jpg",
-      "969220337986-fpv-drone-rapid-deployment-cam-cat02.jpg",
-      "969220337986-fpv-drone-rapid-deployment-cam-cat03.jpg",
-      "969220337986-fpv-drone-rapid-deployment-cam-cat04.jpg",
-      "969220337986-fpv-drone-rapid-deployment-cam-cat05.jpg"
+      "/images/969220337986-fpv-drone-rapid-deployment-cam-main.jpg",
+      "/images/969220337986-fpv-drone-rapid-deployment-cam-cat01.jpg",
+      "/images/969220337986-fpv-drone-rapid-deployment-cam-cat02.jpg",
+      "/images/969220337986-fpv-drone-rapid-deployment-cam-cat03.jpg",
+      "/images/969220337986-fpv-drone-rapid-deployment-cam-cat04.jpg",
+      "/images/969220337986-fpv-drone-rapid-deployment-cam-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "969220337986-fpv-drone-rapid-deployment-cam-details.jpg"
+    "detailLongImage": "/images/969220337986-fpv-drone-rapid-deployment-cam-details.jpg"
   },
   {
     "id": "911159245418",
     "sku": "911159245418",
     "title": "Tactical Multi-function Grenade Model Pouch, Grenade Prop MOLLE Compatible Elastic Storage Accessory Pouch.",
     "price_cad": 0,
-    "primaryImage": "911159245418-tactical-multi-function-grenad-main.jpg",
+    "primaryImage": "/images/911159245418-tactical-multi-function-grenad-main.jpg",
     "images": [
-      "911159245418-tactical-multi-function-grenad-main.jpg",
-      "911159245418-tactical-multi-function-grenad-cat01.jpg",
-      "911159245418-tactical-multi-function-grenad-cat02.jpg",
-      "911159245418-tactical-multi-function-grenad-cat03.jpg",
-      "911159245418-tactical-multi-function-grenad-cat04.jpg",
-      "911159245418-tactical-multi-function-grenad-cat05.jpg"
+      "/images/911159245418-tactical-multi-function-grenad-main.jpg",
+      "/images/911159245418-tactical-multi-function-grenad-cat01.jpg",
+      "/images/911159245418-tactical-multi-function-grenad-cat02.jpg",
+      "/images/911159245418-tactical-multi-function-grenad-cat03.jpg",
+      "/images/911159245418-tactical-multi-function-grenad-cat04.jpg",
+      "/images/911159245418-tactical-multi-function-grenad-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "911159245418-tactical-multi-function-grenad-details.jpg"
+    "detailLongImage": "/images/911159245418-tactical-multi-function-grenad-details.jpg"
   },
   {
     "id": "914138043076",
     "sku": "914138043076",
     "title": "Cross-border New Product Clay the Claymore Cute Little Square Plush Doll, Good Item for Holiday Gifts.",
     "price_cad": 0,
-    "primaryImage": "914138043076-cross-border-new-product-clay--main.png",
+    "primaryImage": "/images/914138043076-cross-border-new-product-clay--main.png",
     "images": [
-      "914138043076-cross-border-new-product-clay--main.png",
-      "914138043076-cross-border-new-product-clay--cat01.png",
-      "914138043076-cross-border-new-product-clay--cat02.png",
-      "914138043076-cross-border-new-product-clay--cat03.jpg",
-      "914138043076-cross-border-new-product-clay--cat04.jpg"
+      "/images/914138043076-cross-border-new-product-clay--main.png",
+      "/images/914138043076-cross-border-new-product-clay--cat01.png",
+      "/images/914138043076-cross-border-new-product-clay--cat02.png",
+      "/images/914138043076-cross-border-new-product-clay--cat03.jpg",
+      "/images/914138043076-cross-border-new-product-clay--cat04.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "914138043076-cross-border-new-product-clay--details.jpg"
+    "detailLongImage": "/images/914138043076-cross-border-new-product-clay--details.jpg"
   },
   {
     "id": "714880739091",
     "sku": "714880739091",
     "title": "Hydra Riser Mount, UNITY Tactical GBRS All Metal Base for T1 T2 H1 H2 R5 Optic Mount.",
     "price_cad": 0,
-    "primaryImage": "714880739091-hydra-riser-mount,-unity-tacti-main.jpg",
+    "primaryImage": "/images/714880739091-hydra-riser-mount,-unity-tacti-main.jpg",
     "images": [
-      "714880739091-hydra-riser-mount,-unity-tacti-main.jpg",
-      "714880739091-hydra-riser-mount,-unity-tacti-cat01.jpg"
+      "/images/714880739091-hydra-riser-mount,-unity-tacti-main.jpg",
+      "/images/714880739091-hydra-riser-mount,-unity-tacti-cat01.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "714880739091-hydra-riser-mount,-unity-tacti-details.jpg"
+    "detailLongImage": "/images/714880739091-hydra-riser-mount,-unity-tacti-details.jpg"
   },
   {
     "id": "708088774060",
     "sku": "708088774060",
     "title": "Left/Right Hand Convertible Quick Draw Holster for G17 G19 2011 VP9 P320, Universal Light-Bearing Rail Holster.",
     "price_cad": 0,
-    "primaryImage": "708088774060-left-right-hand-convertible-qu-main.jpg",
+    "primaryImage": "/images/708088774060-left-right-hand-convertible-qu-main.jpg",
     "images": [
-      "708088774060-left-right-hand-convertible-qu-main.jpg",
-      "708088774060-left-right-hand-convertible-qu-cat01.jpg",
-      "708088774060-left-right-hand-convertible-qu-cat02.jpg",
-      "708088774060-left-right-hand-convertible-qu-cat03.jpg",
-      "708088774060-left-right-hand-convertible-qu-cat04.jpg",
-      "708088774060-left-right-hand-convertible-qu-cat05.jpg"
+      "/images/708088774060-left-right-hand-convertible-qu-main.jpg",
+      "/images/708088774060-left-right-hand-convertible-qu-cat01.jpg",
+      "/images/708088774060-left-right-hand-convertible-qu-cat02.jpg",
+      "/images/708088774060-left-right-hand-convertible-qu-cat03.jpg",
+      "/images/708088774060-left-right-hand-convertible-qu-cat04.jpg",
+      "/images/708088774060-left-right-hand-convertible-qu-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "708088774060-left-right-hand-convertible-qu-details.jpg"
+    "detailLongImage": "/images/708088774060-left-right-hand-convertible-qu-details.jpg"
   },
   {
     "id": "678305010387",
     "sku": "678305010387",
     "title": "JPC 6094 CPC AVS Plate Carrier Hydration Insert, Cooling Protective Plate, Universal PE Plate.",
     "price_cad": 0,
-    "primaryImage": "678305010387-jpc-6094-cpc-avs-plate-carrier-main.jpg",
+    "primaryImage": "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-main.jpg",
     "images": [
-      "678305010387-jpc-6094-cpc-avs-plate-carrier-main.jpg",
-      "678305010387-jpc-6094-cpc-avs-plate-carrier-cat01.jpg",
-      "678305010387-jpc-6094-cpc-avs-plate-carrier-cat02.jpg",
-      "678305010387-jpc-6094-cpc-avs-plate-carrier-cat03.jpg",
-      "678305010387-jpc-6094-cpc-avs-plate-carrier-cat04.jpg",
-      "678305010387-jpc-6094-cpc-avs-plate-carrier-cat05.jpg"
+      "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-main.jpg",
+      "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-cat01.jpg",
+      "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-cat02.jpg",
+      "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-cat03.jpg",
+      "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-cat04.jpg",
+      "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "678305010387-jpc-6094-cpc-avs-plate-carrier-details.jpg"
+    "detailLongImage": "/images/678305010387-jpc-6094-cpc-avs-plate-carrier-details.jpg"
   },
   {
     "id": "756814464555",
     "sku": "756814464555",
     "title": "MST201",
     "price_cad": 0,
-    "primaryImage": "756814464555-mst201-main.jpg",
+    "primaryImage": "/images/756814464555-mst201-main.jpg",
     "images": [
-      "756814464555-mst201-main.jpg",
-      "756814464555-mst201-cat01.jpg",
-      "756814464555-mst201-cat02.jpg",
-      "756814464555-mst201-cat03.jpg",
-      "756814464555-mst201-cat04.jpg",
-      "756814464555-mst201-cat05.jpg"
+      "/images/756814464555-mst201-main.jpg",
+      "/images/756814464555-mst201-cat01.jpg",
+      "/images/756814464555-mst201-cat02.jpg",
+      "/images/756814464555-mst201-cat03.jpg",
+      "/images/756814464555-mst201-cat04.jpg",
+      "/images/756814464555-mst201-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "756814464555-mst201-details.jpg"
+    "detailLongImage": "/images/756814464555-mst201-details.jpg"
   },
   {
     "id": "853328243320",
     "sku": "853328243320",
     "title": "Metal Riser Mount GBRS Hydra UNITY EXPS Base for T1 T2 H1 Red Dot Sights",
     "price_cad": 0,
-    "primaryImage": "853328243320-metal-riser-mount-gbrs-hydra-u-main.jpg",
+    "primaryImage": "/images/853328243320-metal-riser-mount-gbrs-hydra-u-main.jpg",
     "images": [
-      "853328243320-metal-riser-mount-gbrs-hydra-u-main.jpg",
-      "853328243320-metal-riser-mount-gbrs-hydra-u-cat01.jpg",
-      "853328243320-metal-riser-mount-gbrs-hydra-u-cat02.jpg",
-      "853328243320-metal-riser-mount-gbrs-hydra-u-cat03.jpg",
-      "853328243320-metal-riser-mount-gbrs-hydra-u-cat04.jpg",
-      "853328243320-metal-riser-mount-gbrs-hydra-u-cat05.jpg"
+      "/images/853328243320-metal-riser-mount-gbrs-hydra-u-main.jpg",
+      "/images/853328243320-metal-riser-mount-gbrs-hydra-u-cat01.jpg",
+      "/images/853328243320-metal-riser-mount-gbrs-hydra-u-cat02.jpg",
+      "/images/853328243320-metal-riser-mount-gbrs-hydra-u-cat03.jpg",
+      "/images/853328243320-metal-riser-mount-gbrs-hydra-u-cat04.jpg",
+      "/images/853328243320-metal-riser-mount-gbrs-hydra-u-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "853328243320-metal-riser-mount-gbrs-hydra-u-details.jpg"
+    "detailLongImage": "/images/853328243320-metal-riser-mount-gbrs-hydra-u-details.jpg"
   },
   {
     "id": "855477818032",
     "sku": "855477818032",
     "title": "Electric Goggles Anti-fog Defogger TYPE",
     "price_cad": 0,
-    "primaryImage": "855477818032-electric-goggles-anti-fog-defo-main.jpg",
+    "primaryImage": "/images/855477818032-electric-goggles-anti-fog-defo-main.jpg",
     "images": [
-      "855477818032-electric-goggles-anti-fog-defo-main.jpg",
-      "855477818032-electric-goggles-anti-fog-defo-cat01.jpg",
-      "855477818032-electric-goggles-anti-fog-defo-cat02.jpg",
-      "855477818032-electric-goggles-anti-fog-defo-cat03.jpg",
-      "855477818032-electric-goggles-anti-fog-defo-cat04.jpg",
-      "855477818032-electric-goggles-anti-fog-defo-cat05.jpg"
+      "/images/855477818032-electric-goggles-anti-fog-defo-main.jpg",
+      "/images/855477818032-electric-goggles-anti-fog-defo-cat01.jpg",
+      "/images/855477818032-electric-goggles-anti-fog-defo-cat02.jpg",
+      "/images/855477818032-electric-goggles-anti-fog-defo-cat03.jpg",
+      "/images/855477818032-electric-goggles-anti-fog-defo-cat04.jpg",
+      "/images/855477818032-electric-goggles-anti-fog-defo-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "855477818032-electric-goggles-anti-fog-defo-details.jpg"
+    "detailLongImage": "/images/855477818032-electric-goggles-anti-fog-defo-details.jpg"
   },
   {
     "id": "899190435089",
     "sku": "899190435089",
     "title": "\"FPS\" Action Camera Tactical Mount Arm",
     "price_cad": 0,
-    "primaryImage": "899190435089-\"fps\"-action-camera-tactical-m-main.jpg",
+    "primaryImage": "/images/899190435089-\"fps\"-action-camera-tactical-m-main.jpg",
     "images": [
-      "899190435089-\"fps\"-action-camera-tactical-m-main.jpg",
-      "899190435089-\"fps\"-action-camera-tactical-m-cat01.jpg",
-      "899190435089-\"fps\"-action-camera-tactical-m-cat02.jpg",
-      "899190435089-\"fps\"-action-camera-tactical-m-cat03.jpg",
-      "899190435089-\"fps\"-action-camera-tactical-m-cat04.jpg",
-      "899190435089-\"fps\"-action-camera-tactical-m-cat05.jpg"
+      "/images/899190435089-\"fps\"-action-camera-tactical-m-main.jpg",
+      "/images/899190435089-\"fps\"-action-camera-tactical-m-cat01.jpg",
+      "/images/899190435089-\"fps\"-action-camera-tactical-m-cat02.jpg",
+      "/images/899190435089-\"fps\"-action-camera-tactical-m-cat03.jpg",
+      "/images/899190435089-\"fps\"-action-camera-tactical-m-cat04.jpg",
+      "/images/899190435089-\"fps\"-action-camera-tactical-m-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "899190435089-\"fps\"-action-camera-tactical-m-details.jpg"
+    "detailLongImage": "/images/899190435089-\"fps\"-action-camera-tactical-m-details.jpg"
   },
   {
     "id": "818533365136",
     "sku": "818533365136",
     "title": "Colorful Muzzle Flash Luminous Tactical Tracer Unit with BB Sensor",
     "price_cad": 0,
-    "primaryImage": "818533365136-colorful-muzzle-flash-luminous-main.jpg",
+    "primaryImage": "/images/818533365136-colorful-muzzle-flash-luminous-main.jpg",
     "images": [
-      "818533365136-colorful-muzzle-flash-luminous-main.jpg",
-      "818533365136-colorful-muzzle-flash-luminous-cat01.jpg",
-      "818533365136-colorful-muzzle-flash-luminous-cat02.jpg",
-      "818533365136-colorful-muzzle-flash-luminous-cat03.jpg",
-      "818533365136-colorful-muzzle-flash-luminous-cat04.jpg",
-      "818533365136-colorful-muzzle-flash-luminous-cat05.jpg"
+      "/images/818533365136-colorful-muzzle-flash-luminous-main.jpg",
+      "/images/818533365136-colorful-muzzle-flash-luminous-cat01.jpg",
+      "/images/818533365136-colorful-muzzle-flash-luminous-cat02.jpg",
+      "/images/818533365136-colorful-muzzle-flash-luminous-cat03.jpg",
+      "/images/818533365136-colorful-muzzle-flash-luminous-cat04.jpg",
+      "/images/818533365136-colorful-muzzle-flash-luminous-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "818533365136-colorful-muzzle-flash-luminous-details.jpg"
+    "detailLongImage": "/images/818533365136-colorful-muzzle-flash-luminous-details.jpg"
   },
   {
     "id": "646929225114",
     "sku": "646929225114",
     "title": "Scorpion Style Soft Shell Quick Release Magazine Pouch for 5.56/7.62/9mm Magazines, MOLLE Compatible",
     "price_cad": 0,
-    "primaryImage": "646929225114-scorpion-style-soft-shell-quic-main.jpg",
+    "primaryImage": "/images/646929225114-scorpion-style-soft-shell-quic-main.jpg",
     "images": [
-      "646929225114-scorpion-style-soft-shell-quic-main.jpg",
-      "646929225114-scorpion-style-soft-shell-quic-cat01.jpg",
-      "646929225114-scorpion-style-soft-shell-quic-cat02.jpg",
-      "646929225114-scorpion-style-soft-shell-quic-cat03.jpg",
-      "646929225114-scorpion-style-soft-shell-quic-cat04.jpg",
-      "646929225114-scorpion-style-soft-shell-quic-cat05.jpg"
+      "/images/646929225114-scorpion-style-soft-shell-quic-main.jpg",
+      "/images/646929225114-scorpion-style-soft-shell-quic-cat01.jpg",
+      "/images/646929225114-scorpion-style-soft-shell-quic-cat02.jpg",
+      "/images/646929225114-scorpion-style-soft-shell-quic-cat03.jpg",
+      "/images/646929225114-scorpion-style-soft-shell-quic-cat04.jpg",
+      "/images/646929225114-scorpion-style-soft-shell-quic-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "646929225114-scorpion-style-soft-shell-quic-details.jpg"
+    "detailLongImage": "/images/646929225114-scorpion-style-soft-shell-quic-details.jpg"
   },
   {
     "id": "846296600859",
     "sku": "846296600859",
     "title": "Viper 2011 Hi-Capa Speed Cocking Handle Model, G17 TTiG34 Magazine Base Plate, Magwell, Muzzle Brake",
     "price_cad": 0,
-    "primaryImage": "846296600859-viper-2011-hi-capa-speed-cocki-main.png",
+    "primaryImage": "/images/846296600859-viper-2011-hi-capa-speed-cocki-main.png",
     "images": [
-      "846296600859-viper-2011-hi-capa-speed-cocki-main.png",
-      "846296600859-viper-2011-hi-capa-speed-cocki-cat01.png"
+      "/images/846296600859-viper-2011-hi-capa-speed-cocki-main.png",
+      "/images/846296600859-viper-2011-hi-capa-speed-cocki-cat01.png"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "846296600859-viper-2011-hi-capa-speed-cocki-details.jpg"
+    "detailLongImage": "/images/846296600859-viper-2011-hi-capa-speed-cocki-details.jpg"
   },
   {
     "id": "890198613762",
@@ -267,141 +267,141 @@ export const generatedProducts: Product[] = [
     "sku": "940910394002",
     "title": "Internal Magazine Pouch Quick Release",
     "price_cad": 0,
-    "primaryImage": "940910394002-internal-magazine-pouch-quick--main.jpg",
+    "primaryImage": "/images/940910394002-internal-magazine-pouch-quick--main.jpg",
     "images": [
-      "940910394002-internal-magazine-pouch-quick--main.jpg",
-      "940910394002-internal-magazine-pouch-quick--cat01.jpg",
-      "940910394002-internal-magazine-pouch-quick--cat02.jpg",
-      "940910394002-internal-magazine-pouch-quick--cat03.jpg"
+      "/images/940910394002-internal-magazine-pouch-quick--main.jpg",
+      "/images/940910394002-internal-magazine-pouch-quick--cat01.jpg",
+      "/images/940910394002-internal-magazine-pouch-quick--cat02.jpg",
+      "/images/940910394002-internal-magazine-pouch-quick--cat03.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "940910394002-internal-magazine-pouch-quick--details.jpg"
+    "detailLongImage": "/images/940910394002-internal-magazine-pouch-quick--details.jpg"
   },
   {
     "id": "643256207245",
     "sku": "643256207245",
     "title": "Universal Nylon Tactical Underarm Multi-functional Accessory Strap, Quick-Release Shoulder Strap Lanyard, Single-Point Crossbody Sling",
     "price_cad": 0,
-    "primaryImage": "643256207245-universal-nylon-tactical-under-main.jpg",
+    "primaryImage": "/images/643256207245-universal-nylon-tactical-under-main.jpg",
     "images": [
-      "643256207245-universal-nylon-tactical-under-main.jpg",
-      "643256207245-universal-nylon-tactical-under-cat01.jpg",
-      "643256207245-universal-nylon-tactical-under-cat02.jpg",
-      "643256207245-universal-nylon-tactical-under-cat03.jpg",
-      "643256207245-universal-nylon-tactical-under-cat04.jpg",
-      "643256207245-universal-nylon-tactical-under-cat05.jpg"
+      "/images/643256207245-universal-nylon-tactical-under-main.jpg",
+      "/images/643256207245-universal-nylon-tactical-under-cat01.jpg",
+      "/images/643256207245-universal-nylon-tactical-under-cat02.jpg",
+      "/images/643256207245-universal-nylon-tactical-under-cat03.jpg",
+      "/images/643256207245-universal-nylon-tactical-under-cat04.jpg",
+      "/images/643256207245-universal-nylon-tactical-under-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "643256207245-universal-nylon-tactical-under-details.jpg"
+    "detailLongImage": "/images/643256207245-universal-nylon-tactical-under-details.jpg"
   },
   {
     "id": "678253192936",
     "sku": "678253192936",
     "title": "Tactical Laser Light PEQ15 Red/Green Laser Indicator, [Brand Name Removed] M300/M600 Flashlight Dual Control Tail Switch Set",
     "price_cad": 0,
-    "primaryImage": "678253192936-tactical-laser-light-peq15-red-main.jpg",
+    "primaryImage": "/images/678253192936-tactical-laser-light-peq15-red-main.jpg",
     "images": [
-      "678253192936-tactical-laser-light-peq15-red-main.jpg",
-      "678253192936-tactical-laser-light-peq15-red-cat01.png",
-      "678253192936-tactical-laser-light-peq15-red-cat02.png",
-      "678253192936-tactical-laser-light-peq15-red-cat03.jpg",
-      "678253192936-tactical-laser-light-peq15-red-cat04.png",
-      "678253192936-tactical-laser-light-peq15-red-cat05.png"
+      "/images/678253192936-tactical-laser-light-peq15-red-main.jpg",
+      "/images/678253192936-tactical-laser-light-peq15-red-cat01.png",
+      "/images/678253192936-tactical-laser-light-peq15-red-cat02.png",
+      "/images/678253192936-tactical-laser-light-peq15-red-cat03.jpg",
+      "/images/678253192936-tactical-laser-light-peq15-red-cat04.png",
+      "/images/678253192936-tactical-laser-light-peq15-red-cat05.png"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "678253192936-tactical-laser-light-peq15-red-details.jpg"
+    "detailLongImage": "/images/678253192936-tactical-laser-light-peq15-red-details.jpg"
   },
   {
     "id": "815037864475",
     "sku": "815037864475",
     "title": "Sports Arm Guards, Honeycomb Extended Anti-Collision, Anti-Drop, Anti-Abrasion, Thickened Sun Protection Professional Sleeves, Arm Protective Gear for Basketball, Football, Volleyball",
     "price_cad": 0,
-    "primaryImage": "815037864475-sports-arm-guards,-honeycomb-e-main.jpg",
+    "primaryImage": "/images/815037864475-sports-arm-guards,-honeycomb-e-main.jpg",
     "images": [
-      "815037864475-sports-arm-guards,-honeycomb-e-main.jpg",
-      "815037864475-sports-arm-guards,-honeycomb-e-cat01.png",
-      "815037864475-sports-arm-guards,-honeycomb-e-cat02.jpg",
-      "815037864475-sports-arm-guards,-honeycomb-e-cat03.jpg",
-      "815037864475-sports-arm-guards,-honeycomb-e-cat04.jpg",
-      "815037864475-sports-arm-guards,-honeycomb-e-cat05.jpg"
+      "/images/815037864475-sports-arm-guards,-honeycomb-e-main.jpg",
+      "/images/815037864475-sports-arm-guards,-honeycomb-e-cat01.png",
+      "/images/815037864475-sports-arm-guards,-honeycomb-e-cat02.jpg",
+      "/images/815037864475-sports-arm-guards,-honeycomb-e-cat03.jpg",
+      "/images/815037864475-sports-arm-guards,-honeycomb-e-cat04.jpg",
+      "/images/815037864475-sports-arm-guards,-honeycomb-e-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "815037864475-sports-arm-guards,-honeycomb-e-details.jpg"
+    "detailLongImage": "/images/815037864475-sports-arm-guards,-honeycomb-e-details.jpg"
   },
   {
     "id": "586117181099",
     "sku": "586117181099",
     "title": "SpeedQB Protective Gear Set, Adult Skateboard, Field Protective Knee Pads, Elbow Pads, Palm Guards, SQB Water Bullet, [Brand Name Removed] CNSQB Competition",
     "price_cad": 0,
-    "primaryImage": "586117181099-speedqb-protective-gear-set,-a-main.jpg",
+    "primaryImage": "/images/586117181099-speedqb-protective-gear-set,-a-main.jpg",
     "images": [
-      "586117181099-speedqb-protective-gear-set,-a-main.jpg",
-      "586117181099-speedqb-protective-gear-set,-a-cat01.jpg",
-      "586117181099-speedqb-protective-gear-set,-a-cat02.jpg",
-      "586117181099-speedqb-protective-gear-set,-a-cat03.jpg",
-      "586117181099-speedqb-protective-gear-set,-a-cat04.jpg",
-      "586117181099-speedqb-protective-gear-set,-a-cat05.jpg"
+      "/images/586117181099-speedqb-protective-gear-set,-a-main.jpg",
+      "/images/586117181099-speedqb-protective-gear-set,-a-cat01.jpg",
+      "/images/586117181099-speedqb-protective-gear-set,-a-cat02.jpg",
+      "/images/586117181099-speedqb-protective-gear-set,-a-cat03.jpg",
+      "/images/586117181099-speedqb-protective-gear-set,-a-cat04.jpg",
+      "/images/586117181099-speedqb-protective-gear-set,-a-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "586117181099-speedqb-protective-gear-set,-a-details.jpg"
+    "detailLongImage": "/images/586117181099-speedqb-protective-gear-set,-a-details.jpg"
   },
   {
     "id": "723563903640",
     "sku": "723563903640",
     "title": "Russian Little Green Man with Dustproof, Anti-Fog, Tactical, Windproof Cycling Military Fan Outdoor Headwear, Khaki, Green",
     "price_cad": 0,
-    "primaryImage": "723563903640-russian-little-green-man-with--main.jpg",
+    "primaryImage": "/images/723563903640-russian-little-green-man-with--main.jpg",
     "images": [
-      "723563903640-russian-little-green-man-with--main.jpg",
-      "723563903640-russian-little-green-man-with--cat01.jpg",
-      "723563903640-russian-little-green-man-with--cat02.jpg",
-      "723563903640-russian-little-green-man-with--cat03.jpg",
-      "723563903640-russian-little-green-man-with--cat04.jpg",
-      "723563903640-russian-little-green-man-with--cat05.jpg"
+      "/images/723563903640-russian-little-green-man-with--main.jpg",
+      "/images/723563903640-russian-little-green-man-with--cat01.jpg",
+      "/images/723563903640-russian-little-green-man-with--cat02.jpg",
+      "/images/723563903640-russian-little-green-man-with--cat03.jpg",
+      "/images/723563903640-russian-little-green-man-with--cat04.jpg",
+      "/images/723563903640-russian-little-green-man-with--cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "723563903640-russian-little-green-man-with--details.jpg"
+    "detailLongImage": "/images/723563903640-russian-little-green-man-with--details.jpg"
   },
   {
     "id": "859285997780",
     "sku": "859285997780",
     "title": "KUBLAI P1N23456789/ZY Universal Intake/Exhaust Valve Wrench Key Disassembly Tool, Stainless Steel",
     "price_cad": 0,
-    "primaryImage": "859285997780-kublai-p1n23456789-zy-universa-main.jpg",
+    "primaryImage": "/images/859285997780-kublai-p1n23456789-zy-universa-main.jpg",
     "images": [
-      "859285997780-kublai-p1n23456789-zy-universa-main.jpg",
-      "859285997780-kublai-p1n23456789-zy-universa-cat01.jpg",
-      "859285997780-kublai-p1n23456789-zy-universa-cat02.jpg",
-      "859285997780-kublai-p1n23456789-zy-universa-cat03.jpg",
-      "859285997780-kublai-p1n23456789-zy-universa-cat04.jpg"
+      "/images/859285997780-kublai-p1n23456789-zy-universa-main.jpg",
+      "/images/859285997780-kublai-p1n23456789-zy-universa-cat01.jpg",
+      "/images/859285997780-kublai-p1n23456789-zy-universa-cat02.jpg",
+      "/images/859285997780-kublai-p1n23456789-zy-universa-cat03.jpg",
+      "/images/859285997780-kublai-p1n23456789-zy-universa-cat04.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "859285997780-kublai-p1n23456789-zy-universa-details.jpg"
+    "detailLongImage": "/images/859285997780-kublai-p1n23456789-zy-universa-details.jpg"
   },
   {
     "id": "728771048041",
     "sku": "728771048041",
     "title": "Outdoor M67 Grenade Smoke Model Prop, Detachable with Functional Pull-Ring, Cosplay Replica Prop.",
     "price_cad": 0,
-    "primaryImage": "728771048041-outdoor-m67-grenade-smoke-mode-main.jpg",
+    "primaryImage": "/images/728771048041-outdoor-m67-grenade-smoke-mode-main.jpg",
     "images": [
-      "728771048041-outdoor-m67-grenade-smoke-mode-main.jpg",
-      "728771048041-outdoor-m67-grenade-smoke-mode-cat01.jpg",
-      "728771048041-outdoor-m67-grenade-smoke-mode-cat02.jpg",
-      "728771048041-outdoor-m67-grenade-smoke-mode-cat03.jpg",
-      "728771048041-outdoor-m67-grenade-smoke-mode-cat04.jpg",
-      "728771048041-outdoor-m67-grenade-smoke-mode-cat05.jpg"
+      "/images/728771048041-outdoor-m67-grenade-smoke-mode-main.jpg",
+      "/images/728771048041-outdoor-m67-grenade-smoke-mode-cat01.jpg",
+      "/images/728771048041-outdoor-m67-grenade-smoke-mode-cat02.jpg",
+      "/images/728771048041-outdoor-m67-grenade-smoke-mode-cat03.jpg",
+      "/images/728771048041-outdoor-m67-grenade-smoke-mode-cat04.jpg",
+      "/images/728771048041-outdoor-m67-grenade-smoke-mode-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "728771048041-outdoor-m67-grenade-smoke-mode-details.jpg"
+    "detailLongImage": "/images/728771048041-outdoor-m67-grenade-smoke-mode-details.jpg"
   },
   {
     "id": "898356105062",
@@ -418,71 +418,71 @@ export const generatedProducts: Product[] = [
     "sku": "713575933395",
     "title": "Universal Plate Carrier MOLLE System Mobile Phone Navigation Panel Pouch, Chest PDA Pouch, Outdoor Multi-functional Chest Pouch.",
     "price_cad": 0,
-    "primaryImage": "713575933395-universal-plate-carrier-molle--main.jpg",
+    "primaryImage": "/images/713575933395-universal-plate-carrier-molle--main.jpg",
     "images": [
-      "713575933395-universal-plate-carrier-molle--main.jpg",
-      "713575933395-universal-plate-carrier-molle--cat01.jpg",
-      "713575933395-universal-plate-carrier-molle--cat02.jpg",
-      "713575933395-universal-plate-carrier-molle--cat03.jpg",
-      "713575933395-universal-plate-carrier-molle--cat04.jpg",
-      "713575933395-universal-plate-carrier-molle--cat05.jpg"
+      "/images/713575933395-universal-plate-carrier-molle--main.jpg",
+      "/images/713575933395-universal-plate-carrier-molle--cat01.jpg",
+      "/images/713575933395-universal-plate-carrier-molle--cat02.jpg",
+      "/images/713575933395-universal-plate-carrier-molle--cat03.jpg",
+      "/images/713575933395-universal-plate-carrier-molle--cat04.jpg",
+      "/images/713575933395-universal-plate-carrier-molle--cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "713575933395-universal-plate-carrier-molle--details.jpg"
+    "detailLongImage": "/images/713575933395-universal-plate-carrier-molle--details.jpg"
   },
   {
     "id": "814126590282",
     "sku": "814126590282",
     "title": "K Series Helmet Battery Camouflage Counterweight Pouch, Compatible with Helmet Covers and PVS (NVG setups).",
     "price_cad": 0,
-    "primaryImage": "814126590282-k-series-helmet-battery-camouf-main.jpg",
+    "primaryImage": "/images/814126590282-k-series-helmet-battery-camouf-main.jpg",
     "images": [
-      "814126590282-k-series-helmet-battery-camouf-main.jpg",
-      "814126590282-k-series-helmet-battery-camouf-cat01.jpg",
-      "814126590282-k-series-helmet-battery-camouf-cat02.jpg",
-      "814126590282-k-series-helmet-battery-camouf-cat03.jpg",
-      "814126590282-k-series-helmet-battery-camouf-cat04.jpg",
-      "814126590282-k-series-helmet-battery-camouf-cat05.jpg"
+      "/images/814126590282-k-series-helmet-battery-camouf-main.jpg",
+      "/images/814126590282-k-series-helmet-battery-camouf-cat01.jpg",
+      "/images/814126590282-k-series-helmet-battery-camouf-cat02.jpg",
+      "/images/814126590282-k-series-helmet-battery-camouf-cat03.jpg",
+      "/images/814126590282-k-series-helmet-battery-camouf-cat04.jpg",
+      "/images/814126590282-k-series-helmet-battery-camouf-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "814126590282-k-series-helmet-battery-camouf-details.jpg"
+    "detailLongImage": "/images/814126590282-k-series-helmet-battery-camouf-details.jpg"
   },
   {
     "id": "725254573496",
     "sku": "725254573496",
     "title": "Outdoor Ronin Tactical Belt Set, Multi-functional Modular Patrol Belt with Detachable Adjustable Inner Belt.",
     "price_cad": 0,
-    "primaryImage": "725254573496-outdoor-ronin-tactical-belt-se-main.jpg",
+    "primaryImage": "/images/725254573496-outdoor-ronin-tactical-belt-se-main.jpg",
     "images": [
-      "725254573496-outdoor-ronin-tactical-belt-se-main.jpg",
-      "725254573496-outdoor-ronin-tactical-belt-se-cat01.jpg",
-      "725254573496-outdoor-ronin-tactical-belt-se-cat02.jpg",
-      "725254573496-outdoor-ronin-tactical-belt-se-cat03.jpg",
-      "725254573496-outdoor-ronin-tactical-belt-se-cat04.jpg",
-      "725254573496-outdoor-ronin-tactical-belt-se-cat05.jpg"
+      "/images/725254573496-outdoor-ronin-tactical-belt-se-main.jpg",
+      "/images/725254573496-outdoor-ronin-tactical-belt-se-cat01.jpg",
+      "/images/725254573496-outdoor-ronin-tactical-belt-se-cat02.jpg",
+      "/images/725254573496-outdoor-ronin-tactical-belt-se-cat03.jpg",
+      "/images/725254573496-outdoor-ronin-tactical-belt-se-cat04.jpg",
+      "/images/725254573496-outdoor-ronin-tactical-belt-se-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "725254573496-outdoor-ronin-tactical-belt-se-details.jpg"
+    "detailLongImage": "/images/725254573496-outdoor-ronin-tactical-belt-se-details.jpg"
   },
   {
     "id": "654310678238",
     "sku": "654310678238",
     "title": "TC Tactical Headset Adapter, Civilian PTT for Two-way Radios, Kenwood Interface, Supports Z-Tactical.",
     "price_cad": 0,
-    "primaryImage": "654310678238-tc-tactical-headset-adapter,-c-main.jpg",
+    "primaryImage": "/images/654310678238-tc-tactical-headset-adapter,-c-main.jpg",
     "images": [
-      "654310678238-tc-tactical-headset-adapter,-c-main.jpg",
-      "654310678238-tc-tactical-headset-adapter,-c-cat01.jpg",
-      "654310678238-tc-tactical-headset-adapter,-c-cat02.jpg",
-      "654310678238-tc-tactical-headset-adapter,-c-cat03.jpg",
-      "654310678238-tc-tactical-headset-adapter,-c-cat04.jpg",
-      "654310678238-tc-tactical-headset-adapter,-c-cat05.jpg"
+      "/images/654310678238-tc-tactical-headset-adapter,-c-main.jpg",
+      "/images/654310678238-tc-tactical-headset-adapter,-c-cat01.jpg",
+      "/images/654310678238-tc-tactical-headset-adapter,-c-cat02.jpg",
+      "/images/654310678238-tc-tactical-headset-adapter,-c-cat03.jpg",
+      "/images/654310678238-tc-tactical-headset-adapter,-c-cat04.jpg",
+      "/images/654310678238-tc-tactical-headset-adapter,-c-cat05.jpg"
     ],
     "url": "",
     "margin": 0.5,
-    "detailLongImage": "654310678238-tc-tactical-headset-adapter,-c-details.jpg"
+    "detailLongImage": "/images/654310678238-tc-tactical-headset-adapter,-c-details.jpg"
   }
 ]

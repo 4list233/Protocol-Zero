@@ -17,3 +17,16 @@ scraper/ai_scraper_output/
 scraper/Archive Media/
 scraper/__pycache__/
 shop/public/images/
+
+
+# Cleanup: Ignore logs and cache
+scraper/*.log
+scraper/archive/
+scraper/data/cache/
+*.pyc
+__pycache__/
+.DS_Store
+
+# Keep structure files
+!scraper/archive/.gitkeep
+!scraper/data/cache/.gitkeep

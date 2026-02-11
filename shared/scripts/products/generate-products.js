@@ -35,11 +35,23 @@ function buildProduct(product, index, overrides) {
 	const title = product.title_en || product.title || product.title_original || 'Unnamed Product'
 	// Output only the translated title; keep originals only in manifest
 	const url = product.url || ''
-	const primaryImage = product.primaryImage || (product.images?.[0] ?? '')
+	
+	// Helper function to ensure image path starts with /images/
+	const ensureImagePath = (imagePath) => {
+		if (!imagePath) return ''
+		// If already starts with /images/, return as-is
+		if (imagePath.startsWith('/images/')) return imagePath
+		// If starts with /, remove it before adding /images/
+		if (imagePath.startsWith('/')) return `/images${imagePath}`
+		// Otherwise, just prepend /images/
+		return `/images/${imagePath}`
+	}
+	
+	const primaryImage = ensureImagePath(product.primaryImage || (product.images?.[0] ?? ''))
 
 	const imageSet = new Set()
 	if (primaryImage) imageSet.add(primaryImage)
-	;(product.images || []).filter(Boolean).forEach(img => imageSet.add(img))
+	;(product.images || []).filter(Boolean).forEach(img => imageSet.add(ensureImagePath(img)))
 	const images = Array.from(imageSet)
 
 	const override = overrides[id] || overrides[url] || {}
@@ -73,7 +85,7 @@ function buildProduct(product, index, overrides) {
 	}
 
 	// Do not include title_en/title_original in generated output to avoid duplication
-	if (product.detailLongImage) output.detailLongImage = product.detailLongImage
+	if (product.detailLongImage) output.detailLongImage = ensureImagePath(product.detailLongImage)
 	if (product.category) output.category = product.category
 	if (product.description) output.description = product.description
 	if (options && options.length) output.options = options

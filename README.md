@@ -2,7 +2,38 @@
 
 **Automated Taobao Product Scraping + Next.js E-Commerce Shop**
 
-**Status:** 🟢 Scraper 95% Complete | Shop Integration 90% Complete
+**Status:** � Ready for Refactoring | Documentation Complete
+
+---
+
+## 🎯 **For External Developer: START HERE**
+
+**Complete refactoring documentation has been prepared for you:**
+
+### 📚 Essential Reading (3 hours total)
+1. **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Master index of all documents
+2. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - One-page overview (10 min)
+3. **[ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md)** - Visual system diagrams (15 min)
+4. **[REFACTOR_PLAN.md](REFACTOR_PLAN.md)** - Complete refactoring plan (30 min)
+5. **[SCRAPER_SPECIFICATIONS.md](SCRAPER_SPECIFICATIONS.md)** - Scraper technical specs (45 min)
+6. **[WEBSITE_SPECIFICATIONS.md](WEBSITE_SPECIFICATIONS.md)** - Website technical specs (45 min)
+7. **[HANDOFF_GUIDE.md](HANDOFF_GUIDE.md)** - Step-by-step implementation (60 min)
+
+### 🎯 Project Goal
+Migrate from **Knack/Notion** → **Supabase**, build complete e-commerce frontend, and deploy to **Vercel**. 4-week timeline.
+
+### ✅ What You'll Build
+- Refactored scraper (Python + Supabase)
+- Product pages with variant selection
+- Shopping cart & checkout
+- Admin dashboard
+- Production deployment on Vercel
+
+**👉 Start with: [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)**
+
+---
+
+## 📋 Current Project Information
 
 📋 **[View Full TODO List](TODO.md)** | 🗺️ **[Integration Roadmap](INTEGRATION_ROADMAP.md)** | 📖 **[Setup Guide](SETUP.md)**
 

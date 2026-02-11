@@ -1,5 +1,0 @@
-# Variants for Tactical Helmet NVG Flip-Up Mount and Action Camera Adapter Mount, Helmet Accessory.
-# Format: Name | Price CNY | Price CAD | Margin | Status
-# Edit this file to modify variants, then run: python folders_to_knack.py
-
-Black | 23.0 | 16.99 | 30.7% | Active

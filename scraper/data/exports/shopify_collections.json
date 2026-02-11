@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shopify Collections Configuration",
+  "description": "Defines how products are categorized into Shopify collections based on price tiers",
+  "type": "object",
+  "properties": {
+    "budget": {
+      "type": "string",
+      "description": "Collection name for budget products ($0-$25)",
+      "default": "Budget ($0-$25)"
+    },
+    "mid_range": {
+      "type": "string",
+      "description": "Collection name for mid-range products ($25-$75)",
+      "default": "Mid-Range ($25-$75)"
+    },
+    "premium": {
+      "type": "string",
+      "description": "Collection name for premium products ($75+)",
+      "default": "Premium ($75+)"
+    },
+    "default": {
+      "type": "string",
+      "description": "Default collection for all products",
+      "default": "All Products"
+    }
+  },
+  "collections_by_category": {
+    "type": "object",
+    "description": "Map product types to specific collections",
+    "properties": {
+      "holster": {
+        "type": "array",
+        "items": {"type": "string"},
+        "default": ["Holsters & Accessories", "Tactical Gear"]
+      },
+      "vest": {
+        "type": "array",
+        "items": {"type": "string"},
+        "default": ["Vests & Plate Carriers", "Tactical Gear"]
+      },
+      "helmet": {
+        "type": "array",
+        "items": {"type": "string"},
+        "default": ["Helmets & Head Protection", "Tactical Gear"]
+      },
+      "optics": {
+        "type": "array",
+        "items": {"type": "string"},
+        "default": ["Optics & Sights", "Weapon Accessories"]
+      },
+      "pouch": {
+        "type": "array",
+        "items": {"type": "string"},
+        "default": ["Pouches & Storage", "Tactical Gear"]
+      }
+    }
+  },
+  "default_tags": {
+    "type": "array",
+    "description": "Tags automatically added to all products",
+    "items": {"type": "string"},
+    "default": ["airsoft", "tactical", "protocol-zero"]
+  }
+}

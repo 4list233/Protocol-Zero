@@ -10,6 +10,9 @@
     "sync-all": "npm run promote-reviewed && npm run sync-media && npm run generate-products",
     "verify-notion": "node notion/verify-notion.js",
     "seed-notion": "node notion/json-to-notion.js",
+    "clear-notion": "node notion/clear-notion-images.js",
+    "reseed-notion": "node notion/reseed-images-from-knack.js",
+    "reset-notion-images": "node notion/reset-and-reseed-images.js",
     "snapshot:products": "node products/snapshot-products.js"
   },
   "dependencies": {
