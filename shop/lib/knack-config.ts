@@ -62,6 +62,7 @@ export const KNACK_CONFIG = {
     orders: process.env.KNACK_OBJECT_KEY_ORDERS || 'object_10',
     clips: process.env.KNACK_OBJECT_KEY_CLIPS || 'object_11',
     signups: process.env.KNACK_OBJECT_KEY_SIGNUPS || 'object_12',
+    productImages: process.env.KNACK_OBJECT_KEY_PRODUCT_IMAGES || 'object_14',
   },
 
   // Field Mappings - Updated with actual field keys from Knack Builder
@@ -100,15 +101,30 @@ export const KNACK_CONFIG = {
       description: process.env.KNACK_FIELD_PRODUCTS_DESCRIPTION || 'field_49',
       category: process.env.KNACK_FIELD_PRODUCTS_CATEGORY || 'field_50',
       status: process.env.KNACK_FIELD_PRODUCTS_STATUS || 'field_51',
-      priceCadBase: process.env.KNACK_FIELD_PRODUCTS_PRICE_CAD_BASE || 'field_138',
-      margin: process.env.KNACK_FIELD_PRODUCTS_MARGIN || 'field_53',
+      margin: process.env.KNACK_FIELD_PRODUCTS_MARGIN || 'field_134',
+      priceCadBase: process.env.KNACK_FIELD_PRODUCTS_PRICE_CAD_BASE || 'field_52', // Base price in CAD
       stock: process.env.KNACK_FIELD_PRODUCTS_STOCK || 'field_54',
       url: process.env.KNACK_FIELD_PRODUCTS_URL || 'field_55',
-      primaryImage: process.env.KNACK_FIELD_PRODUCTS_PRIMARY_IMAGE || 'field_56',
+      // Image fields on product (for quick access / caching)
+      primaryImage: process.env.KNACK_FIELD_PRODUCTS_PRIMARY_IMAGE || 'field_140',
       images: process.env.KNACK_FIELD_PRODUCTS_IMAGES || 'field_57',
-      detailImage: process.env.KNACK_FIELD_PRODUCTS_DETAIL_IMAGE || 'field_58',
+      detailImage: process.env.KNACK_FIELD_PRODUCTS_DETAIL_IMAGE || 'field_141',
+      image: process.env.KNACK_FIELD_PRODUCTS_IMAGE || 'field_185',
+      competitorProducts: process.env.KNACK_FIELD_PRODUCTS_COMPETITOR || 'field_135',
+      archived: process.env.KNACK_FIELD_PRODUCTS_ARCHIVED || 'field_374',
       createdAt: process.env.KNACK_FIELD_PRODUCTS_CREATED_AT || 'field_59',
       updatedAt: process.env.KNACK_FIELD_PRODUCTS_UPDATED_AT || 'field_60',
+    },
+
+    // Product Images Object Fields (object_14) - NEW
+    productImages: {
+      name: 'field_186',
+      product: 'field_188',      // Connection to products (object_6)
+      image: 'field_189',        // Image file
+      imageType: 'field_190',    // Multiple Choice: Primary, Gallery, Detail, Catalog, Variant
+      sortOrder: 'field_191',    // Number for ordering
+      altText: 'field_192',      // Short Text for accessibility
+      variantId: 'field_193',    // Short Text - links to specific variant
     },
 
     // Variants Object Fields (object_7)
@@ -117,35 +133,28 @@ export const KNACK_CONFIG = {
       variantName: process.env.KNACK_FIELD_VARIANTS_VARIANT_NAME || 'field_62',
       sku: process.env.KNACK_FIELD_VARIANTS_SKU || 'field_63',
       priceCny: process.env.KNACK_FIELD_VARIANTS_PRICE_CNY || 'field_64',
-      priceCad: process.env.KNACK_FIELD_VARIANTS_PRICE_CAD || 'field_138',
+      priceCad: process.env.KNACK_FIELD_VARIANTS_PRICE_CAD || 'field_138', // Selling Price
       stock: process.env.KNACK_FIELD_VARIANTS_STOCK || 'field_66',
       status: process.env.KNACK_FIELD_VARIANTS_STATUS || 'field_67',
       sortOrder: process.env.KNACK_FIELD_VARIANTS_SORT_ORDER || 'field_68',
       createdAt: process.env.KNACK_FIELD_VARIANTS_CREATED_AT || 'field_69',
       updatedAt: process.env.KNACK_FIELD_VARIANTS_UPDATED_AT || 'field_70',
+      // Chinese source info
+      chineseName: 'field_149',       // Chinese name
+      chineseLink: 'field_150',       // Chinese Link (Taobao URL)
       // Multi-dimensional variant option fields (Color + Size selection)
       optionType1: 'field_145',   // e.g., "Color", "Style"
       optionValue1: 'field_146',  // e.g., "Black", "Standard"
       optionType2: 'field_147',   // e.g., "Size" (nullable)
       optionValue2: 'field_148',  // e.g., "M", "85-125cm" (nullable)
-      // Pricing fields (added for ratio-based pricing model)
+      // Pricing fields
       shippingCny: 'field_151',         // Shipping allocation per item (default 30 CNY)
-      costCad: 'field_173',             // Landed cost in CAD ((Price + Shipping) × 0.19)
       isBaseVariant: 'field_152',       // Boolean - mark ONE variant as base for ratio calc
+      totalCostCad: 'field_153',        // Calculated total cost in CAD
+      marginStandard: 'field_154',      // Calculated margin % for standard sales
+      marginPromo: 'field_155',         // Calculated margin % with promo code
       competitorPriceCad: 'field_139',  // Research price from Canadian competitors
       competitorProducts: 'field_137',  // Short text - competitor product links/notes
-      totalCostCad: 'field_153',        // Calculated total cost in CAD (LEGACY - use costCad)
-      marginStandard: 'field_154',      // Calculated margin % for standard sales (30.5)
-      marginPromo: 'field_155',         // Calculated margin % with promo code (14.2)
-      isBundle: 'field_156',            // Boolean - is this a bundle variant?
-      bundleComponents: 'field_157',    // What's included in the bundle
-      // Add-on pricing fields - for items that are cheaper when added to another order
-      isAddonItem: 'field_158',      // Boolean - eligible for add-on pricing
-      addonPriceCad: 'field_159',    // Discounted add-on price (¥20 shipping vs ¥70)
-      addonCostCad: 'field_160',     // Cost with reduced shipping
-      addonMargin: 'field_161',      // Margin at add-on price (50%)
-      minCartForAddon: 'field_162',  // Min cart value to unlock ($30)
-      imageIdsJson: 'field_176',     // JSON array of image IDs bound to this variant
     },
 
     // Orders Object Fields (object_10)

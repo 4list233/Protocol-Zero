@@ -10,6 +10,7 @@ import "./globals.css"
 import { Suspense } from "react"
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.ca'),
   title: "Protocol Zero Airsoft — Social Hub & Gear Shop",
   description: "The social hub for airsoft enthusiasts. Share clips, check game schedules, and shop premium gear.",
   generator: "v0.app",

@@ -17,6 +17,7 @@ import { auth } from '@/lib/firebase'
 type AuthContextType = {
   user: User | null
   loading: boolean
+  isAdmin: boolean
   signInWithGoogle: () => Promise<void>
   signInWithInstagram: () => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<User>
@@ -28,6 +29,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isAdmin: false,
   signInWithGoogle: async () => {},
   signInWithInstagram: async () => {},
   signInWithEmail: async () => { throw new Error('Not implemented') },
@@ -41,6 +43,7 @@ export const useAuth = () => useContext(AuthContext)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     // If Firebase isn't configured (e.g., missing env vars), skip auth init
@@ -49,8 +52,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
+
+      // Check for admin custom claim
+      if (user) {
+        try {
+          const tokenResult = await user.getIdTokenResult()
+          setIsAdmin(tokenResult.claims.admin === true)
+        } catch (error) {
+          console.error('Error checking admin claim:', error)
+          setIsAdmin(false)
+        }
+      } else {
+        setIsAdmin(false)
+      }
+
       setLoading(false)
     })
 
@@ -126,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithInstagram, signInWithEmail, registerWithEmail, resetPassword, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, signInWithGoogle, signInWithInstagram, signInWithEmail, registerWithEmail, resetPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   )

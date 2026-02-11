@@ -1,6 +1,5 @@
 // Knack-based products operations
-// Images are served directly from /public/images/ folder (fast - no API calls for fetching)
-// Notion is only used for syncing images when creating/updating products
+// Images are now fetched from Knack's Product Images table (object_14)
 import {
   getKnackRecords,
   getKnackRecord,
@@ -10,122 +9,143 @@ import {
 } from './knack-client'
 import { KNACK_CONFIG, getFieldValue } from './knack-config'
 import type { ProductRuntime, ProductVariant } from './notion-client'
-import { Client } from '@notionhq/client'
 
-// Notion client (only used for syncing images when creating/updating products)
-let notionClient: Client | null = null
-function getNotionClient(): Client | null {
-  if (notionClient) return notionClient
-  
-  const NOTION_API_KEY = process.env.NOTION_API_KEY
-  const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
-  
-  if (!NOTION_API_KEY || !PRODUCTS_DB) {
-    return null
-  }
-  
-  notionClient = new Client({ auth: NOTION_API_KEY })
-  return notionClient
-}
+// Product Images object and fields from config
+const PRODUCT_IMAGES_OBJECT_KEY = KNACK_CONFIG.objectKeys.productImages
+const PRODUCT_IMAGE_FIELDS = KNACK_CONFIG.fields.productImages
 
-// Notion image cache - stores product ID to images mapping
-const notionImageCache = new Map<string, { images: string[]; detailImage?: string }>()
+// Knack image cache - stores product record ID to images mapping
+const knackImageCache = new Map<string, {
+  primaryImage?: string
+  galleryImages: string[]
+  detailImage?: string
+}>()
 
-// Preload all images from Notion in a single batch query
-async function preloadNotionImages(): Promise<void> {
-  const notion = getNotionClient()
-  if (!notion) return
-
-  const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
-  if (!PRODUCTS_DB) return
+// Preload all images from Knack's Product Images table in a single batch query
+async function preloadKnackImages(): Promise<void> {
+  if (!isKnackConfigured()) return
 
   try {
-    // Query all products from Notion
-    const response = await notion.databases.query({
-      database_id: PRODUCTS_DB,
-      page_size: 100,
+    // Fetch all product images from Knack
+    const imageRecords = await getKnackRecords<Record<string, unknown>>(PRODUCT_IMAGES_OBJECT_KEY, {
+      sortField: PRODUCT_IMAGE_FIELDS.sortOrder,
+      sortOrder: 'asc',
     })
 
-    // Cache images by Product ID
-    for (const page of response.results) {
-      if (!('properties' in page)) continue
-      
-      const props = page.properties
-      
-      // Get Product ID from Notion
-      const productIdProp = props['ID'] as any
-      const productIdTexts = productIdProp?.rich_text || []
-      const productId = productIdTexts[0]?.text?.content
-      
-      if (!productId) continue
+    // Group images by product connection
+    for (const record of imageRecords) {
+      // Get the product connection - try _raw field first (Knack returns both formats)
+      const productConnectionRaw = record[`${PRODUCT_IMAGE_FIELDS.product}_raw`]
+      const productConnection = productConnectionRaw || getFieldValue(record, PRODUCT_IMAGE_FIELDS.product, 'Product')
+      const productRecordId = extractProductRecordId(productConnection)
 
-      // Extract images from Notion
-      const { images, detailImage } = extractNotionImages(props)
-      
-      // Fix localhost URLs to production
-      const fixedImages = images.map(fixImageUrl)
-      const fixedDetailImage = detailImage ? fixImageUrl(detailImage) : undefined
+      if (!productRecordId) continue
 
-      notionImageCache.set(productId, {
-        images: fixedImages,
-        detailImage: fixedDetailImage,
-      })
+      // Get image URL from the image field - try _raw field first (contains full URL info)
+      const imageFieldRaw = record[`${PRODUCT_IMAGE_FIELDS.image}_raw`]
+      const imageField = imageFieldRaw || getFieldValue(record, PRODUCT_IMAGE_FIELDS.image, 'Image')
+      const imageUrl = extractImageUrl(imageField)
+
+      if (!imageUrl) continue
+
+      // Get image type (Primary, Gallery, Detail, etc.)
+      const imageType = String(getFieldValue(record, PRODUCT_IMAGE_FIELDS.imageType, 'Image Type') || 'Gallery')
+
+      // Get or create cache entry for this product
+      if (!knackImageCache.has(productRecordId)) {
+        knackImageCache.set(productRecordId, {
+          primaryImage: undefined,
+          galleryImages: [],
+          detailImage: undefined,
+        })
+      }
+      const cached = knackImageCache.get(productRecordId)!
+
+      // Categorize the image
+      if (imageType === 'Primary') {
+        cached.primaryImage = imageUrl
+      } else if (imageType === 'Detail') {
+        cached.detailImage = imageUrl
+      } else {
+        // Gallery, Catalog, Variant all go into gallery
+        cached.galleryImages.push(imageUrl)
+      }
     }
+
+    console.log(`[Knack Images] Preloaded images for ${knackImageCache.size} products`)
   } catch (error) {
-    console.error('Error preloading Notion images:', error)
+    console.error('Error preloading Knack images:', error)
   }
 }
 
+// Extract product record ID from connection field
+function extractProductRecordId(connection: unknown): string | null {
+  if (!connection) return null
 
+  // If it's a string, could be ID or HTML
+  if (typeof connection === 'string') {
+    // Check for Knack ID in class attribute (HTML format)
+    if (connection.includes('<')) {
+      const classMatch = connection.match(/class="([a-f0-9]{24})"/)
+      if (classMatch && classMatch[1]) {
+        return classMatch[1]
+      }
+    }
+    // Plain string ID
+    if (/^[a-f0-9]{24}$/.test(connection)) {
+      return connection
+    }
+    return null
+  }
 
-// Helper to extract images from Notion file property
-function extractNotionImages(props: Record<string, unknown>): { images: string[]; detailImage?: string } {
-  type FileItem = { external?: { url?: string }; file?: { url?: string }; name?: string; type?: string }
-  
-  // Extract images from Files property
-  const imagesProp = props['Images'] as { files?: FileItem[]; type?: string } | undefined
-  const imageFiles = imagesProp?.files || []
-  
-  const images: string[] = imageFiles.map((f: FileItem) => {
-    return f.external?.url || f.file?.url || ''
-  }).filter(Boolean)
+  // If it's an array, get first item's ID
+  if (Array.isArray(connection) && connection.length > 0) {
+    const first = connection[0]
+    if (typeof first === 'string') {
+      if (/^[a-f0-9]{24}$/.test(first)) {
+        return first
+      }
+      // Try to extract from HTML
+      const match = first.match(/class="([a-f0-9]{24})"/)
+      if (match && match[1]) {
+        return match[1]
+      }
+    }
+    if (typeof first === 'object' && first !== null) {
+      const obj = first as Record<string, unknown>
+      if (obj.id) return String(obj.id)
+    }
+  }
 
-  // Extract detail image
-  const detailImageProp = props['Detail Image'] as { files?: FileItem[]; type?: string } | undefined
-  const detailFiles = detailImageProp?.files || []
-  const detailLongImage = detailFiles.length > 0 
-    ? (detailFiles[0].external?.url || detailFiles[0].file?.url) 
-    : undefined
+  // If it's an object with id
+  if (typeof connection === 'object' && connection !== null) {
+    const obj = connection as Record<string, unknown>
+    if (obj.id) return String(obj.id)
+  }
 
-  // Images extracted from Notion properties
-
-  return { images, detailImage: detailLongImage }
+  return null
 }
 
-// Fix image URLs that were stored with localhost - replace with production URL
-function fixImageUrl(url: string): string {
-  if (!url) return url
-  
-  // Get the production base URL
-  const productionUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.ca'
-  
-  // Replace localhost URLs with production URL
-  if (url.includes('localhost:3000')) {
-    return url.replace(/https?:\/\/localhost:3000/g, productionUrl)
-  }
-  
-  return url
-}
+// Get images from Knack cache (by product record ID)
+function getImagesForProduct(productRecordId: string): { images: string[]; detailImage?: string } {
+  const cached = knackImageCache.get(productRecordId)
 
-// Get images from Notion cache (preloaded)
-async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{ images: string[]; detailImage?: string }> {
-  // Return cached images from Notion
-  const cached = notionImageCache.get(productId)
-  
-  if (cached && cached.images.length > 0) {
-    return cached
+  if (cached) {
+    // Build images array: primary first, then gallery
+    const images: string[] = []
+    if (cached.primaryImage) {
+      images.push(cached.primaryImage)
+    }
+    images.push(...cached.galleryImages)
+
+    if (images.length > 0) {
+      return {
+        images,
+        detailImage: cached.detailImage,
+      }
+    }
   }
-  
+
   // Fallback to placeholder if no images found
   return {
     images: ['/images/placeholder.png'],
@@ -133,118 +153,6 @@ async function fetchImagesFromNotion(productId: string, _sku: string): Promise<{
   }
 }
 
-// Create or update product images in Notion (linked by ID/SKU)
-async function syncImagesToNotion(
-  productId: string,
-  sku: string,
-  images: string[],
-  detailImage?: string
-): Promise<void> {
-  const notion = getNotionClient()
-  if (!notion) {
-    console.warn('Notion not configured, skipping image sync')
-    return
-  }
-
-  const PRODUCTS_DB = process.env.NOTION_DATABASE_ID_PRODUCTS
-  if (!PRODUCTS_DB) {
-    console.warn('NOTION_DATABASE_ID_PRODUCTS not set, skipping image sync')
-    return
-  }
-
-  try {
-    // Convert image URLs to Notion file format
-    // For local paths (starting with /), convert to full URLs
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://pzairsoft.ca'
-    
-    const imageFiles = images
-      .filter((url) => url && !url.includes('placeholder.png'))
-      .map((url) => {
-        // If it's already a full URL, use as external
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-          return { external: { url } }
-        }
-        // Convert local paths to full URLs
-        const fullUrl = url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/images/${url}`
-        return { external: { url: fullUrl } }
-      })
-
-    const detailImageFile = detailImage
-      ? (() => {
-          if (detailImage.startsWith('http://') || detailImage.startsWith('https://')) {
-            return [{ external: { url: detailImage } }]
-          }
-          const fullUrl = detailImage.startsWith('/') 
-            ? `${baseUrl}${detailImage}` 
-            : `${baseUrl}/images/${detailImage}`
-          return [{ external: { url: fullUrl } }]
-        })()
-      : undefined
-
-    // Try to find existing product in Notion by ID or SKU
-    let response = await notion.databases.query({
-      database_id: PRODUCTS_DB,
-      filter: {
-        property: 'ID',
-        rich_text: { equals: productId },
-      },
-    })
-
-    if (response.results.length === 0) {
-      response = await notion.databases.query({
-        database_id: PRODUCTS_DB,
-        filter: {
-          property: 'SKU',
-          rich_text: { equals: sku },
-        },
-      })
-    }
-
-    if (response.results.length > 0) {
-      // Update existing Notion page with images
-      const pageId = response.results[0].id
-      const updateProps: Record<string, unknown> = {}
-      if (imageFiles.length > 0) {
-        updateProps.Images = { files: imageFiles }
-      }
-      if (detailImageFile) {
-        updateProps['Detail Image'] = { files: detailImageFile }
-      }
-      await notion.pages.update({
-        page_id: pageId,
-        properties: updateProps as any, // Notion API types are complex, using any for flexibility
-      })
-    } else {
-      // Create new Notion page with minimal data (just for images)
-      // Link it to Knack by ID and SKU
-      const createProps: Record<string, unknown> = {
-        ID: {
-          rich_text: [{ text: { content: productId } }],
-        },
-        SKU: {
-          rich_text: [{ text: { content: sku } }],
-        },
-        Title: {
-          title: [{ text: { content: `Image record for ${productId}` } }],
-        },
-        Status: { select: { name: 'Active' } },
-      }
-      if (imageFiles.length > 0) {
-        createProps.Images = { files: imageFiles }
-      }
-      if (detailImageFile) {
-        createProps['Detail Image'] = { files: detailImageFile }
-      }
-      await notion.pages.create({
-        parent: { database_id: PRODUCTS_DB },
-        properties: createProps as any, // Notion API types are complex, using any for flexibility
-      })
-    }
-  } catch (error) {
-    console.error('Error syncing images to Notion:', error)
-    // Don't throw - image sync failure shouldn't break product creation
-  }
-}
 
 // Knack object keys (from config or env)
 const PRODUCTS_OBJECT_KEY = KNACK_CONFIG.objectKeys.products
@@ -294,14 +202,25 @@ function extractImageUrl(imageField: unknown): string {
   // If it's an object (Knack file field format)
   if (typeof imageField === 'object' && imageField !== null) {
     const fileObj = imageField as Record<string, unknown>
-    
-    // Knack file fields typically have 'url' property
+
+    // Knack file fields typically have 'url' property (use for API access)
+    // or 'signed_url_inline' (for direct S3 access without download prompt)
+    // or 'signed_url' (for S3 access with download prompt)
+    if (fileObj.signed_url_inline && typeof fileObj.signed_url_inline === 'string') {
+      return fileObj.signed_url_inline
+    }
+    if (fileObj.signed_url && typeof fileObj.signed_url === 'string') {
+      return fileObj.signed_url
+    }
     if (fileObj.url && typeof fileObj.url === 'string') {
       return fileObj.url
     }
     // Sometimes it's nested in 'file' object
     if (fileObj.file && typeof fileObj.file === 'object') {
       const file = fileObj.file as Record<string, unknown>
+      if (file.signed_url_inline && typeof file.signed_url_inline === 'string') {
+        return file.signed_url_inline
+      }
       if (file.url && typeof file.url === 'string') {
         return file.url
       }
@@ -326,31 +245,32 @@ function extractImageUrl(imageField: unknown): string {
 }
 
 // Map Knack record to ProductRuntime type
-// Images are fetched from cache (preloaded from Notion)
+// Images are fetched from Knack's Product Images table (object_14)
 async function mapKnackRecordToProduct(record: Record<string, unknown>, variants: ProductVariant[] = []): Promise<ProductRuntime> {
   const knackRecordId = String(record.id || '')
   if (!knackRecordId) {
     throw new Error('Product record must have a Knack record ID')
   }
-  
+
   // Use ID field (field_45) as product ID for URLs, fallback to SKU, then Knack record ID
   const idField = getFieldValue(record, PRODUCT_FIELDS.id, 'ID')
   const sku = String(getFieldValue(record, PRODUCT_FIELDS.sku, 'SKU') || '')
-  
+
   // Product ID for URLs: prefer ID field, then SKU, then Knack record ID as last resort
-  const productId = idField 
-    ? String(idField) 
+  const productId = idField
+    ? String(idField)
     : (sku || knackRecordId)
-  
-  // Fetch images from Notion cache (preloaded)
-  const imageData = await fetchImagesFromNotion(productId, sku)
-  const notionImages = imageData.images || []
-  const notionDetailImage = imageData.detailImage
-  
-  // Use Notion images if available, otherwise fallback to placeholder
-  const images = notionImages.length > 0 ? notionImages : ['/images/placeholder.png']
+
+  // Get images from Knack cache (preloaded from Product Images table)
+  // Use knackRecordId to match product connection in images table
+  const imageData = getImagesForProduct(knackRecordId)
+  const knackImages = imageData.images || []
+  const knackDetailImage = imageData.detailImage
+
+  // Use Knack images if available, otherwise fallback to placeholder
+  const images = knackImages.length > 0 ? knackImages : ['/images/placeholder.png']
   const primaryImage = images[0] || '/images/placeholder.png'
-  const detailLongImage = notionDetailImage
+  const detailLongImage = knackDetailImage
 
   // Get status directly from record - no price-based overrides
   const status = (getFieldValue(record, PRODUCT_FIELDS.status, 'Status') || 'Active') as ProductRuntime['status']
@@ -454,7 +374,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
   }
 
   // Preload all images from Notion (single batch query)
-  await preloadNotionImages()
+  await preloadKnackImages()
 
   // Fetch only products with status=Active
   const products = await getKnackRecords<Record<string, unknown>>(PRODUCTS_OBJECT_KEY, {
@@ -617,7 +537,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
   }
 
   // Preload all images from Notion (single batch query)
-  await preloadNotionImages()
+  await preloadKnackImages()
 
   let product: Record<string, unknown> | null = null
   
@@ -804,28 +724,22 @@ export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<s
     }
   }
 
-  // Sync images to Notion (linked by productId and SKU)
-  if (data.images && data.images.length > 0) {
-    await syncImagesToNotion(productId, data.sku, data.images, data.detailLongImage)
-  }
+  // Images are managed via Knack's Product Images table (object_14)
+  // Use the upload_to_knack.py script to upload images
 
   return productId
 }
 
 /**
  * Update an existing product
- * Data updates go to Knack, image updates go to Notion (linked by ID/SKU)
+ * Data updates go to Knack. Images are managed via Product Images table (object_14).
  */
 export async function updateProduct(productId: string, data: Partial<ProductRuntime>): Promise<void> {
   if (!isKnackConfigured()) {
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
 
-  // Get current product to find SKU for Notion linking
-  const currentProduct = await fetchProductById(productId)
-  const sku = data.sku || currentProduct?.sku || ''
-
-  // Update product data in Knack (excluding images)
+  // Update product data in Knack
   const updateData: Record<string, unknown> = {}
 
   if (data.title !== undefined) updateData[PRODUCT_FIELDS.title] = data.title
@@ -837,20 +751,9 @@ export async function updateProduct(productId: string, data: Partial<ProductRunt
   if (data.stock !== undefined) updateData[PRODUCT_FIELDS.stock] = data.stock
   if (data.url !== undefined) updateData[PRODUCT_FIELDS.url] = data.url
   if (data.sku !== undefined) updateData[PRODUCT_FIELDS.sku] = data.sku
-  // Don't update images in Knack - they're stored in Notion
-  // Clear image fields if they're being updated
-  if (data.images !== undefined || data.primaryImage !== undefined || data.detailLongImage !== undefined) {
-    updateData[PRODUCT_FIELDS.primaryImage] = null
-    updateData[PRODUCT_FIELDS.images] = null
-    updateData[PRODUCT_FIELDS.detailImage] = null
-  }
 
   await updateKnackRecord(PRODUCTS_OBJECT_KEY, productId, updateData)
 
-  // Sync images to Notion if they're being updated
-  if (data.images !== undefined || data.detailLongImage !== undefined) {
-    const images = data.images || currentProduct?.images || []
-    const detailImage = data.detailLongImage !== undefined ? data.detailLongImage : currentProduct?.detailLongImage
-    await syncImagesToNotion(productId, sku, images, detailImage)
-  }
+  // Note: Images are managed via Knack's Product Images table (object_14)
+  // Use the admin dashboard or upload_to_knack.py script to manage images
 }
