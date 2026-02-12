@@ -1,13 +1,52 @@
 #!/usr/bin/env python3
 """
-Seed existing products.json to Knack database
+Seed existing products.json to Knack database.
+Validates all translations are complete before seeding.
 """
 import json
 import sys
+import re
 from knack_integration import KnackAPI, PRODUCT_FIELDS, VARIANT_FIELDS, PRODUCTS_OBJECT_KEY, VARIANTS_OBJECT_KEY
 
-def seed_json_to_knack(json_path):
-    """Seed products from JSON file to Knack"""
+
+def has_chinese(text: str) -> bool:
+    """Check if text contains Chinese characters"""
+    return any('\u4e00' <= ch <= '\u9fff' for ch in (text or ''))
+
+
+def validate_translations(products: list) -> dict:
+    """Validate all translations are complete before seeding to Knack"""
+    issues = {
+        'untranslated_titles': [],
+        'untranslated_variants': [],
+        'missing_titles': [],
+        'missing_skus': [],
+    }
+    
+    for idx, product in enumerate(products, 1):
+        title_en = product.get('title_en', '')
+        
+        if not title_en or title_en == product.get('title_zh', ''):
+            issues['missing_titles'].append(f"Product {idx}: {product.get('product_id', '?')}")
+        elif has_chinese(title_en):
+            issues['untranslated_titles'].append(
+                f"Product {idx}: {title_en[:60]}"
+            )
+        
+        if not product.get('product_sku'):
+            issues['missing_skus'].append(f"Product {idx}: {product.get('product_id', '?')}")
+        
+        for v_idx, variant in enumerate(product.get('variants', []), 1):
+            variant_en = variant.get('variant_name_en', '')
+            if has_chinese(variant_en):
+                issues['untranslated_variants'].append(
+                    f"Product {idx} Variant {v_idx}: {variant_en[:50]}"
+                )
+    
+    return issues
+
+def seed_json_to_knack(json_path, force=False):
+    """Seed products from JSON file to Knack. Validates translations first."""
     print(f"🚀 Seeding products from {json_path} to Knack\n")
     
     # Load JSON
@@ -16,6 +55,41 @@ def seed_json_to_knack(json_path):
     
     products = data.get('products', [])
     print(f"📦 Found {len(products)} products\n")
+    
+    # ── VALIDATE TRANSLATIONS ──
+    print("🔍 Validating translations...")
+    issues = validate_translations(products)
+    
+    total_issues = (len(issues['untranslated_titles']) + len(issues['untranslated_variants']) +
+                    len(issues['missing_titles']) + len(issues['missing_skus']))
+    
+    if total_issues > 0:
+        print(f"\n⚠️  Translation validation found {total_issues} issues:")
+        if issues['missing_titles']:
+            print(f"   ❌ Missing titles: {len(issues['missing_titles'])}")
+            for item in issues['missing_titles'][:5]:
+                print(f"      - {item}")
+        if issues['untranslated_titles']:
+            print(f"   ❌ Untranslated titles (Chinese remaining): {len(issues['untranslated_titles'])}")
+            for item in issues['untranslated_titles'][:5]:
+                print(f"      - {item}")
+        if issues['untranslated_variants']:
+            print(f"   ❌ Untranslated variants (Chinese remaining): {len(issues['untranslated_variants'])}")
+            for item in issues['untranslated_variants'][:10]:
+                print(f"      - {item}")
+        if issues['missing_skus']:
+            print(f"   ⚠️  Missing SKUs: {len(issues['missing_skus'])}")
+        
+        if not force:
+            print(f"\n❌ SEEDING BLOCKED - translations incomplete!")
+            print(f"   Run the scraper first to translate all products:")
+            print(f"   → python ai_scraper.py --test")
+            print(f"   Or force seeding with: --force")
+            sys.exit(1)
+        else:
+            print(f"\n⚠️  Forcing seed despite {total_issues} validation issues...")
+    else:
+        print(f"   ✅ All translations validated - zero Chinese text remaining\n")
     
     # Initialize Knack API
     try:
@@ -97,5 +171,12 @@ def seed_json_to_knack(json_path):
     print(f"   Variants: {total_variants}")
 
 if __name__ == '__main__':
-    json_path = 'ai_scraper_output/products.json'
-    seed_json_to_knack(json_path)
+    import argparse
+    parser = argparse.ArgumentParser(description='Seed products.json to Knack database')
+    parser.add_argument('--input', default='ai_scraper_output/products.json',
+                       help='Input JSON file path')
+    parser.add_argument('--force', action='store_true',
+                       help='Force seeding even if translations are incomplete')
+    args = parser.parse_args()
+    
+    seed_json_to_knack(args.input, force=args.force)

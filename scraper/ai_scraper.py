@@ -487,6 +487,220 @@ English translation (no quotes, no explanation):"""
         
         return result
 
+    # ================================================================
+    # BULK TRANSLATION - 2 API calls total for entire scrape session
+    # ================================================================
+
+    def bulk_translate_products(self, titles_zh: List[str]) -> List[str]:
+        """
+        Translate ALL product titles in ONE DeepSeek API call.
+        
+        Sends a numbered list of all Chinese titles, gets numbered translations back.
+        Massive token savings vs individual calls.
+        
+        Args:
+            titles_zh: List of Chinese product titles
+            
+        Returns:
+            List of English translations (same order)
+        """
+        if not self.client:
+            print("   ⚠️  No API key - using rule-based translation for titles")
+            return [self._rule_based_translate(t) for t in titles_zh]
+        
+        if not titles_zh:
+            return []
+        
+        print(f"\n   🚀 Bulk translating {len(titles_zh)} product titles in 1 API call...")
+        self._rate_limit_wait()
+        
+        # Build numbered list
+        numbered = "\n".join([f"{i+1}. {t}" for i, t in enumerate(titles_zh)])
+        
+        prompt = f"""Translate these Chinese airsoft/tactical product titles to English for a professional milsim equipment catalog.
+
+**KEEP True Identifiers (DO NOT remove):**
+- Model numbers/codes: L4G24, HL-ACC-73-T, PEQ-15, DBAL-A3, MK18, 6094, MICH 2000
+- Platform names: M4, AK, Glock, 1911, AR-15, MP5
+- Camo patterns: MultiCam, M81 Woodland, AOR1, Flecktarn, CP Camo
+- Interface standards: Picatinny (1913), M-LOK, KeyMod, QD
+- Rail/mount types: Wilcox, Ops-Core, ARC, Unity, Reptilia
+- NV/IR terms: NVG, Night Vision, IR, Laser, PEQ, PVS-14
+- Material standards: Cordura, 500D Nylon, 6061 Aluminum
+
+**REMOVE Generic Branding + Marketing Fluff:**
+- Store names, "factory direct", "OEM/ODM", "hot sale", "premium", "high quality"
+- "tactical" when used as empty marketing, "military grade", "same as", "1:1", "replica"
+- Chinese: 爆款, 正品, 外贸, 高品质, 热销, 同款
+- Random brand words: 悟空, WOSPORT, 骏马, 战狼, FMA, TMC (unless clearly real identifier)
+- **Never invent a brand**. If uncertain, omit it.
+
+**APPLY Milsim Terminology:**
+- 快拆 → QD
+- 导轨/皮轨/20mm/1913 → Picatinny (1913)
+- 织带/MOLLE → MOLLE
+- 背心 → Plate Carrier (if tactical) or Vest
+- 夜视仪 → NVG or Night Vision
+- 头盔 → Helmet
+- Drop "战术" as generic adjective unless it distinguishes category
+
+**Colors (normalize):**
+黑色/黑 → Black, 消光黑 → Matte Black, 沙色/土黄 → Tan, 军绿/橄榄绿 → OD Green, 狼棕 → Coyote Brown, 狼灰 → Wolf Grey
+
+**Title Format:** [Model/Identifier] + [Item Type] + [Key Specs] + [Compatibility] + [Color if important]
+- Keep concise, remove filler, use Title Case
+- Example: "L4G24 NVG Mount - Aluminum - Wilcox Compatible"
+
+**Output format:** One translation per line with the SAME number prefix.
+
+Titles to translate:
+{numbered}
+
+Translations (one per line with number):"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=DEEPSEEK_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max(3000, len(titles_zh) * 50),
+                temperature=0.3,
+            )
+            
+            result_text = response.choices[0].message.content.strip()
+            translations = self._parse_numbered_response(result_text, len(titles_zh))
+            
+            print(f"   ✅ Translated {len(translations)}/{len(titles_zh)} product titles")
+            
+            # Fill any gaps with rule-based fallback
+            while len(translations) < len(titles_zh):
+                idx = len(translations)
+                translations.append(self._rule_based_translate(titles_zh[idx]))
+            
+            return translations
+            
+        except Exception as e:
+            print(f"   ❌ Bulk product translation failed: {e}")
+            print(f"   ⚠️  Falling back to rule-based translation")
+            return [self._rule_based_translate(t) for t in titles_zh]
+    
+    def bulk_translate_variants(self, names_zh: List[str]) -> List[str]:
+        """
+        Translate ALL variant names in ONE DeepSeek API call.
+        
+        Args:
+            names_zh: List of Chinese variant names (colors, sizes, styles)
+            
+        Returns:
+            List of English translations (same order)
+        """
+        if not self.client:
+            print("   ⚠️  No API key - using rule-based translation for variants")
+            return [self._rule_based_translate(t) for t in names_zh]
+        
+        if not names_zh:
+            return []
+        
+        # For very large variant lists, chunk into groups of ~200 to stay within token limits
+        MAX_PER_CALL = 200
+        if len(names_zh) > MAX_PER_CALL:
+            print(f"   📦 Large variant set ({len(names_zh)}) - chunking into {(len(names_zh) + MAX_PER_CALL - 1) // MAX_PER_CALL} API calls...")
+            all_translations = []
+            for start in range(0, len(names_zh), MAX_PER_CALL):
+                chunk = names_zh[start:start + MAX_PER_CALL]
+                chunk_translations = self.bulk_translate_variants(chunk)
+                all_translations.extend(chunk_translations)
+            return all_translations
+        
+        print(f"\n   🚀 Bulk translating {len(names_zh)} variant names in 1 API call...")
+        self._rate_limit_wait()
+        
+        # Build numbered list
+        numbered = "\n".join([f"{i+1}. {t}" for i, t in enumerate(names_zh)])
+        
+        prompt = f"""Translate these Chinese variant names (colors/sizes/styles) to English using milsim/tactical conventions.
+
+**Colors (normalize):**
+黑色/黑 → Black, 消光黑 → Matte Black, 沙色/土黄/黄褐 → Tan or Coyote Brown
+卡其 → Khaki, 泥色 → FDE, 狼棕 → Coyote Brown, 狼灰 → Wolf Grey
+军绿/橄榄绿 → OD Green, 游骑兵绿 → Ranger Green
+灰色 → Grey, CP迷彩 → CP Camo, 暗夜迷彩 → Black Camo, 丛林迷彩 → Jungle Camo
+multicam/MC → MultiCam
+
+**Sizes (normalize):**
+Standard: XXS, XS, S, M, L, XL, XXL, 2XL, 3XL, 4XL
+均码 → One Size, 通用 → Universal
+大款 → Large, 小款 → Small, 短款 → Short, 矮款 → Low Profile
+Keep numeric sizes exactly: 80-110, 85-125cm, 20cm, 30mm
+Quantity: 一个 → 1 pc, 两个 → 2 pcs, 一套 → 1 Set
+
+**Materials/Style (normalize):**
+金属 → Metal, 铝合金 → Aluminum, 尼龙 → Nylon, CNC → CNC
+标准 → Standard, 升级版 → Upgraded, 套装 → Set
+单 → Single, 双 → Dual, 左 → Left, 右 → Right
+
+**Format:** Translate to short, consistent English. If multiple dimensions, keep explicit: "FDE / QD Mount", "Black / Low Mount"
+
+**Output format:** One translation per line with the SAME number prefix.
+
+Variant names to translate:
+{numbered}
+
+Translations (one per line with number):"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=DEEPSEEK_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max(5000, len(names_zh) * 30),
+                temperature=0.3,
+            )
+            
+            result_text = response.choices[0].message.content.strip()
+            translations = self._parse_numbered_response(result_text, len(names_zh))
+            
+            print(f"   ✅ Translated {len(translations)}/{len(names_zh)} variant names")
+            
+            # Fill any gaps with rule-based fallback
+            while len(translations) < len(names_zh):
+                idx = len(translations)
+                translations.append(self._rule_based_translate(names_zh[idx]))
+            
+            return translations
+            
+        except Exception as e:
+            print(f"   ❌ Bulk variant translation failed: {e}")
+            print(f"   ⚠️  Falling back to rule-based translation")
+            return [self._rule_based_translate(t) for t in names_zh]
+    
+    def _parse_numbered_response(self, response: str, expected_count: int) -> List[str]:
+        """Parse a numbered list response (e.g., '1. Black\\n2. Tan') into ordered list"""
+        lines = response.strip().split('\n')
+        # Use dict to handle out-of-order numbers
+        by_number = {}
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Match "1. Translation" or "1) Translation"
+            match = re.match(r'^(\d+)[\.\)]\s*(.+)$', line)
+            if match:
+                idx = int(match.group(1))
+                translation = match.group(2).strip().strip('"').strip("'")
+                by_number[idx] = translation
+        
+        # Build ordered list
+        result = []
+        for i in range(1, expected_count + 1):
+            if i in by_number:
+                result.append(by_number[i])
+            else:
+                result.append("")  # Gap - will be filled by caller
+        
+        return result
+
+    # Keep old method for backward compatibility with click-based variant extraction
     def batch_translate_all(self, texts: List[str]) -> List[str]:
         """
         Batch translate a large list of Chinese texts in a single DeepSeek API call.
@@ -1067,19 +1281,19 @@ class ScrapedProduct:
     images: Dict[str, List[str]] = field(default_factory=dict)
     base_price_cny: float = 0.0
     base_price_cad: float = 0.0
+    media_folder: str = ""  # Stable folder name based on product_id
     timestamp: str = ""
 
 
 class AIScraper:
     """Main scraper with full pipeline"""
     
-    def __init__(self, headless: bool = False, dry_run: bool = False, skip_knack: bool = False, no_api: bool = False, batch_translate: bool = False):
+    def __init__(self, headless: bool = False, dry_run: bool = False, skip_knack: bool = False, no_api: bool = False):
         self.driver = None
         self.headless = headless
         self.dry_run = dry_run
         self.skip_knack = skip_knack
         self.no_api = no_api
-        self.batch_translate = batch_translate
         
         self.translator = AITranslator(no_api=no_api)
         self.parser = VariantParser()
@@ -1160,12 +1374,6 @@ class AIScraper:
         # Reset failed models for each new product - start fresh with priority order
         self.translator.reset_failed_models()
         
-        # Create media folder
-        product_folder = os.path.join(MEDIA_DIR, f"product_{index:03d}")
-        os.makedirs(product_folder, exist_ok=True)
-        
-        downloader = ImageDownloader(product_folder)
-        
         try:
             # Load page
             self.driver.get(url)
@@ -1183,11 +1391,18 @@ class AIScraper:
             # Extract product ID from URL
             product_id = self._extract_product_id(url)
             
-            # Extract Chinese title (translation will be done in batch with variants)
+            # Create media folder using product_id for stable naming
+            # This prevents image mix-ups if scraping order changes or a product fails
+            product_folder = os.path.join(MEDIA_DIR, product_id)
+            os.makedirs(product_folder, exist_ok=True)
+            
+            downloader = ImageDownloader(product_folder)
+            
+            # Extract Chinese title (translation done in batch after all products scraped)
             title_zh = self._extract_title()
             print(f"   📝 Title (ZH): {title_zh[:50]}...")
             
-            # Create product (title_en and SKU will be updated by batch processing)
+            # Create product (title_en and SKU will be updated by batch translation)
             product = ScrapedProduct(
                 url=url,
                 product_id=product_id,
@@ -1195,6 +1410,7 @@ class AIScraper:
                 title_en=title_zh,  # Placeholder, will be updated by batch
                 product_sku="",  # Will be generated after translation
                 images={'Main': [], 'Catalogue': [], 'Details': []},
+                media_folder=product_id,
                 timestamp=datetime.now().isoformat()
             )
             
@@ -1244,31 +1460,20 @@ class AIScraper:
                     # Get Chinese variant name
                     variant_zh = ' / '.join(v.option_values_zh.values()) if v.option_values_zh else v.prop_path
                     
-                    # Translate (skip if batch mode - will translate at end)
-                    if self.batch_translate:
-                        variant_en = variant_zh  # Placeholder, will be translated later
-                        parsed = {'normalized': variant_zh, 'optionType1': '', 'optionValue1': '', 'optionType2': '', 'optionValue2': ''}
-                    else:
-                        variant_en = self.translator.translate(variant_zh)
-                        parsed = self.parser.parse(variant_en)
-                    
+                    # Always defer translation - batch translate at end for efficiency
                     scraped_variant = ScrapedVariant(
                         variant_name_zh=variant_zh,
-                        variant_name_en=parsed['normalized'],
-                        option_type_1=parsed['optionType1'],
-                        option_value_1=parsed['optionValue1'],
-                        option_type_2=parsed['optionType2'],
-                        option_value_2=parsed['optionValue2'],
+                        variant_name_en=variant_zh,  # Placeholder, batch translated later
+                        option_type_1='',
+                        option_value_1='',
+                        option_type_2='',
+                        option_value_2='',
                         price_cny=v.price_cny or 0.0,
                         sku=v.sku_id or v.prop_path,
                         in_stock=v.available
                     )
                     product.variants.append(scraped_variant)
-                    
-                    if not self.batch_translate:
-                        print(f"         → {variant_zh} → {parsed['normalized']}")
-                    else:
-                        print(f"         → {variant_zh} (pending translation)")
+                    print(f"         → {variant_zh} (pending batch translation)")
             else:
                 # Fallback: click-based variant detection with screenshot price extraction
                 print("      → No structured variants, trying click detection...")
@@ -2222,49 +2427,149 @@ class AIScraper:
     def _batch_translate_all_products(self):
         """Batch translate all product titles and variants in a single API call"""
         print(f"\n{'='*60}")
-        print("📝 BATCH TRANSLATION")
+        print("📝 BATCH TRANSLATION (2 API calls)")
         print(f"{'='*60}")
         
-        # Collect all texts that need translation
-        all_texts = []
-        text_mapping = []  # (product_idx, 'title' | variant_idx)
+        # Load translation cache
+        cache = self._load_translation_cache()
+        
+        # ── PHASE 1: Collect & bulk-translate all product titles ──
+        titles_to_translate = []  # (product_idx, title_zh)
         
         for p_idx, product in enumerate(self.products):
-            # Add title
-            if product.title_zh and product.title_zh != product.title_en:
-                all_texts.append(product.title_zh)
-                text_mapping.append((p_idx, 'title'))
+            title_zh = product.title_zh or ''
+            if not title_zh or title_zh == '登录':
+                continue
+            # Check cache first
+            if title_zh in cache:
+                product.title_en = cache[title_zh]
+                print(f"   [{p_idx+1}] ✓ Cached: {cache[title_zh][:50]}")
+            elif self.translator._has_chinese(title_zh):
+                titles_to_translate.append((p_idx, title_zh))
+        
+        print(f"\n   📦 Product titles needing translation: {len(titles_to_translate)}")
+        
+        if titles_to_translate:
+            title_translations = self.translator.bulk_translate_products(
+                [t for _, t in titles_to_translate]
+            )
             
-            # Add variants
+            # Apply title translations
+            for (p_idx, title_zh), title_en in zip(titles_to_translate, title_translations):
+                self.products[p_idx].title_en = title_en
+                cache[title_zh] = title_en
+                print(f"   [{p_idx+1}] → {title_en[:60]}")
+        
+        # ── PHASE 2: Generate SKUs from translated titles ──
+        for product in self.products:
+            product.product_sku = generate_product_sku(product.title_en, product.product_id)
+        
+        # ── PHASE 3: Collect & bulk-translate all variant names ──
+        variants_to_translate = []  # (product_idx, variant_idx, variant_zh)
+        
+        for p_idx, product in enumerate(self.products):
             for v_idx, variant in enumerate(product.variants):
-                if variant.variant_name_zh and variant.variant_name_zh != variant.variant_name_en:
-                    all_texts.append(variant.variant_name_zh)
-                    text_mapping.append((p_idx, v_idx))
+                variant_zh = variant.variant_name_zh or ''
+                cache_key = f"variant:{variant_zh}"
+                
+                if cache_key in cache:
+                    parsed = self.parser.parse(cache[cache_key])
+                    variant.variant_name_en = parsed['normalized']
+                    variant.option_type_1 = parsed['optionType1']
+                    variant.option_value_1 = parsed['optionValue1']
+                    variant.option_type_2 = parsed['optionType2']
+                    variant.option_value_2 = parsed['optionValue2']
+                elif self.translator._has_chinese(variant_zh):
+                    variants_to_translate.append((p_idx, v_idx, variant_zh))
         
-        if not all_texts:
-            print("   No texts need translation")
-            return
+        print(f"\n   🏷️  Variant names needing translation: {len(variants_to_translate)}")
         
-        print(f"   Found {len(all_texts)} texts to translate")
-        
-        # Batch translate
-        translations = self.translator.batch_translate_all(all_texts)
-        
-        # Apply translations back to products
-        for (p_idx, target), translation in zip(text_mapping, translations):
-            if target == 'title':
-                self.products[p_idx].title_en = translation
-            else:
-                v_idx = target
-                # Also parse the translation into option types/values
-                parsed = self.parser.parse(translation)
+        if variants_to_translate:
+            variant_translations = self.translator.bulk_translate_variants(
+                [v for _, _, v in variants_to_translate]
+            )
+            
+            # Apply variant translations
+            for (p_idx, v_idx, variant_zh), variant_en in zip(variants_to_translate, variant_translations):
+                parsed = self.parser.parse(variant_en)
                 self.products[p_idx].variants[v_idx].variant_name_en = parsed['normalized']
                 self.products[p_idx].variants[v_idx].option_type_1 = parsed['optionType1']
                 self.products[p_idx].variants[v_idx].option_value_1 = parsed['optionValue1']
                 self.products[p_idx].variants[v_idx].option_type_2 = parsed['optionType2']
                 self.products[p_idx].variants[v_idx].option_value_2 = parsed['optionValue2']
+                cache[f"variant:{variant_zh}"] = variant_en
         
-        print(f"   ✅ Applied translations to {len(self.products)} products")
+        # ── PHASE 4: Generate variant SKUs ──
+        reset_sku_tracker()
+        for product in self.products:
+            for v_idx, variant in enumerate(product.variants):
+                variant.sku = get_unique_variant_sku(
+                    product.product_sku, variant.variant_name_en, v_idx + 1,
+                    option_type1=variant.option_type_1,
+                    option_value1=variant.option_value_1,
+                    option_type2=variant.option_type_2,
+                    option_value2=variant.option_value_2
+                )
+        
+        # ── PHASE 5: Validate translations ──
+        issues = self._validate_translations()
+        
+        # Save cache
+        self._save_translation_cache(cache)
+        
+        api_calls = (1 if titles_to_translate else 0) + (1 if variants_to_translate else 0)
+        print(f"\n   ✅ Batch translation complete")
+        print(f"      API calls made: {api_calls}")
+        print(f"      Products translated: {len(titles_to_translate)}")
+        print(f"      Variants translated: {len(variants_to_translate)}")
+        if issues['untranslated_titles'] or issues['untranslated_variants']:
+            print(f"      ⚠️  Untranslated titles: {len(issues['untranslated_titles'])}")
+            print(f"      ⚠️  Untranslated variants: {len(issues['untranslated_variants'])}")
+        else:
+            print(f"      ✅ All translations validated - zero Chinese text remaining")
+    
+    def _load_translation_cache(self) -> dict:
+        """Load translation cache from disk"""
+        cache_path = os.path.join(OUTPUT_DIR, 'translation_cache.json')
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                pass
+        return {}
+    
+    def _save_translation_cache(self, cache: dict):
+        """Save translation cache to disk"""
+        cache_path = os.path.join(OUTPUT_DIR, 'translation_cache.json')
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        with open(cache_path, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+    
+    def _validate_translations(self) -> dict:
+        """Validate all translations are complete - no Chinese text remaining"""
+        issues = {
+            'untranslated_titles': [],
+            'untranslated_variants': [],
+        }
+        
+        for product in self.products:
+            if self.translator._has_chinese(product.title_en):
+                issues['untranslated_titles'].append({
+                    'product_id': product.product_id,
+                    'title_zh': product.title_zh,
+                    'title_en': product.title_en,
+                })
+            
+            for variant in product.variants:
+                if self.translator._has_chinese(variant.variant_name_en):
+                    issues['untranslated_variants'].append({
+                        'product_id': product.product_id,
+                        'variant_zh': variant.variant_name_zh,
+                        'variant_en': variant.variant_name_en,
+                    })
+        
+        return issues
     
     def run(self, urls: List[str], test_mode: bool = False):
         """Run the full pipeline"""
@@ -2279,12 +2584,11 @@ class AIScraper:
                 urls = urls[:1]
             
             print(f"\n🚀 AI Scraper V3 - {len(urls)} URLs")
+            print("   Mode: 📝 BATCH TRANSLATE (2 API calls at end)")
             if self.dry_run:
                 print("   Mode: 🧪 DRY RUN (no Knack changes)")
             if self.skip_knack:
                 print("   Mode: ⏭️  SKIP KNACK (scrape only)")
-            if self.batch_translate:
-                print("   Mode: 📝 BATCH TRANSLATE (at end)")
             
             for i, url in enumerate(urls, 1):
                 product = self.scrape_product(url, i)
@@ -2292,9 +2596,8 @@ class AIScraper:
                     self.products.append(product)
                 time.sleep(2)
             
-            # Batch translate if requested
-            if self.batch_translate:
-                self._batch_translate_all_products()
+            # Always batch translate after all products collected
+            self._batch_translate_all_products()
             
             self._export()
             
@@ -2483,7 +2786,6 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Simulate Knack updates')
     parser.add_argument('--skip-knack', action='store_true', help='[DEPRECATED] Use default behavior instead')
     parser.add_argument('--no-api', action='store_true', help='No API calls (DOM/rule-based only)')
-    parser.add_argument('--batch-translate', action='store_true', help='Batch all translations at end (more efficient)')
     args = parser.parse_args()
     
     # Default is now to skip Knack unless --push-knack is specified
@@ -2494,7 +2796,6 @@ def main():
         dry_run=args.dry_run,
         skip_knack=skip_knack,
         no_api=args.no_api,
-        batch_translate=args.batch_translate
     )
     
     if args.login:
