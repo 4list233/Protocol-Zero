@@ -11,8 +11,10 @@ export const dynamic = 'force-dynamic'
 
 const PRODUCTS_OBJECT_KEY = KNACK_CONFIG.objectKeys.products
 const VARIANTS_OBJECT_KEY = KNACK_CONFIG.objectKeys.variants
+const PRODUCT_IMAGES_OBJECT_KEY = KNACK_CONFIG.objectKeys.productImages
 const PRODUCT_FIELDS = KNACK_CONFIG.fields.products
 const VARIANT_FIELDS = KNACK_CONFIG.fields.variants
+const PRODUCT_IMAGE_FIELDS = KNACK_CONFIG.fields.productImages
 
 // GET /api/admin/products/[id] - Get a single product with variants
 export async function GET(
@@ -106,6 +108,38 @@ export async function GET(
     // Sort variants by sortOrder
     productVariants.sort((a, b) => a.sortOrder - b.sortOrder)
 
+    // Fetch images from object_14 (Product Images table) — grouped by imageType
+    let primaryImage = ''
+    const galleryImages: string[] = []
+    let detailImage = ''
+
+    try {
+      const productImageRecords = await getKnackRecords<Record<string, unknown>>(
+        PRODUCT_IMAGES_OBJECT_KEY,
+        {
+          filters: { [PRODUCT_IMAGE_FIELDS.product]: knackRecordId },
+          sortField: PRODUCT_IMAGE_FIELDS.sortOrder,
+          sortOrder: 'asc',
+        }
+      )
+
+      for (const img of productImageRecords) {
+        const imageType = String(getFieldValue(img, PRODUCT_IMAGE_FIELDS.imageType, 'Image Type') || '')
+        const imageUrl = extractImageUrl(getFieldValue(img, PRODUCT_IMAGE_FIELDS.image, 'Image'))
+        if (!imageUrl) continue
+
+        if (imageType === 'Primary') {
+          primaryImage = imageUrl
+        } else if (imageType === 'Gallery') {
+          galleryImages.push(imageUrl)
+        } else if (imageType === 'Detail') {
+          detailImage = imageUrl
+        }
+      }
+    } catch (imgError) {
+      console.error('[Admin API] Failed to fetch product images:', imgError)
+    }
+
     // Build response
     const response = {
       id: String(getFieldValue(product, PRODUCT_FIELDS.id, 'ID') || knackRecordId),
@@ -117,9 +151,9 @@ export async function GET(
       category: String(getFieldValue(product, PRODUCT_FIELDS.category, 'Category') || ''),
       status: String(getFieldValue(product, PRODUCT_FIELDS.status, 'Status') || 'Draft'),
       url: String(getFieldValue(product, PRODUCT_FIELDS.url, 'URL') || ''),
-      primaryImage: extractImageUrl(getFieldValue(product, PRODUCT_FIELDS.primaryImage, 'Primary Image')),
-      images: extractImageUrls(getFieldValue(product, PRODUCT_FIELDS.images, 'Images')),
-      detailImage: extractImageUrl(getFieldValue(product, PRODUCT_FIELDS.detailImage, 'Detail Image')),
+      primaryImage,
+      images: galleryImages,
+      detailImage,
       variants: productVariants,
     }
 

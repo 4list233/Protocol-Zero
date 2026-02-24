@@ -68,16 +68,17 @@ def load_products(input_file: Optional[str] = None) -> Dict:
     return data
 
 
-def scan_product_images(product_index: int) -> Dict[str, List[str]]:
+def scan_product_images(media_folder: str) -> Dict[str, List[str]]:
     """
     Scan media directory for a product and collect image paths.
-    
+
     For Details, only collects the stitched Details_Long.jpg file.
     For Main and Catalogue, collects all image files.
-    
+
     Args:
-        product_index: Product index (1-based) to construct folder name (e.g., 3 for product_003)
-        
+        media_folder: The media folder name for the product (e.g., "741196802456" - Taobao product ID).
+                      This matches the 'media_folder' field in products.json.
+
     Returns:
         Dict with keys 'Main', 'Catalogue', 'Details' containing absolute image paths
     """
@@ -86,10 +87,11 @@ def scan_product_images(product_index: int) -> Dict[str, List[str]]:
         'Catalogue': [],
         'Details': []
     }
-    
-    # Construct media folder path using zero-padded index
-    folder_name = f"product_{product_index:03d}"
-    product_folder = os.path.join(MEDIA_DIR, folder_name)
+
+    if not media_folder:
+        return images
+
+    product_folder = os.path.join(MEDIA_DIR, media_folder)
     
     if not os.path.exists(product_folder):
         return images
@@ -152,6 +154,7 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
             # Build product data
             product_data = {
                 PRODUCT_FIELDS['id']: product.get('product_id', ''),
+                PRODUCT_FIELDS['sku']: product.get('product_sku', ''),
                 PRODUCT_FIELDS['title']: product_title,
                 PRODUCT_FIELDS['titleOriginal']: product.get('title_zh', ''),
                 PRODUCT_FIELDS['url']: product.get('url', ''),
@@ -180,15 +183,22 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
             # Skip out-of-stock variants
             if not v.get('in_stock', True):
                 continue
-            
+
             # Skip variants without proper English names
             variant_name = v.get('variant_name_en', '').strip()
             if not variant_name or len(variant_name) < 2:
                 skipped_count += 1
                 continue
-            
+
+            # Skip variants without a SKU (can't safely dedup without it)
+            variant_sku = v.get('sku', '').strip()
+            if not variant_sku:
+                skipped_count += 1
+                print(f"      ⚠️  Skipping variant with no SKU: {variant_name[:40]}")
+                continue
+
             in_stock_count += 1
-            
+
             # Get pricing data
             price_cny = v.get('price_cny', 0)
             shipping_cny = v.get('shipping_cny', 30)
@@ -196,9 +206,10 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
             price_cad = v.get('price_cad', 0)
             margin_standard = v.get('margin_standard', 0)
             margin_promo = v.get('margin_promo', 0)
-            
+
             variant_data = {
                 VARIANT_FIELDS['product']: [product_record_id],
+                VARIANT_FIELDS['sku']: variant_sku,
                 VARIANT_FIELDS['variantName']: variant_name,
                 VARIANT_FIELDS['optionType1']: v.get('option_type_1', ''),
                 VARIANT_FIELDS['optionValue1']: v.get('option_value_1', ''),
@@ -212,18 +223,18 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
                 VARIANT_FIELDS['marginPromo']: margin_promo,
                 VARIANT_FIELDS['status']: 'Active',
             }
-            
+
             if dry_run:
-                print(f"      → [DRY RUN] {variant_name[:40]} | ¥{price_cny} → ${cost_cad:.2f} cost → ${price_cad} sell")
+                print(f"      → [DRY RUN] {variant_name[:40]} | SKU={variant_sku[:20]} | ¥{price_cny} → ${cost_cad:.2f} cost → ${price_cad} sell")
                 continue
-            
-            # Check if variant exists (by name)
+
+            # Check if variant exists by SKU (scoped dedup - SKU is globally unique per variant)
             existing_variant = knack.find_record(
                 VARIANTS_OBJECT_KEY,
-                VARIANT_FIELDS['variantName'],
-                variant_name
+                VARIANT_FIELDS['sku'],
+                variant_sku
             )
-            
+
             if existing_variant:
                 knack.update_record(VARIANTS_OBJECT_KEY, existing_variant['id'], variant_data)
                 print(f"      → Updated: {variant_name[:35]} | ¥{price_cny} → ${price_cad}")
@@ -237,8 +248,9 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
 
         # Upload images if requested
         if with_images:
-            # Scan media directory for images using product index
-            images = scan_product_images(product_index)
+            # Scan media directory using product's media_folder (Taobao product ID)
+            media_folder = product.get('media_folder', '')
+            images = scan_product_images(media_folder)
             # Count total images
             total_images = sum(len(paths) for paths in images.values())
             if total_images > 0:

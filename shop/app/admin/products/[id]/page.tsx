@@ -13,8 +13,6 @@ import {
   Check,
   Loader2,
   GripVertical,
-  Trash2,
-  Plus,
 } from "lucide-react"
 
 type Variant = {
@@ -134,6 +132,35 @@ export default function ProductEditorPage() {
         throw new Error(data.error || "Failed to save")
       }
 
+      // Save each variant
+      if (product.variants.length > 0) {
+        const variantSaves = product.variants.map((v) =>
+          fetch(`/api/admin/variants/${v.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              variantName: v.variantName,
+              priceCad: v.priceCad,
+              priceCny: v.priceCny,
+              costCad: v.costCad,
+              stock: v.stock,
+              status: v.status,
+              optionType1: v.optionType1,
+              optionValue1: v.optionValue1,
+              optionType2: v.optionType2,
+              optionValue2: v.optionValue2,
+              marginStandard: v.marginStandard,
+              marginPromo: v.marginPromo,
+            }),
+          })
+        )
+        const variantResults = await Promise.all(variantSaves)
+        const failedCount = variantResults.filter((r) => !r.ok).length
+        if (failedCount > 0) {
+          throw new Error(`${failedCount} variant(s) failed to save`)
+        }
+      }
+
       setSuccess("Product saved successfully!")
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
@@ -248,7 +275,7 @@ export default function ProductEditorPage() {
         />
       )}
       {activeTab === "images" && (
-        <ImagesTab product={product} onChange={handleProductChange} />
+        <ImagesTab product={product} />
       )}
     </div>
   )
@@ -334,19 +361,20 @@ function ProductDetailsTab({
         <h3 className="text-lg font-semibold text-white">Pricing</h3>
 
         <div>
-          <label className="block text-sm text-zinc-400 mb-1">Base Price (CAD)</label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
-            <input
-              type="number"
-              step="0.01"
-              value={product.priceCadBase || 0}
-              onChange={(e) => onChange("priceCadBase", parseFloat(e.target.value) || 0)}
-              className="w-full pl-8 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500"
-            />
+          <label className="block text-sm text-zinc-400 mb-1">Selling Price (CAD)</label>
+          <div className="px-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-zinc-300">
+            {(() => {
+              const prices = product.variants.map((v) => v.priceCad).filter((p) => p > 0)
+              if (prices.length === 0) return <span className="text-zinc-500">No variants with price</span>
+              const min = Math.min(...prices)
+              const max = Math.max(...prices)
+              return min === max
+                ? `$${min.toFixed(2)} CAD`
+                : `From $${min.toFixed(2)} – $${max.toFixed(2)} CAD`
+            })()}
           </div>
           <p className="text-xs text-zinc-500 mt-1">
-            This is the base price. Variant prices may override this.
+            Pricing is set per variant. Edit prices in the Variants tab.
           </p>
         </div>
 
@@ -536,18 +564,24 @@ function VariantsTab({
 
 function ImagesTab({
   product,
-  onChange,
 }: {
   product: Product
-  onChange: (field: keyof Product, value: unknown) => void
 }) {
   return (
     <div className="space-y-6">
+      <div className="bg-amber-900/20 border border-amber-800/50 rounded-lg p-4">
+        <p className="text-sm text-amber-400">
+          Images are managed via the scraper pipeline. Run{" "}
+          <code className="bg-zinc-800 px-1 rounded">upload_to_knack.py --with-images</code>{" "}
+          after scraping to update product images.
+        </p>
+      </div>
+
       {/* Primary Image */}
       <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Primary Image</h3>
         <div className="flex items-start gap-6">
-          <div className="w-48 h-48 bg-zinc-800 rounded-lg overflow-hidden">
+          <div className="w-48 h-48 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
             {product.primaryImage ? (
               <Image
                 src={product.primaryImage}
@@ -562,19 +596,9 @@ function ImagesTab({
               </div>
             )}
           </div>
-          <div className="flex-1">
-            <label className="block text-sm text-zinc-400 mb-2">Image URL</label>
-            <input
-              type="url"
-              value={product.primaryImage || ""}
-              onChange={(e) => onChange("primaryImage", e.target.value)}
-              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500"
-              placeholder="https://..."
-            />
-            <p className="text-xs text-zinc-500 mt-2">
-              This is the main image shown on product cards and as the hero image.
-            </p>
-          </div>
+          {!product.primaryImage && (
+            <p className="text-sm text-zinc-500 self-center">No primary image uploaded yet.</p>
+          )}
         </div>
       </div>
 
@@ -582,7 +606,7 @@ function ImagesTab({
       <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Detail Image (Stitched)</h3>
         <div className="flex items-start gap-6">
-          <div className="w-48 h-48 bg-zinc-800 rounded-lg overflow-hidden">
+          <div className="w-48 h-48 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
             {product.detailImage ? (
               <Image
                 src={product.detailImage}
@@ -597,29 +621,26 @@ function ImagesTab({
               </div>
             )}
           </div>
-          <div className="flex-1">
-            <label className="block text-sm text-zinc-400 mb-2">Image URL</label>
-            <input
-              type="url"
-              value={product.detailImage || ""}
-              onChange={(e) => onChange("detailImage", e.target.value)}
-              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500"
-              placeholder="https://..."
-            />
-            <p className="text-xs text-zinc-500 mt-2">
-              This is the stitched/composite detail image showing product features.
+          {!product.detailImage && (
+            <p className="text-sm text-zinc-500 self-center">
+              No detail image. Run{" "}
+              <code className="bg-zinc-800 px-1 rounded text-xs">stitch_details.py</code>{" "}
+              then re-upload.
             </p>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Gallery Images */}
       <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Gallery Images</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {(product.images || []).map((img, index) => (
-            <div key={index} className="relative group">
-              <div className="w-full aspect-square bg-zinc-800 rounded-lg overflow-hidden">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">Gallery Images</h3>
+          <span className="text-sm text-zinc-500">{(product.images || []).length} image(s)</span>
+        </div>
+        {(product.images || []).length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {(product.images || []).map((img, index) => (
+              <div key={index} className="w-full aspect-square bg-zinc-800 rounded-lg overflow-hidden">
                 <Image
                   src={img}
                   alt={`Gallery ${index + 1}`}
@@ -628,29 +649,11 @@ function ImagesTab({
                   className="w-full h-full object-cover"
                 />
               </div>
-              <button
-                onClick={() => {
-                  const newImages = product.images.filter((_, i) => i !== index)
-                  onChange("images", newImages)
-                }}
-                className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={() => {
-              const url = prompt("Enter image URL:")
-              if (url) {
-                onChange("images", [...(product.images || []), url])
-              }
-            }}
-            className="w-full aspect-square bg-zinc-800 hover:bg-zinc-700 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
-          >
-            <Plus className="w-8 h-8" />
-          </button>
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-500">No gallery images uploaded yet.</p>
+        )}
       </div>
     </div>
   )

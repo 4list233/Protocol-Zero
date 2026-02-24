@@ -24,6 +24,7 @@ import csv
 import base64
 import argparse
 import hashlib
+import random
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field, asdict
@@ -72,6 +73,90 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_AI_API_KEY')  
 PAGE_LOAD_WAIT = 15
 CLICK_DELAY = 0.6
 
+# ============================================================================
+# HUMAN-LIKE BEHAVIOR CONFIG
+# ============================================================================
+# Randomized delays to mimic real browsing patterns and avoid bot detection.
+# All values in seconds — actual delay = random.uniform(min, max)
+
+HUMAN_DELAY = {
+    'page_load':        (4, 8),      # After navigating to a new page
+    'between_products': (15, 35),    # Pause between scraping different products
+    'scroll_pause':     (1.5, 4),    # After scrolling to a new section
+    'variant_click':    (0.8, 2.0),  # After clicking a variant button
+    'variant_settle':   (0.5, 1.2),  # Wait for price to update after variant click
+    'before_action':    (0.3, 0.8),  # Small pause before clicks/interactions
+    'screenshot':       (0.4, 1.0),  # Before taking a screenshot
+    'login_nav':        (2, 4),      # After navigating during login
+    'api_rate':         (0.1, 0.4),  # Between Knack API calls
+    'overlay_wait':     (8, 15),     # When no input available for captcha
+}
+
+
+def human_delay(action: str, multiplier: float = 1.0) -> float:
+    """Sleep for a random human-like duration based on the action type.
+    
+    Args:
+        action: Key from HUMAN_DELAY config
+        multiplier: Scale factor (e.g. 1.5 = 50% longer, for extra caution)
+    
+    Returns:
+        The actual delay used (seconds)
+    """
+    min_s, max_s = HUMAN_DELAY.get(action, (1, 3))
+    delay = random.uniform(min_s * multiplier, max_s * multiplier)
+    time.sleep(delay)
+    return delay
+
+
+def human_scroll(driver, target_y: int = None, smooth: bool = True):
+    """Scroll like a human — incremental with random pauses.
+    
+    If target_y is None, scrolls to a random position on the page.
+    If smooth=True, scrolls in small increments with pauses.
+    """
+    current_y = driver.execute_script("return window.pageYOffset;")
+    page_height = driver.execute_script("return document.body.scrollHeight;")
+    viewport = driver.execute_script("return window.innerHeight;")
+    
+    if target_y is None:
+        target_y = random.randint(0, max(0, page_height - viewport))
+    
+    if smooth and abs(target_y - current_y) > 300:
+        # Scroll in 3-6 increments with small pauses
+        steps = random.randint(3, 6)
+        step_size = (target_y - current_y) / steps
+        for i in range(steps):
+            next_y = int(current_y + step_size * (i + 1))
+            # Add slight jitter to each step
+            jitter = random.randint(-30, 30)
+            driver.execute_script(f"window.scrollTo(0, {next_y + jitter});")
+            time.sleep(random.uniform(0.3, 0.8))
+    else:
+        driver.execute_script(f"window.scrollTo(0, {target_y});")
+        time.sleep(random.uniform(0.5, 1.2))
+
+
+def human_browse_pause(driver):
+    """Simulate a person pausing to look at a page — random scroll + wait.
+    
+    Called between products to look like natural browsing.
+    """
+    # Sometimes scroll around the page a bit before moving on
+    if random.random() < 0.6:
+        page_height = driver.execute_script("return document.body.scrollHeight;")
+        viewport = driver.execute_script("return window.innerHeight;")
+        
+        # Scroll to a random spot
+        scroll_to = random.randint(0, max(0, page_height - viewport))
+        human_scroll(driver, scroll_to, smooth=True)
+        time.sleep(random.uniform(2, 5))
+        
+        # Maybe scroll back up
+        if random.random() < 0.4:
+            human_scroll(driver, 0, smooth=True)
+            time.sleep(random.uniform(1, 3))
+
 
 def is_tmall_url(url: str) -> bool:
     """Detect if URL is from Tmall (vs regular Taobao)"""
@@ -91,18 +176,25 @@ PRICING_CONFIG = {
     'shipping_cny': 30,           # Fixed shipping cost per item (CNY)
     'salesperson_cut': 0.10,      # 10% of revenue to salesperson
     'promoter_cut': 0.10,         # 10% to promoter (if promo code used)
-    'target_margin': 0.30,        # 30% target margin on sale price
+    'gross_margin': 0.50,         # 50% gross margin (Price = 2x Cost)
+    # Net margins:
+    #   Standard: 50% - 10% salesperson = 40% → owner keeps 30% net after overhead
+    #   Promo:    50% - 10% salesperson - 10% promoter = 30% net for owner
 }
 
 def calculate_price_cad(price_cny: float) -> dict:
     """
-    Calculate CAD pricing with margins from CNY price.
+    Calculate CAD pricing from CNY price.
     
     Formula:
     - Cost CAD = (Price CNY + Shipping CNY) × Exchange Rate
-    - Sale Price = Cost / (1 - salesperson_cut - target_margin)
+    - Sale Price = Cost / (1 - gross_margin) = Cost × 2  (50% gross margin)
     
-    Returns dict with all pricing fields.
+    Margin breakdown per sale:
+    - 50% goes to cost of goods
+    - 10% to salesperson
+    - 10% to promoter (promo only)
+    - 30% net to owner
     """
     cfg = PRICING_CONFIG
     
@@ -110,21 +202,20 @@ def calculate_price_cad(price_cny: float) -> dict:
     cost_cny = price_cny + cfg['shipping_cny']
     cost_cad = cost_cny * cfg['exchange_rate']
     
-    # Calculate sale price to achieve target margin after salesperson cut
-    # Price = Cost / (1 - salesperson% - margin%)
-    divisor = 1 - cfg['salesperson_cut'] - cfg['target_margin']
+    # Sale price at 50% gross margin: Price = Cost / (1 - 0.50) = Cost × 2
+    divisor = 1 - cfg['gross_margin']
     sale_price_cad = cost_cad / divisor if divisor > 0 else cost_cad * 2
     
-    # Round to nearest .99 for retail pricing
-    sale_price_cad = round(sale_price_cad) - 0.01
-    if sale_price_cad < 1:
-        sale_price_cad = round(cost_cad * 1.5, 2)
+    # Round up to nearest .99 for retail pricing (always round UP to protect margin)
+    sale_price_cad = int(sale_price_cad) + 0.99
+    if sale_price_cad < cost_cad * 1.5:
+        sale_price_cad = round(cost_cad * 2, 2)
     
-    # Calculate actual margins
+    # Standard margin: after salesperson cut
     revenue_after_salesperson = sale_price_cad * (1 - cfg['salesperson_cut'])
     margin_standard = (revenue_after_salesperson - cost_cad) / sale_price_cad if sale_price_cad > 0 else 0
     
-    # Promo margin (after discount + salesperson + promoter)
+    # Promo margin: 10% customer discount + salesperson + promoter
     promo_price = sale_price_cad * 0.90  # 10% customer discount
     revenue_after_cuts = promo_price * (1 - cfg['salesperson_cut'] - cfg['promoter_cut'])
     margin_promo = (revenue_after_cuts - cost_cad) / promo_price if promo_price > 0 else 0
@@ -1303,37 +1394,71 @@ class AIScraper:
         self.pending_translations: List[dict] = []  # For batch translation mode
         
     def setup_driver(self):
-        """Initialize Chrome and load cookies"""
+        """Initialize Chrome with anti-detection stealth and load cookies"""
         options = webdriver.ChromeOptions()
+        
+        # === ANTI-DETECTION: Make Chrome look like a normal browser ===
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
         options.add_argument('--remote-debugging-port=9222')
+        # Realistic user-agent (Chrome 120 on macOS)
+        options.add_argument('--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        # Disable automation flags that sites check
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        options.add_experimental_option('useAutomationExtension', False)
+        # Set realistic language/locale
+        options.add_argument('--lang=zh-CN')
+        options.add_argument('--accept-lang=zh-CN,zh;q=0.9,en;q=0.8')
         
         if self.headless:
             options.add_argument('--headless=new')
         
-        print("🚀 Starting Chrome...")
+        print("🚀 Starting Chrome (stealth mode)...")
         service = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=options)
-        self.driver.set_page_load_timeout(30)
+        self.driver.set_page_load_timeout(45)
+        
+        # Remove webdriver navigator flag (another detection vector)
+        self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            'source': '''
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en'] });
+                window.chrome = { runtime: {} };
+            '''
+        })
         
         # Load saved cookies if available
         cookies_file = os.path.join(SCRIPT_DIR, 'taobao_cookies.json')
         if os.path.exists(cookies_file):
             print("🍪 Loading saved Taobao cookies...")
             self.driver.get('https://www.taobao.com/')
-            time.sleep(2)
+            human_delay('login_nav')
             with open(cookies_file, 'r') as f:
                 cookies = json.load(f)
-                for cookie in cookies:
-                    try:
-                        self.driver.add_cookie(cookie)
-                    except:
-                        pass
-            print("✅ Cookies loaded")
+                if not cookies:
+                    print("⚠️  Cookie file is empty - run: python3 ai_scraper.py --login")
+                else:
+                    for cookie in cookies:
+                        try:
+                            self.driver.add_cookie(cookie)
+                        except:
+                            pass
+            # Reload page so cookies take effect (login session recognized)
+            self.driver.get('https://www.taobao.com/')
+            human_delay('page_load')
+            
+            # Verify login by checking for username element
+            try:
+                nick = self.driver.find_element(By.CSS_SELECTOR, '.site-nav-login-info-nick, .J_UserNick, a[class*="nick"]')
+                print(f"✅ Logged in as: {nick.text}")
+            except:
+                print("⚠️  Cookies loaded but login not detected - you may need to re-login: python3 ai_scraper.py --login")
+        else:
+            print("⚠️  No saved cookies found - run: python3 ai_scraper.py --login")
         
     def setup_knack(self):
         """Initialize Knack API"""
@@ -1357,12 +1482,19 @@ class AIScraper:
         print("⏳ Press Enter when done...")
         input()
         
+        # Navigate to taobao.com to ensure we capture all domain cookies
+        self.driver.get('https://www.taobao.com/')
+        human_delay('login_nav')
+        
         # Save cookies
         cookies = self.driver.get_cookies()
-        with open(os.path.join(SCRIPT_DIR, 'taobao_cookies.json'), 'w') as f:
-            json.dump(cookies, f)
+        if cookies:
+            with open(os.path.join(SCRIPT_DIR, 'taobao_cookies.json'), 'w') as f:
+                json.dump(cookies, f)
+            print(f"✅ Login saved! ({len(cookies)} cookies captured)")
+        else:
+            print("❌ No cookies captured - login may have failed")
         
-        print("✅ Login saved!")
         self.driver.quit()
     
     def scrape_product(self, url: str, index: int) -> Optional[ScrapedProduct]:
@@ -1377,7 +1509,7 @@ class AIScraper:
         try:
             # Load page
             self.driver.get(url)
-            time.sleep(3)
+            human_delay('page_load')
             
             # Wait for title
             try:
@@ -1387,6 +1519,11 @@ class AIScraper:
             except TimeoutException:
                 print("   ⚠️  Page timeout - may need login")
                 return None
+            
+            # Human behavior: scroll down a bit like reading the page, then back up
+            human_scroll(self.driver, random.randint(200, 600), smooth=True)
+            human_delay('scroll_pause')
+            human_scroll(self.driver, 0, smooth=False)
             
             # Extract product ID from URL
             product_id = self._extract_product_id(url)
@@ -1433,9 +1570,9 @@ class AIScraper:
                     product.images['Catalogue'].append(path)
             print(f"      → Gallery: {len(product.images['Catalogue'])} captured")
             
-            # Detail images (scroll down)
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)
+            # Detail images (scroll down — human-like incremental)
+            human_scroll(self.driver, self.driver.execute_script("return document.body.scrollHeight;"), smooth=True)
+            human_delay('scroll_pause')
             
             detail_urls = self._get_detail_image_urls()
             for i, img_url in enumerate(detail_urls[:30]):
@@ -1445,8 +1582,8 @@ class AIScraper:
             print(f"      → Details: {len(product.images['Details'])} captured")
             
             # Scroll back up
-            self.driver.execute_script("window.scrollTo(0, 0);")
-            time.sleep(1)
+            human_scroll(self.driver, 0, smooth=True)
+            human_delay('scroll_pause')
             
             # === STEP 2: EXTRACT VARIANTS ===
             print("   🔍 Extracting variants...")
@@ -1585,7 +1722,7 @@ class AIScraper:
             
             for scroll_pos in scroll_steps:
                 self.driver.execute_script(f"window.scrollTo(0, {scroll_pos});")
-                time.sleep(1.5)  # Wait for lazy load to trigger
+                human_delay('scroll_pause')  # Random wait for lazy load
             
             # STEP 2: Find detail section container
             detail_selectors = [
@@ -1740,7 +1877,7 @@ class AIScraper:
                 try:
                     input("      ↩️  Press Enter after solving...")
                 except EOFError:
-                    time.sleep(10)
+                    human_delay('overlay_wait')
         except Exception:
             pass
     
@@ -1850,9 +1987,9 @@ class AIScraper:
                 self._dismiss_overlays()
                 # Click the variant
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", v['button'])
-                time.sleep(0.2)
+                human_delay('before_action')
                 v['button'].click()
-                time.sleep(0.5)  # Wait for price to update
+                human_delay('variant_settle')  # Wait for price to update
                 
                 # Try DOM extraction first (fast, no API cost)
                 price = self._extract_current_price()
@@ -1862,7 +1999,7 @@ class AIScraper:
                     dom_failures += 1
                     screenshot_path = os.path.join(screenshots_folder, f'variant_{idx+1:03d}.png')
                     self.driver.execute_script("window.scrollTo(0, 0);")
-                    time.sleep(0.5)  # Wait for price to fully load before screenshot
+                    human_delay('screenshot')  # Wait for price to load before screenshot
                     self.driver.save_screenshot(screenshot_path)
                     price = self.translator.extract_price_from_screenshot(screenshot_path)
                     
@@ -1872,7 +2009,7 @@ class AIScraper:
                     # ALWAYS save variant hero image for variant-specific display in Shopify
                     variant_image_path = os.path.join(variant_images_folder, f'variant_{idx+1:03d}.png')
                     self.driver.execute_script("window.scrollTo(0, 0);")
-                    time.sleep(0.3)
+                    human_delay('screenshot')
                     self.driver.save_screenshot(variant_image_path)
                 
                 if price > 0:
@@ -1973,7 +2110,7 @@ class AIScraper:
         # Take screenshot for batch processing
         screenshot_path = os.path.join(screenshots_folder, 'multi_dim.png')
         self.driver.execute_script("window.scrollTo(0, 0);")
-        time.sleep(0.3)
+        human_delay('screenshot')
         self.driver.save_screenshot(screenshot_path)
         
         # Batch translate dimension options
@@ -2010,9 +2147,9 @@ class AIScraper:
             try:
                 self._dismiss_overlays()
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", opt1['button'])
-                time.sleep(0.2)
+                human_delay('before_action')
                 opt1['button'].click()
-                time.sleep(0.5)  # Wait for price to update
+                human_delay('variant_click')  # Wait for price to update
             except:
                 continue
             
@@ -2034,7 +2171,7 @@ class AIScraper:
                 try:
                     self._dismiss_overlays()
                     opt2['button'].click()
-                    time.sleep(0.5)  # Wait for price to update after click
+                    human_delay('variant_settle')  # Wait for price to update after click
                     
                     # First try DOM extraction (fast, no API cost)
                     price = self._extract_current_price()
@@ -2044,7 +2181,7 @@ class AIScraper:
                         # Take screenshot and use Vision to read price
                         screenshot_path = os.path.join(screenshots_folder, f'variant_{variant_count+1:03d}.png')
                         self.driver.execute_script("window.scrollTo(0, 0);")
-                        time.sleep(0.5)  # Wait for price to fully load before screenshot
+                        human_delay('screenshot')  # Wait for price to load before screenshot
                         self.driver.save_screenshot(screenshot_path)
                         price = self.translator.extract_price_from_screenshot(screenshot_path)
                         
@@ -2054,7 +2191,7 @@ class AIScraper:
                         # ALWAYS save variant hero image for variant-specific display in Shopify
                         variant_image_path = os.path.join(variant_images_folder, f'variant_{variant_count+1:03d}.png')
                         self.driver.execute_script("window.scrollTo(0, 0);")
-                        time.sleep(0.3)
+                        human_delay('screenshot')
                         self.driver.save_screenshot(variant_image_path)
                     
                     # Update last known price if we got a valid one
@@ -2372,7 +2509,7 @@ class AIScraper:
                 
                 # Add CAD pricing fields
                 variant_data[VARIANT_FIELDS['priceCad']] = v.price_cad
-                variant_data[VARIANT_FIELDS['costCad']] = v.cost_cad
+                variant_data[VARIANT_FIELDS['totalCostCad']] = v.cost_cad
                 variant_data[VARIANT_FIELDS['marginStandard']] = v.margin_standard  # As percentage (30.5)
                 variant_data[VARIANT_FIELDS['marginPromo']] = v.margin_promo  # As percentage (14.2)
                 
@@ -2394,7 +2531,7 @@ class AIScraper:
                     self.knack_api.create_record(VARIANTS_OBJECT_KEY, variant_data)
                     print(f"         → Knack: Created: {v.variant_name_en} @ ${v.price_cad}")
                 
-                time.sleep(0.2)  # Rate limit
+                time.sleep(0.2)  # Knack rate limit (server-side, keep short)
             
             # ============================================
             # PUSH TO NOTION (image URLs)
@@ -2594,7 +2731,12 @@ class AIScraper:
                 product = self.scrape_product(url, i)
                 if product:
                     self.products.append(product)
-                time.sleep(2)
+                
+                # Human-like pause between products (longer = safer)
+                if i < len(urls):
+                    delay = human_delay('between_products')
+                    print(f"   ⏳ Browsing pause ({delay:.0f}s) before next product...")
+                    human_browse_pause(self.driver)
             
             # Always batch translate after all products collected
             self._batch_translate_all_products()
