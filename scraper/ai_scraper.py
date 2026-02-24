@@ -2026,53 +2026,32 @@ class AIScraper:
         if dom_failures > 0:
             print(f"      → ⚠️  Used Screenshot Vision backup for {dom_failures}/{len(variant_data)} variants")
         
-        # STEP 2: Batch translate all variant names (ONE API call)
-        variant_names_zh = [v['name_zh'] for v in variant_data]
-        print(f"      → 🚀 Batch translating {len(variant_names_zh)} variants...")
-        
-        batch_result = self.translator.batch_process_product(
-            screenshot_path=os.path.join(screenshots_folder, 'price_check.png') if os.path.exists(os.path.join(screenshots_folder, 'price_check.png')) else "",
-            title_zh=product.title_zh,
-            variant_names_zh=variant_names_zh
-        )
-        
-        # Update title and generate product SKU
-        if batch_result['title_en'] and batch_result['title_en'] != product.title_zh:
-            product.title_en = batch_result['title_en']
-            product.product_sku = generate_product_sku(product.title_en, product.product_id)
-            print(f"      → 📝 Title: {product.title_en[:50]}...")
-            print(f"      → 📝 Product SKU: {product.product_sku}")
-        
-        # STEP 3: Create variant records with individual prices and descriptive SKUs
-        for i, (v, name_en) in enumerate(zip(variant_data, batch_result['variants_en'])):
-            parsed = self.parser.parse(name_en)
+        # STEP 2: Store Chinese names as placeholders — batch translation runs after all products scraped
+        print(f"      → 📦 Queued {len(variant_data)} variant names for end-of-run batch translation")
 
-            # Use individual price, fall back to batch price if 0
-            price = v['price'] if v['price'] > 0 else batch_result['price']
+        # Get fallback price from price_check screenshot (Vision only, no translation)
+        fallback_price = 0.0
+        price_check_path = os.path.join(screenshots_folder, 'price_check.png')
+        if os.path.exists(price_check_path) and not self.translator.no_api:
+            fallback_price = self.translator.extract_price_from_screenshot(price_check_path)
 
-            # Generate unique variant SKU with collision prevention
-            variant_sku = get_unique_variant_sku(
-                product.product_sku, parsed['normalized'], i+1,
-                option_type1=label,
-                option_value1=parsed['optionValue1'] or name_en,
-                option_type2=parsed['optionType2'] or "",
-                option_value2=parsed['optionValue2'] or ""
-            )
+        # STEP 3: Create variant records with Chinese placeholders (translated + SKU'd at end)
+        for i, v in enumerate(variant_data):
+            price = v['price'] if v['price'] > 0 else fallback_price
 
             product.variants.append(ScrapedVariant(
                 variant_name_zh=v['name_zh'],
-                variant_name_en=parsed['normalized'],
+                variant_name_en=v['name_zh'],   # Placeholder — replaced by batch translation
                 option_type_1=label,
-                option_value_1=parsed['optionValue1'] or name_en,
-                option_type_2=parsed['optionType2'],
-                option_value_2=parsed['optionValue2'],
+                option_value_1=v['name_zh'],    # Placeholder — replaced by batch translation
+                option_type_2=None,
+                option_value_2=None,
                 price_cny=price,
-                sku=variant_sku,
+                sku='',                          # Generated after batch translation
                 in_stock=True
             ))
 
-            print(f"         → {v['name_zh']} → {parsed['normalized']}")
-            print(f"            SKU: {variant_sku} @ ¥{price}")
+            print(f"         → {v['name_zh']} @ ¥{price}")
     
     def _extract_multi_dimension_variants(self, product: ScrapedProduct, dimensions: List[Dict], screenshots_folder: str, variant_images_folder: str):
         """
@@ -2113,27 +2092,10 @@ class AIScraper:
         human_delay('screenshot')
         self.driver.save_screenshot(screenshot_path)
         
-        # Batch translate dimension options
-        print(f"      → 🚀 Batch translating {len(dim1_options)} {dim1['label']} + {len(dim2_options)} {dim2['label']} options...")
-        
-        all_names_zh = [o['name_zh'] for o in dim1_options] + [o['name_zh'] for o in dim2_options]
-        
-        batch_result = self.translator.batch_process_product(
-            screenshot_path=screenshot_path,
-            title_zh=product.title_zh,
-            variant_names_zh=all_names_zh
-        )
-        
-        # Split translations back
-        dim1_translations = batch_result['variants_en'][:len(dim1_options)]
-        dim2_translations = batch_result['variants_en'][len(dim1_options):]
-        
-        # Update title and generate product SKU
-        if batch_result['title_en'] and batch_result['title_en'] != product.title_zh:
-            product.title_en = batch_result['title_en']
-            product.product_sku = generate_product_sku(product.title_en, product.product_id)
-            print(f"      → 📝 Title: {product.title_en[:50]}...")
-            print(f"      → 📝 Product SKU: {product.product_sku}")
+        # Use Chinese names as placeholders — batch translation runs after all products scraped
+        print(f"      → 📦 Queued {len(dim1_options)} + {len(dim2_options)} variant names for end-of-run batch translation")
+        dim1_translations = [o['name_zh'] for o in dim1_options]
+        dim2_translations = [o['name_zh'] for o in dim2_options]
         
         # Create variant combinations with INDIVIDUAL prices for each
         variant_count = 0
