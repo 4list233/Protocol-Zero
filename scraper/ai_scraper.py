@@ -708,30 +708,68 @@ Translations (one per line with number):"""
         # Build numbered list
         numbered = "\n".join([f"{i+1}. {t}" for i, t in enumerate(names_zh)])
         
-        prompt = f"""Translate these Chinese variant names (colors/sizes/styles) to English using milsim/tactical conventions.
+        prompt = f"""You are translating Chinese airsoft product variant names to English for a milsim/airsoft equipment catalog.
+These are variant selectors on product listings (e.g. color, model spec, thread type, mounting standard, bundle contents).
 
-**Colors (normalize):**
-黑色/黑 → Black, 消光黑 → Matte Black, 沙色/土黄/黄褐 → Tan or Coyote Brown
-卡其 → Khaki, 泥色 → FDE, 狼棕 → Coyote Brown, 狼灰 → Wolf Grey
-军绿/橄榄绿 → OD Green, 游骑兵绿 → Ranger Green
-灰色 → Grey, CP迷彩 → CP Camo, 暗夜迷彩 → Black Camo, 丛林迷彩 → Jungle Camo
-multicam/MC → MultiCam
+**CONTEXT: Airsoft / Milsim gear store. Translate with precision — customers use these to select exactly what they're buying.**
 
-**Sizes (normalize):**
-Standard: XXS, XS, S, M, L, XL, XXL, 2XL, 3XL, 4XL
-均码 → One Size, 通用 → Universal
-大款 → Large, 小款 → Small, 短款 → Short, 矮款 → Low Profile
-Keep numeric sizes exactly: 80-110, 85-125cm, 20cm, 30mm
-Quantity: 一个 → 1 pc, 两个 → 2 pcs, 一套 → 1 Set
+---
+**COLORS (standardize to milsim palette):**
+黑色/哑黑/消光黑 → Matte Black | 亮黑/黑色 → Black
+沙色/土黄/黄褐/沙漠黄 → Tan | 狼棕/泥色 → Coyote Brown | 卡其 → Khaki
+暗土/FDE → FDE | 军绿/橄榄绿 → OD Green | 游骑兵绿 → Ranger Green
+狼灰/灰色 → Wolf Grey | 绿色 → Green | 红色 → Red | 蓝色 → Blue
+CP迷彩/CP Camo → CP Camo | 多彩迷彩 → MultiCam | 丛林迷彩 → Jungle Camo
+暗夜迷彩 → Black Camo | 数码沙漠 → Desert Digital | 沙漠蟒 → Desert Python
 
-**Materials/Style (normalize):**
-金属 → Metal, 铝合金 → Aluminum, 尼龙 → Nylon, CNC → CNC
-标准 → Standard, 升级版 → Upgraded, 套装 → Set
-单 → Single, 双 → Dual, 左 → Left, 右 → Right
+---
+**SIZES & DIMENSIONS (keep numbers exactly):**
+Clothing: XXS XS S M L XL XXL 2XL 3XL 4XL | 均码 → One Size | 通用/通用尺码 → Universal
+Body measurements: keep exact (e.g. 80-230cm, 85-125cm)
+Hardware dimensions: keep exact with units (e.g. 30mm, 25.4mm, 14mm CCW, 14mm CW)
+Barrel thread: 14mm逆牙/逆螺纹 → 14mm CCW | 14mm正牙/正螺纹 → 14mm CW | M14 → M14
 
-**Format:** Translate to short, consistent English. If multiple dimensions, keep explicit: "FDE / QD Mount", "Black / Low Mount"
+---
+**MOUNTING & INTERFACE STANDARDS (use the standard abbreviation):**
+20mm导轨/皮轨/1913 → Picatinny (1913) | M-LOK → M-LOK | KeyMod → KeyMod
+QD快拆 → QD | 高架/高脚 → High Mount | 低架/低脚 → Low Mount | 中架 → Mid Mount
+左轮/左装 → Left Hand | 右轮/右装 → Right Hand
 
-**Output format:** One translation per line with the SAME number prefix.
+---
+**MODEL IDENTIFIERS (preserve exactly — these are the product classification):**
+Keep all model numbers, platform codes, compatibility refs exactly:
+M4/M16/AR15, AK/AKM, Glock/G17/G18/G19, 1911, MP5, HK416, SCAR, AUG
+PEQ-15, DBAL-A3, PVS-14, GPNVG-18, L4G24, MK18, 6094, JPC, MICH 2000
+X300/X400, SureFire, Streamlight, Unity, Reptilia, Wilcox, Ops-Core, ARC
+
+---
+**MATERIALS & CONSTRUCTION:**
+金属/全金属 → Full Metal | 铝合金 → Aluminum | 锌合金 → Zinc Alloy | 钢 → Steel
+尼龙/PA66 → Nylon | 考度拉 → Cordura | 1000D/500D/210D → keep as-is
+CNC → CNC | 铸造 → Cast | 注塑 → Injection Molded | 碳纤维 → Carbon Fiber
+
+---
+**BUNDLE / SET VARIANTS:**
+套装/全套 → Full Set | 单品/仅 → [Item] Only | 含...→ w/ [item]
+升级版/加强版 → Upgraded | 标准版 → Standard | 豪华版 → Deluxe
+一个/1个 → 1 pc | 两个/2个 → 2 pcs | 一套 → 1 Set
+
+---
+**OEM / BRANDING — STRIP COMPLETELY:**
+Remove: store names, "factory direct", "OEM", "1:1", "same as real", "hot sale", "high quality"
+Remove: 爆款 正品 外贸 高品质 热销 同款 厂家直销
+Remove: generic brand names (悟空, WOSPORT, 骏马, 战狼, TMC, FMA) UNLESS it's a real product identifier
+KEEP: military/government designations (PVS, DBAL, MICH, JPC, 6094, L4G24, etc.)
+
+---
+**FORMAT RULES:**
+- Use " / " to separate dimensions: "Black / 30mm", "Tan / 14mm CCW"
+- Include all meaningful specs — don't collapse "Black CNC High Mount" to just "Black"
+- Normalize units but keep exact numbers
+- If variant describes a compatibility or bundle, say so: "w/ QD Sling Mount", "Glock 17/19 Compatible"
+- Use Title Case
+
+**Output:** One translation per line, same number prefix. No explanations.
 
 Variant names to translate:
 {numbered}
@@ -2825,7 +2863,7 @@ class AIScraper:
         print(f"\n   {'='*60}")
         print(f"   💰 PRICING SUMMARY (In-Stock Only)")
         print(f"   {'='*60}")
-        print(f"   Config: ¥{PRICING_CONFIG['shipping_cny']} shipping, {PRICING_CONFIG['exchange_rate']} rate, {int(PRICING_CONFIG['target_margin']*100)}% margin")
+        print(f"   Config: ¥{PRICING_CONFIG['shipping_cny']} shipping, {PRICING_CONFIG['exchange_rate']} rate, {int(PRICING_CONFIG['gross_margin']*100)}% margin")
         print(f"   {'─'*60}")
         
         total_variants = 0

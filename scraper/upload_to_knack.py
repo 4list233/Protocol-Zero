@@ -211,6 +211,7 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
                 VARIANT_FIELDS['product']: [product_record_id],
                 VARIANT_FIELDS['sku']: variant_sku,
                 VARIANT_FIELDS['variantName']: variant_name,
+                VARIANT_FIELDS['chineseName']: v.get('variant_name_zh', ''),
                 VARIANT_FIELDS['optionType1']: v.get('option_type_1', ''),
                 VARIANT_FIELDS['optionValue1']: v.get('option_value_1', ''),
                 VARIANT_FIELDS['optionType2']: v.get('option_type_2', ''),
