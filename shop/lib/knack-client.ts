@@ -177,8 +177,8 @@ export async function getKnackRecord<T = KnackRecord>(objectKey: string, recordI
     throw new Error(`Knack API error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
-  const data = (await response.json()) as { record: T }
-  return data.record
+  const data = await response.json()
+  return data as T
 }
 
 /**
