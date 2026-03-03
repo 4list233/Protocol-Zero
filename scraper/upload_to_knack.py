@@ -230,12 +230,16 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
                 print(f"      → [DRY RUN] {variant_name[:40]} | ¥{price_cny} → ${cost_cad:.2f} cost → ${price_cad} sell")
                 continue
             
-            # Check if variant exists (by name)
-            existing_variant = knack.find_record(
+            # Check if variant exists scoped to THIS product (prevents stealing variants
+            # with generic names like 'Black' or 'Tan' from other products)
+            existing_variants = knack.find_records_with_filters(
                 VARIANTS_OBJECT_KEY,
-                VARIANT_FIELDS['variantName'],
-                variant_name
+                [
+                    {'field': VARIANT_FIELDS['variantName'], 'operator': 'is', 'value': variant_name},
+                    {'field': VARIANT_FIELDS['product'], 'operator': 'contains', 'value': product_record_id},
+                ]
             )
+            existing_variant = existing_variants[0] if existing_variants else None
             
             if existing_variant:
                 knack.update_record(VARIANTS_OBJECT_KEY, existing_variant['id'], variant_data)

@@ -155,6 +155,29 @@ class KnackAPI:
         
         return records[0] if records else None
 
+    def find_records_with_filters(self, object_key: str, filters: list) -> list:
+        """Find records matching ALL of the given filter conditions.
+        
+        Args:
+            object_key: Knack object key (e.g. 'object_6')
+            filters: List of dicts with keys 'field', 'operator', 'value'
+                     e.g. [{'field': 'field_62', 'operator': 'is', 'value': 'Black'},
+                           {'field': 'field_61', 'operator': 'contains', 'value': 'RECORD_ID'}]
+        Returns:
+            List of matching records (may be empty)
+        """
+        url = f'{KNACK_API_BASE}/objects/{object_key}/records'
+        params = {
+            'filters': json.dumps({
+                'match': 'and',
+                'rules': filters
+            })
+        }
+        response = requests.get(url, headers=self.headers, params=params)
+        if not response.ok:
+            return []
+        return response.json().get('records', [])
+
     def get_all_records(self, object_key: str, page_limit: int = 1000) -> List[Dict]:
         """Get all records from an object (paginated)"""
         all_records = []
