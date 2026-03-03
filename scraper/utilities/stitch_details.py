@@ -156,7 +156,7 @@ def main():
     else:
         product_folders = sorted([
             f for f in MEDIA_DIR.iterdir()
-            if f.is_dir() and f.name.startswith("product_")
+            if f.is_dir()
         ])
     
     if not product_folders:

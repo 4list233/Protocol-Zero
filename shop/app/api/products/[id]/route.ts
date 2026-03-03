@@ -3,7 +3,7 @@ import { fetchProductById } from '@/lib/notion-client'
 import { getCached, setCache } from '@/lib/notion-cache'
 import { sanitizeProduct, type PublicProduct } from '@/lib/api-sanitizer'
 
-export const dynamic = 'force-dynamic'
+// Allow Next.js to cache — individual product pages change infrequently
 
 // Allowed origins for product API access
 const ALLOWED_ORIGINS = [
@@ -77,7 +77,7 @@ export async function GET(
     if (cached) {
       return NextResponse.json(cached, {
         headers: { 
-          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
           'X-Cache': 'HIT'
         },
       })
@@ -95,7 +95,7 @@ export async function GET(
 
     return NextResponse.json(publicProduct, {
       headers: { 
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
         'X-Cache': 'MISS'
       },
     })

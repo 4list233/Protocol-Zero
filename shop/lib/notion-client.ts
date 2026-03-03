@@ -38,6 +38,7 @@ export type ProductRuntime = {
   primaryImage: string
   images: string[]
   detailLongImage?: string
+  variantImages?: Record<string, string>  // variantId (SKU) → imageUrl
   category?: string
   description?: string
   status?: 'Active' | 'Draft' | 'Discontinued' | 'Out of Stock'

@@ -20,7 +20,7 @@ export type PublicProductVariant = Omit<ProductVariant,
  * Sanitized product type for public API responses
  * Excludes margin, internal fields, and uses sanitized variants
  */
-export type PublicProduct = Omit<ProductRuntime, 
+export type PublicProduct = Omit<ProductRuntime,
   | 'margin'         // Remove margin percentage (sensitive)
   | 'title_original' // Remove Chinese title (not displayed)
   | 'url'            // Remove Taobao URL (not displayed, contains sensitive links)
@@ -28,8 +28,10 @@ export type PublicProduct = Omit<ProductRuntime,
   | 'stock'          // Remove product-level stock (only variant stock is used)
   | 'price_cad'      // Remove product-level price (always 0, only variant prices used)
   | 'variants'
+  | 'variantImages'  // Will be converted from Map to Record
 > & {
   variants?: PublicProductVariant[]
+  variantImages?: Record<string, string>  // Converted from Map for JSON serialization
 }
 
 /**
@@ -63,11 +65,18 @@ export function sanitizeProduct(product: ProductRuntime): PublicProduct {
     stock,            // Remove product-level stock (only variant stock is used)
     price_cad,        // Remove product-level price (always 0, only variant prices used)
     variants,
+    variantImages,
     ...publicProduct
   } = product
-  
+
+  // Convert variantImages Map to plain object for JSON serialization
+  const variantImagesObj = variantImages
+    ? Object.fromEntries(variantImages)
+    : undefined
+
   return {
     ...publicProduct,
+    variantImages: variantImagesObj as any,  // Will be Record<string, string> in JSON
     variants: variants?.map(sanitizeVariant),
   }
 }

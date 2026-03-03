@@ -4,18 +4,19 @@ Upload to Knack & Sync to Notion
 ================================
 
 Separate script to upload scraped products to Knack and sync media to Notion.
-Run this AFTER manual review of scraped data and images.
+Run this AFTER scraping and translation.
 
 Usage:
-    python upload_to_knack.py                 # Upload all products from products.json
+    python upload_to_knack.py                 # Upload all products from products_translated.json
     python upload_to_knack.py --dry-run       # Preview without making changes
     python upload_to_knack.py --sync-media    # Also sync media to public/images
     python upload_to_knack.py --product-id 5  # Upload specific product only
 
 Prerequisites:
-    1. Run scraper first: python ai_scraper.py
-    2. Review and stitch images manually
-    3. Ensure Knack credentials in .env
+    1. Run scraper: python ai_scraper.py
+    2. Run translation: python translate_deepseek.py
+    3. Review images (automatic stitching)
+    4. Ensure Knack credentials in .env
 """
 
 import os
@@ -46,17 +47,18 @@ from knack_integration import (
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'ai_scraper_output')
 MEDIA_DIR = os.path.join(SCRIPT_DIR, 'ai_scraper_output', 'media')
-JSON_OUTPUT = os.path.join(OUTPUT_DIR, 'products.json')
+JSON_OUTPUT = os.path.join(OUTPUT_DIR, 'products_translated.json')  # Use translated file by default
 SYNC_MEDIA_SCRIPT = os.path.join(SCRIPT_DIR, '..', 'shared', 'scripts', 'sync-media.js')
 
 
 def load_products(input_file: Optional[str] = None) -> Dict:
-    """Load products from products.json or specified file"""
+    """Load products from products_translated.json or specified file"""
     json_file = input_file if input_file else JSON_OUTPUT
-    
+
     if not os.path.exists(json_file):
-        print(f"❌ No products.json found at {json_file}")
+        print(f"❌ No products file found at {json_file}")
         print("   Run the scraper first: python ai_scraper.py")
+        print("   Then translate: python translate_deepseek.py")
         sys.exit(1)
     
     with open(json_file, 'r', encoding='utf-8') as f:
@@ -74,42 +76,41 @@ def scan_product_images(media_folder: str) -> Dict[str, List[str]]:
 
     For Details, only collects the stitched Details_Long.jpg file.
     For Main and Catalogue, collects all image files.
+    For Variant, collects all variant-specific images from variant_screenshots folder.
 
     Args:
-        media_folder: The media folder name for the product (e.g., "741196802456" - Taobao product ID).
-                      This matches the 'media_folder' field in products.json.
+        media_folder: Media folder name (e.g., '817287036106' or 'product_001')
 
     Returns:
-        Dict with keys 'Main', 'Catalogue', 'Details' containing absolute image paths
+        Dict with keys 'Main', 'Catalogue', 'Details', 'Variant' containing absolute image paths
     """
     images = {
         'Main': [],
         'Catalogue': [],
-        'Details': []
+        'Details': [],
+        'Variant': []
     }
 
-    if not media_folder:
-        return images
-
+    # Use the actual media folder name from JSON
     product_folder = os.path.join(MEDIA_DIR, media_folder)
-    
+
     if not os.path.exists(product_folder):
         return images
-    
+
     # Scan Main folder
     main_folder = os.path.join(product_folder, 'Main')
     if os.path.exists(main_folder):
         for file in sorted(os.listdir(main_folder)):
             if file.lower().endswith(('.jpg', '.jpeg', '.png')) and not file.startswith('.'):
                 images['Main'].append(os.path.join(main_folder, file))
-    
+
     # Scan Catalogue folder
     catalogue_folder = os.path.join(product_folder, 'Catalogue')
     if os.path.exists(catalogue_folder):
         for file in sorted(os.listdir(catalogue_folder)):
             if file.lower().endswith(('.jpg', '.jpeg', '.png')) and not file.startswith('.'):
                 images['Catalogue'].append(os.path.join(catalogue_folder, file))
-    
+
     # Scan Details folder - ONLY collect Details_Long.jpg (the stitched image)
     details_folder = os.path.join(product_folder, 'Details')
     if os.path.exists(details_folder):
@@ -122,7 +123,14 @@ def scan_product_images(media_folder: str) -> Dict[str, List[str]]:
                 if file.lower() == 'details_long.jpg':
                     images['Details'].append(os.path.join(details_folder, file))
                     break
-    
+
+    # Scan variant_screenshots folder
+    variant_folder = os.path.join(product_folder, 'variant_screenshots')
+    if os.path.exists(variant_folder):
+        for file in sorted(os.listdir(variant_folder)):
+            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')) and not file.startswith('.'):
+                images['Variant'].append(os.path.join(variant_folder, file))
+
     return images
 
 
@@ -154,7 +162,6 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
             # Build product data
             product_data = {
                 PRODUCT_FIELDS['id']: product.get('product_id', ''),
-                PRODUCT_FIELDS['sku']: product.get('product_sku', ''),
                 PRODUCT_FIELDS['title']: product_title,
                 PRODUCT_FIELDS['titleOriginal']: product.get('title_zh', ''),
                 PRODUCT_FIELDS['url']: product.get('url', ''),
@@ -183,22 +190,15 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
             # Skip out-of-stock variants
             if not v.get('in_stock', True):
                 continue
-
+            
             # Skip variants without proper English names
             variant_name = v.get('variant_name_en', '').strip()
             if not variant_name or len(variant_name) < 2:
                 skipped_count += 1
                 continue
-
-            # Skip variants without a SKU (can't safely dedup without it)
-            variant_sku = v.get('sku', '').strip()
-            if not variant_sku:
-                skipped_count += 1
-                print(f"      ⚠️  Skipping variant with no SKU: {variant_name[:40]}")
-                continue
-
+            
             in_stock_count += 1
-
+            
             # Get pricing data
             price_cny = v.get('price_cny', 0)
             shipping_cny = v.get('shipping_cny', 30)
@@ -206,12 +206,10 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
             price_cad = v.get('price_cad', 0)
             margin_standard = v.get('margin_standard', 0)
             margin_promo = v.get('margin_promo', 0)
-
+            
             variant_data = {
                 VARIANT_FIELDS['product']: [product_record_id],
-                VARIANT_FIELDS['sku']: variant_sku,
                 VARIANT_FIELDS['variantName']: variant_name,
-                VARIANT_FIELDS['chineseName']: v.get('variant_name_zh', ''),
                 VARIANT_FIELDS['optionType1']: v.get('option_type_1', ''),
                 VARIANT_FIELDS['optionValue1']: v.get('option_value_1', ''),
                 VARIANT_FIELDS['optionType2']: v.get('option_type_2', ''),
@@ -224,18 +222,18 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
                 VARIANT_FIELDS['marginPromo']: margin_promo,
                 VARIANT_FIELDS['status']: 'Active',
             }
-
+            
             if dry_run:
-                print(f"      → [DRY RUN] {variant_name[:40]} | SKU={variant_sku[:20]} | ¥{price_cny} → ${cost_cad:.2f} cost → ${price_cad} sell")
+                print(f"      → [DRY RUN] {variant_name[:40]} | ¥{price_cny} → ${cost_cad:.2f} cost → ${price_cad} sell")
                 continue
-
-            # Check if variant exists by SKU (scoped dedup - SKU is globally unique per variant)
+            
+            # Check if variant exists (by name)
             existing_variant = knack.find_record(
                 VARIANTS_OBJECT_KEY,
-                VARIANT_FIELDS['sku'],
-                variant_sku
+                VARIANT_FIELDS['variantName'],
+                variant_name
             )
-
+            
             if existing_variant:
                 knack.update_record(VARIANTS_OBJECT_KEY, existing_variant['id'], variant_data)
                 print(f"      → Updated: {variant_name[:35]} | ¥{price_cny} → ${price_cad}")
@@ -249,17 +247,18 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
 
         # Upload images if requested
         if with_images:
-            # Scan media directory using product's media_folder (Taobao product ID)
-            media_folder = product.get('media_folder', '')
+            # Get media folder from JSON, fallback to sequential naming
+            media_folder = product.get('media_folder', f"product_{product_index:03d}")
+            # Scan media directory for images using actual folder name
             images = scan_product_images(media_folder)
             # Count total images
             total_images = sum(len(paths) for paths in images.values())
             if total_images > 0:
-                print(f"   🖼️  Uploading {total_images} images...")
-                img_count = upload_product_images(knack, product_record_id, images, dry_run)
+                print(f"   🖼️  Uploading {total_images} images from {media_folder}...")
+                img_count = upload_product_images(knack, product_record_id, images, product.get('variants', []), dry_run)
                 print(f"   → Uploaded {img_count} images")
             else:
-                print(f"   ⚠️  No images found in media folder")
+                print(f"   ⚠️  No images found in media folder: {media_folder}")
 
         return product_record_id
 
@@ -274,6 +273,7 @@ def upload_product_images(
     knack: KnackAPI,
     product_record_id: str,
     images: Dict,
+    variants: List[Dict] = None,
     dry_run: bool = False
 ) -> int:
     """
@@ -282,8 +282,9 @@ def upload_product_images(
     Args:
         knack: KnackAPI instance
         product_record_id: The Knack record ID of the product (used for field_188 connection)
-        images: Dict with keys 'Main', 'Catalogue', 'Details' containing image paths
+        images: Dict with keys 'Main', 'Catalogue', 'Details', 'Variant' containing image paths
                 Note: Details should contain ONLY the stitched Details_Long.jpg file
+        variants: List of variant dicts with 'sku' keys (needed for linking variant images)
         dry_run: If True, just preview without uploading
 
     Returns:
@@ -296,7 +297,12 @@ def upload_product_images(
         'Main': IMAGE_TYPES['primary'],      # Primary images
         'Catalogue': IMAGE_TYPES['gallery'],  # Gallery images
         'Details': IMAGE_TYPES['detail'],     # Detail image (stitched Details_Long.jpg)
+        'Variant': IMAGE_TYPES['variant'],   # Variant-specific images
     }
+
+    # Ensure variants is a list
+    if variants is None:
+        variants = []
 
     for category, image_paths in images.items():
         if not image_paths:
@@ -316,7 +322,17 @@ def upload_product_images(
             actual_type = IMAGE_TYPES['primary'] if category == 'Main' and idx == 0 else image_type
 
             if dry_run:
-                print(f"      → [DRY RUN] Would upload: {os.path.basename(image_path)} ({actual_type})")
+                dry_run_msg = f"      → [DRY RUN] Would upload: {os.path.basename(image_path)} ({actual_type})"
+                # Show variant linking info in dry run
+                if category == 'Variant':
+                    import re
+                    match = re.match(r'variant_(\d+)\.', os.path.basename(image_path))
+                    if match and variants:
+                        variant_index = int(match.group(1)) - 1
+                        if 0 <= variant_index < len(variants):
+                            variant_sku = variants[variant_index].get('sku', 'N/A')
+                            dry_run_msg += f" variantId={variant_sku}"
+                print(dry_run_msg)
                 uploaded_count += 1
                 continue
 
@@ -327,7 +343,7 @@ def upload_product_images(
                     alt_text = "Product details (stitched long image)"
                 else:
                     alt_text = f"{category} image {idx + 1}"
-                
+
                 # Use product_record_id for connection field (same as variants use for field_61)
                 image_record_data = {
                     PRODUCT_IMAGE_FIELDS['product']: [product_record_id],
@@ -336,6 +352,20 @@ def upload_product_images(
                     PRODUCT_IMAGE_FIELDS['altText']: alt_text,
                     PRODUCT_IMAGE_FIELDS['name']: os.path.basename(image_path),
                 }
+
+                # Link variant images to their variants via variantId (SKU)
+                if category == 'Variant':
+                    import re
+                    # Extract variant index from filename: variant_001.png → 0 (0-based)
+                    match = re.match(r'variant_(\d+)\.', os.path.basename(image_path))
+                    if match and variants:
+                        variant_index = int(match.group(1)) - 1  # 1-based to 0-based
+                        if 0 <= variant_index < len(variants):
+                            variant_sku = variants[variant_index].get('sku', '')
+                            if variant_sku:
+                                image_record_data[PRODUCT_IMAGE_FIELDS['variantId']] = variant_sku
+                                alt_text = f"Variant: {variants[variant_index].get('variant_name_en', 'Unknown')}"
+                                image_record_data[PRODUCT_IMAGE_FIELDS['altText']] = alt_text
 
                 result = knack.create_record(PRODUCT_IMAGES_OBJECT_KEY, image_record_data)
                 image_record_id = result['id']
@@ -404,7 +434,7 @@ Examples:
     parser.add_argument('--product-id', type=int,
                         help='Upload only this product ID (1-based index)')
     parser.add_argument('--input', type=str,
-                        help='Input JSON file (default: ai_scraper_output/products.json)')
+                        help='Input JSON file (default: ai_scraper_output/products_translated.json)')
     args = parser.parse_args()
     
     print("\n" + "="*60)

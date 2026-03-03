@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { useAuth } from "@/lib/auth-context"
 import type { ProductVariant } from "./products"
 
 // ============ CONFIGURATION ============
@@ -121,6 +122,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [promoCode, setPromoCode] = useState<PromoCode | null>(null)
   const [mounted, setMounted] = useState(false)
+  const { user } = useAuth()
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -142,6 +144,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
       savePromo(promoCode)
     }
   }, [promoCode, mounted])
+
+  // ============ SERVER SYNC (logged-in users only) ============
+
+  // On login: load cart from Knack and override local state
+  useEffect(() => {
+    if (!user || !mounted) return
+    user.getIdToken().then(token =>
+      fetch('/api/user/data', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.cart && Array.isArray(data.cart) && data.cart.length > 0) {
+            setItems(data.cart)
+          }
+        })
+        .catch(() => {}) // silent — keep localStorage on error
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, mounted])
+
+  // On cart change: debounce sync to Knack (logged-in users only)
+  useEffect(() => {
+    if (!user || !mounted) return
+    const timer = setTimeout(() => {
+      user.getIdToken().then(token =>
+        fetch('/api/user/cart', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ items }),
+        }).catch(() => {})
+      )
+    }, 2000) // 2s debounce — avoids hammering on rapid changes
+    return () => clearTimeout(timer)
+  }, [items, user, mounted])
 
   // ============ COMPUTED VALUES ============
 

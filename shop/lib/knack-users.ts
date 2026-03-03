@@ -188,3 +188,49 @@ export async function updateUser(
   await updateKnackRecord(USERS_OBJECT_KEY, id, updates)
 }
 
+/**
+ * Save user persistent data (cart + recently viewed) to Knack
+ * Looks up the user by Firebase UID, then writes the data fields.
+ */
+export async function saveUserData(
+  firebaseUid: string,
+  data: { cartJson?: string; recentlyViewed?: string }
+): Promise<void> {
+  if (!isKnackConfigured()) return
+
+  const records = await getKnackRecords<Record<string, unknown>>(USERS_OBJECT_KEY, {
+    filters: { [USER_FIELDS.userId]: firebaseUid },
+  })
+  if (records.length === 0) return
+
+  const knackId = String(records[0].id || '')
+  const updates: Record<string, unknown> = {
+    [USER_FIELDS.updatedAt]: new Date().toISOString(),
+  }
+  if (data.cartJson !== undefined) updates[USER_FIELDS.cartJson] = data.cartJson
+  if (data.recentlyViewed !== undefined) updates[USER_FIELDS.recentlyViewed] = data.recentlyViewed
+
+  await updateKnackRecord(USERS_OBJECT_KEY, knackId, updates)
+}
+
+/**
+ * Load user persistent data (cart + recently viewed) from Knack
+ * Returns raw JSON strings — caller parses them.
+ */
+export async function loadUserData(
+  firebaseUid: string
+): Promise<{ cartJson: string; recentlyViewed: string }> {
+  if (!isKnackConfigured()) return { cartJson: '', recentlyViewed: '' }
+
+  const records = await getKnackRecords<Record<string, unknown>>(USERS_OBJECT_KEY, {
+    filters: { [USER_FIELDS.userId]: firebaseUid },
+  })
+  if (records.length === 0) return { cartJson: '', recentlyViewed: '' }
+
+  const record = records[0]
+  return {
+    cartJson: String(getFieldValue(record, USER_FIELDS.cartJson, 'Cart Data') || ''),
+    recentlyViewed: String(getFieldValue(record, USER_FIELDS.recentlyViewed, 'Recently Viewed') || ''),
+  }
+}
+

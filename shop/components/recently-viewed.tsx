@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getRecentlyViewed } from "@/lib/recently-viewed"
+import { getRecentlyViewed, setRecentlyViewed } from "@/lib/recently-viewed"
+import { useAuth } from "@/lib/auth-context"
 import Link from "next/link"
 import Image from "next/image"
 import type { RuntimeProduct } from "@/lib/products"
@@ -13,6 +14,25 @@ interface RecentlyViewedProps {
 export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
   const [products, setProducts] = useState<RuntimeProduct[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
+
+  // On login: load recently viewed from server and sync to localStorage
+  useEffect(() => {
+    if (!user) return
+    user.getIdToken().then(token =>
+      fetch('/api/user/data', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.recentlyViewed && Array.isArray(data.recentlyViewed) && data.recentlyViewed.length > 0) {
+            setRecentlyViewed(data.recentlyViewed)
+          }
+        })
+        .catch(() => {})
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid])
 
   useEffect(() => {
     const loadRecentlyViewed = async () => {

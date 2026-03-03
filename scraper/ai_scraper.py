@@ -708,68 +708,30 @@ Translations (one per line with number):"""
         # Build numbered list
         numbered = "\n".join([f"{i+1}. {t}" for i, t in enumerate(names_zh)])
         
-        prompt = f"""You are translating Chinese airsoft product variant names to English for a milsim/airsoft equipment catalog.
-These are variant selectors on product listings (e.g. color, model spec, thread type, mounting standard, bundle contents).
+        prompt = f"""Translate these Chinese variant names (colors/sizes/styles) to English using milsim/tactical conventions.
 
-**CONTEXT: Airsoft / Milsim gear store. Translate with precision — customers use these to select exactly what they're buying.**
+**Colors (normalize):**
+黑色/黑 → Black, 消光黑 → Matte Black, 沙色/土黄/黄褐 → Tan or Coyote Brown
+卡其 → Khaki, 泥色 → FDE, 狼棕 → Coyote Brown, 狼灰 → Wolf Grey
+军绿/橄榄绿 → OD Green, 游骑兵绿 → Ranger Green
+灰色 → Grey, CP迷彩 → CP Camo, 暗夜迷彩 → Black Camo, 丛林迷彩 → Jungle Camo
+multicam/MC → MultiCam
 
----
-**COLORS (standardize to milsim palette):**
-黑色/哑黑/消光黑 → Matte Black | 亮黑/黑色 → Black
-沙色/土黄/黄褐/沙漠黄 → Tan | 狼棕/泥色 → Coyote Brown | 卡其 → Khaki
-暗土/FDE → FDE | 军绿/橄榄绿 → OD Green | 游骑兵绿 → Ranger Green
-狼灰/灰色 → Wolf Grey | 绿色 → Green | 红色 → Red | 蓝色 → Blue
-CP迷彩/CP Camo → CP Camo | 多彩迷彩 → MultiCam | 丛林迷彩 → Jungle Camo
-暗夜迷彩 → Black Camo | 数码沙漠 → Desert Digital | 沙漠蟒 → Desert Python
+**Sizes (normalize):**
+Standard: XXS, XS, S, M, L, XL, XXL, 2XL, 3XL, 4XL
+均码 → One Size, 通用 → Universal
+大款 → Large, 小款 → Small, 短款 → Short, 矮款 → Low Profile
+Keep numeric sizes exactly: 80-110, 85-125cm, 20cm, 30mm
+Quantity: 一个 → 1 pc, 两个 → 2 pcs, 一套 → 1 Set
 
----
-**SIZES & DIMENSIONS (keep numbers exactly):**
-Clothing: XXS XS S M L XL XXL 2XL 3XL 4XL | 均码 → One Size | 通用/通用尺码 → Universal
-Body measurements: keep exact (e.g. 80-230cm, 85-125cm)
-Hardware dimensions: keep exact with units (e.g. 30mm, 25.4mm, 14mm CCW, 14mm CW)
-Barrel thread: 14mm逆牙/逆螺纹 → 14mm CCW | 14mm正牙/正螺纹 → 14mm CW | M14 → M14
+**Materials/Style (normalize):**
+金属 → Metal, 铝合金 → Aluminum, 尼龙 → Nylon, CNC → CNC
+标准 → Standard, 升级版 → Upgraded, 套装 → Set
+单 → Single, 双 → Dual, 左 → Left, 右 → Right
 
----
-**MOUNTING & INTERFACE STANDARDS (use the standard abbreviation):**
-20mm导轨/皮轨/1913 → Picatinny (1913) | M-LOK → M-LOK | KeyMod → KeyMod
-QD快拆 → QD | 高架/高脚 → High Mount | 低架/低脚 → Low Mount | 中架 → Mid Mount
-左轮/左装 → Left Hand | 右轮/右装 → Right Hand
+**Format:** Translate to short, consistent English. If multiple dimensions, keep explicit: "FDE / QD Mount", "Black / Low Mount"
 
----
-**MODEL IDENTIFIERS (preserve exactly — these are the product classification):**
-Keep all model numbers, platform codes, compatibility refs exactly:
-M4/M16/AR15, AK/AKM, Glock/G17/G18/G19, 1911, MP5, HK416, SCAR, AUG
-PEQ-15, DBAL-A3, PVS-14, GPNVG-18, L4G24, MK18, 6094, JPC, MICH 2000
-X300/X400, SureFire, Streamlight, Unity, Reptilia, Wilcox, Ops-Core, ARC
-
----
-**MATERIALS & CONSTRUCTION:**
-金属/全金属 → Full Metal | 铝合金 → Aluminum | 锌合金 → Zinc Alloy | 钢 → Steel
-尼龙/PA66 → Nylon | 考度拉 → Cordura | 1000D/500D/210D → keep as-is
-CNC → CNC | 铸造 → Cast | 注塑 → Injection Molded | 碳纤维 → Carbon Fiber
-
----
-**BUNDLE / SET VARIANTS:**
-套装/全套 → Full Set | 单品/仅 → [Item] Only | 含...→ w/ [item]
-升级版/加强版 → Upgraded | 标准版 → Standard | 豪华版 → Deluxe
-一个/1个 → 1 pc | 两个/2个 → 2 pcs | 一套 → 1 Set
-
----
-**OEM / BRANDING — STRIP COMPLETELY:**
-Remove: store names, "factory direct", "OEM", "1:1", "same as real", "hot sale", "high quality"
-Remove: 爆款 正品 外贸 高品质 热销 同款 厂家直销
-Remove: generic brand names (悟空, WOSPORT, 骏马, 战狼, TMC, FMA) UNLESS it's a real product identifier
-KEEP: military/government designations (PVS, DBAL, MICH, JPC, 6094, L4G24, etc.)
-
----
-**FORMAT RULES:**
-- Use " / " to separate dimensions: "Black / 30mm", "Tan / 14mm CCW"
-- Include all meaningful specs — don't collapse "Black CNC High Mount" to just "Black"
-- Normalize units but keep exact numbers
-- If variant describes a compatibility or bundle, say so: "w/ QD Sling Mount", "Glock 17/19 Compatible"
-- Use Title Case
-
-**Output:** One translation per line, same number prefix. No explanations.
+**Output format:** One translation per line with the SAME number prefix.
 
 Variant names to translate:
 {numbered}
@@ -1391,6 +1353,7 @@ class ScrapedVariant:
     price_cny: float
     sku: str  # Changed from sku_key to sku - this is the full descriptive SKU
     in_stock: bool = True
+    image_path: str = ""  # Path to variant-specific hero image
     # Calculated pricing fields
     shipping_cny: float = 0.0
     cost_cad: float = 0.0
@@ -1865,7 +1828,35 @@ class AIScraper:
         
         print(f"      → Found {len(urls)} detail image URLs")
         return urls
-    
+
+    def _capture_hero_image(self, output_path: str) -> bool:
+        """
+        Capture the main product/hero image element instead of full page.
+        Returns True if successful, False if fallback to full page was needed.
+        """
+        main_image_selectors = [
+            'img.mainPic--vMTLgVPN',           # Primary selector
+            'div[class*="mainPic"] img',       # Container-based
+            'div[class*="PicGallery"] img',    # Gallery container
+        ]
+
+        for selector in main_image_selectors:
+            try:
+                img_element = self.driver.find_element(By.CSS_SELECTOR, selector)
+                # Ensure element is visible and loaded
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", img_element)
+                human_delay('screenshot')
+                img_element.screenshot(output_path)
+                return True
+            except:
+                continue
+
+        # Fallback: full page screenshot
+        self.driver.execute_script("window.scrollTo(0, 0);")
+        human_delay('screenshot')
+        self.driver.save_screenshot(output_path)
+        return False
+
     def _extract_variants_by_click(self, product: ScrapedProduct, product_folder: str):
         """
         OPTIMIZED: Detect variants and process with SINGLE API call.
@@ -2046,9 +2037,9 @@ class AIScraper:
                 else:
                     # ALWAYS save variant hero image for variant-specific display in Shopify
                     variant_image_path = os.path.join(variant_images_folder, f'variant_{idx+1:03d}.png')
-                    self.driver.execute_script("window.scrollTo(0, 0);")
-                    human_delay('screenshot')
-                    self.driver.save_screenshot(variant_image_path)
+                    success = self._capture_hero_image(variant_image_path)
+                    if not success:
+                        print(f"         ⚠️  Using full-page screenshot for variant {idx+1}")
                 
                 if price > 0:
                     v['price'] = price
@@ -2064,32 +2055,57 @@ class AIScraper:
         if dom_failures > 0:
             print(f"      → ⚠️  Used Screenshot Vision backup for {dom_failures}/{len(variant_data)} variants")
         
-        # STEP 2: Store Chinese names as placeholders — batch translation runs after all products scraped
-        print(f"      → 📦 Queued {len(variant_data)} variant names for end-of-run batch translation")
+        # STEP 2: Batch translate all variant names (ONE API call)
+        variant_names_zh = [v['name_zh'] for v in variant_data]
+        print(f"      → 🚀 Batch translating {len(variant_names_zh)} variants...")
+        
+        batch_result = self.translator.batch_process_product(
+            screenshot_path=os.path.join(screenshots_folder, 'price_check.png') if os.path.exists(os.path.join(screenshots_folder, 'price_check.png')) else "",
+            title_zh=product.title_zh,
+            variant_names_zh=variant_names_zh
+        )
+        
+        # Update title and generate product SKU
+        if batch_result['title_en'] and batch_result['title_en'] != product.title_zh:
+            product.title_en = batch_result['title_en']
+            product.product_sku = generate_product_sku(product.title_en, product.product_id)
+            print(f"      → 📝 Title: {product.title_en[:50]}...")
+            print(f"      → 📝 Product SKU: {product.product_sku}")
+        
+        # STEP 3: Create variant records with individual prices and descriptive SKUs
+        for i, (v, name_en) in enumerate(zip(variant_data, batch_result['variants_en'])):
+            parsed = self.parser.parse(name_en)
 
-        # Get fallback price from price_check screenshot (Vision only, no translation)
-        fallback_price = 0.0
-        price_check_path = os.path.join(screenshots_folder, 'price_check.png')
-        if os.path.exists(price_check_path) and not self.translator.no_api:
-            fallback_price = self.translator.extract_price_from_screenshot(price_check_path)
+            # Use individual price, fall back to batch price if 0
+            price = v['price'] if v['price'] > 0 else batch_result['price']
 
-        # STEP 3: Create variant records with Chinese placeholders (translated + SKU'd at end)
-        for i, v in enumerate(variant_data):
-            price = v['price'] if v['price'] > 0 else fallback_price
+            # Generate unique variant SKU with collision prevention
+            variant_sku = get_unique_variant_sku(
+                product.product_sku, parsed['normalized'], i+1,
+                option_type1=label,
+                option_value1=parsed['optionValue1'] or name_en,
+                option_type2=parsed['optionType2'] or "",
+                option_value2=parsed['optionValue2'] or ""
+            )
+
+            # Build image path for this variant
+            variant_image_path = os.path.join(variant_images_folder, f'variant_{i+1:03d}.png')
 
             product.variants.append(ScrapedVariant(
                 variant_name_zh=v['name_zh'],
-                variant_name_en=v['name_zh'],   # Placeholder — replaced by batch translation
+                variant_name_en=parsed['normalized'],
                 option_type_1=label,
-                option_value_1=v['name_zh'],    # Placeholder — replaced by batch translation
-                option_type_2=None,
-                option_value_2=None,
+                option_value_1=parsed['optionValue1'] or name_en,
+                option_type_2=parsed['optionType2'],
+                option_value_2=parsed['optionValue2'],
                 price_cny=price,
-                sku='',                          # Generated after batch translation
-                in_stock=True
+                sku=variant_sku,
+                in_stock=True,
+                image_path=variant_image_path
             ))
 
-            print(f"         → {v['name_zh']} @ ¥{price}")
+            print(f"         → {v['name_zh']} → {parsed['normalized']}")
+            print(f"            SKU: {variant_sku} @ ¥{price}")
     
     def _extract_multi_dimension_variants(self, product: ScrapedProduct, dimensions: List[Dict], screenshots_folder: str, variant_images_folder: str):
         """
@@ -2130,10 +2146,27 @@ class AIScraper:
         human_delay('screenshot')
         self.driver.save_screenshot(screenshot_path)
         
-        # Use Chinese names as placeholders — batch translation runs after all products scraped
-        print(f"      → 📦 Queued {len(dim1_options)} + {len(dim2_options)} variant names for end-of-run batch translation")
-        dim1_translations = [o['name_zh'] for o in dim1_options]
-        dim2_translations = [o['name_zh'] for o in dim2_options]
+        # Batch translate dimension options
+        print(f"      → 🚀 Batch translating {len(dim1_options)} {dim1['label']} + {len(dim2_options)} {dim2['label']} options...")
+        
+        all_names_zh = [o['name_zh'] for o in dim1_options] + [o['name_zh'] for o in dim2_options]
+        
+        batch_result = self.translator.batch_process_product(
+            screenshot_path=screenshot_path,
+            title_zh=product.title_zh,
+            variant_names_zh=all_names_zh
+        )
+        
+        # Split translations back
+        dim1_translations = batch_result['variants_en'][:len(dim1_options)]
+        dim2_translations = batch_result['variants_en'][len(dim1_options):]
+        
+        # Update title and generate product SKU
+        if batch_result['title_en'] and batch_result['title_en'] != product.title_zh:
+            product.title_en = batch_result['title_en']
+            product.product_sku = generate_product_sku(product.title_en, product.product_id)
+            print(f"      → 📝 Title: {product.title_en[:50]}...")
+            print(f"      → 📝 Product SKU: {product.product_sku}")
         
         # Create variant combinations with INDIVIDUAL prices for each
         variant_count = 0
@@ -2190,9 +2223,9 @@ class AIScraper:
                     else:
                         # ALWAYS save variant hero image for variant-specific display in Shopify
                         variant_image_path = os.path.join(variant_images_folder, f'variant_{variant_count+1:03d}.png')
-                        self.driver.execute_script("window.scrollTo(0, 0);")
-                        human_delay('screenshot')
-                        self.driver.save_screenshot(variant_image_path)
+                        success = self._capture_hero_image(variant_image_path)
+                        if not success:
+                            print(f"         ⚠️  Using full-page screenshot for variant {variant_count+1}")
                     
                     # Update last known price if we got a valid one
                     if price > 0:
@@ -2201,19 +2234,20 @@ class AIScraper:
                         # Fall back to last known price
                         price = last_known_price
                     
-                    variant_count += 1
-
                     # Create combined variant
                     combined_name = f"{name1_en} / {name2_en}"
 
                     # Generate unique variant SKU with collision prevention
                     variant_sku = get_unique_variant_sku(
-                        product.product_sku, combined_name, variant_count,
+                        product.product_sku, combined_name, variant_count + 1,
                         option_type1=dim1['label'],
                         option_value1=name1_en,
                         option_type2=dim2['label'],
                         option_value2=name2_en
                     )
+
+                    # Build image path for this variant
+                    variant_img_path = os.path.join(variant_images_folder, f'variant_{variant_count+1:03d}.png')
 
                     product.variants.append(ScrapedVariant(
                         variant_name_zh=f"{opt1['name_zh']} / {opt2['name_zh']}",
@@ -2224,8 +2258,11 @@ class AIScraper:
                         option_value_2=name2_en,
                         price_cny=price,
                         sku=variant_sku,
-                        in_stock=True
+                        in_stock=True,
+                        image_path=variant_img_path
                     ))
+
+                    variant_count += 1
 
                     print(f"         → {opt1['name_zh']}/{opt2['name_zh']} → {combined_name}")
                     print(f"            SKU: {variant_sku} @ ¥{price}")
@@ -2509,7 +2546,7 @@ class AIScraper:
                 
                 # Add CAD pricing fields
                 variant_data[VARIANT_FIELDS['priceCad']] = v.price_cad
-                variant_data[VARIANT_FIELDS['totalCostCad']] = v.cost_cad
+                variant_data[VARIANT_FIELDS['costCad']] = v.cost_cad
                 variant_data[VARIANT_FIELDS['marginStandard']] = v.margin_standard  # As percentage (30.5)
                 variant_data[VARIANT_FIELDS['marginPromo']] = v.margin_promo  # As percentage (14.2)
                 
@@ -2721,7 +2758,10 @@ class AIScraper:
                 urls = urls[:1]
             
             print(f"\n🚀 AI Scraper V3 - {len(urls)} URLs")
-            print("   Mode: 📝 BATCH TRANSLATE (2 API calls at end)")
+            if self.no_api:
+                print("   Mode: 📦 SCRAPE ONLY (no translation - use translate_deepseek.py after)")
+            else:
+                print("   Mode: 📝 TRANSLATE (during scraping)")
             if self.dry_run:
                 print("   Mode: 🧪 DRY RUN (no Knack changes)")
             if self.skip_knack:
@@ -2737,9 +2777,13 @@ class AIScraper:
                     delay = human_delay('between_products')
                     print(f"   ⏳ Browsing pause ({delay:.0f}s) before next product...")
                     human_browse_pause(self.driver)
-            
-            # Always batch translate after all products collected
-            self._batch_translate_all_products()
+
+            # Batch translate after all products collected (only if not in no-api mode)
+            if not self.no_api:
+                self._batch_translate_all_products()
+            else:
+                print(f"\n⏭️  Skipping translation (scrape-only mode)")
+                print(f"   Run translate_deepseek.py to translate later")
             
             self._export()
             
@@ -2863,7 +2907,7 @@ class AIScraper:
         print(f"\n   {'='*60}")
         print(f"   💰 PRICING SUMMARY (In-Stock Only)")
         print(f"   {'='*60}")
-        print(f"   Config: ¥{PRICING_CONFIG['shipping_cny']} shipping, {PRICING_CONFIG['exchange_rate']} rate, {int(PRICING_CONFIG['gross_margin']*100)}% margin")
+        print(f"   Config: ¥{PRICING_CONFIG['shipping_cny']} shipping, {PRICING_CONFIG['exchange_rate']} rate, {int(PRICING_CONFIG['gross_margin']*100)}% gross margin")
         print(f"   {'─'*60}")
         
         total_variants = 0
@@ -2927,17 +2971,22 @@ def main():
     parser.add_argument('--push-knack', action='store_true', help='Push to Knack after scraping (default: scrape only)')
     parser.add_argument('--dry-run', action='store_true', help='Simulate Knack updates')
     parser.add_argument('--skip-knack', action='store_true', help='[DEPRECATED] Use default behavior instead')
-    parser.add_argument('--no-api', action='store_true', help='No API calls (DOM/rule-based only)')
+    parser.add_argument('--translate', action='store_true', help='Translate during scraping (default: scrape only, translate later with translate_deepseek.py)')
+    parser.add_argument('--no-api', action='store_true', help='[DEPRECATED] Use default behavior instead (scraper now scrapes-only by default)')
     args = parser.parse_args()
-    
+
     # Default is now to skip Knack unless --push-knack is specified
     skip_knack = not args.push_knack
-    
+
+    # Default is now to skip translation unless --translate is specified
+    # This saves API costs by allowing bulk translation later
+    no_api = not args.translate
+
     scraper = AIScraper(
         headless=args.headless,
         dry_run=args.dry_run,
         skip_knack=skip_knack,
-        no_api=args.no_api,
+        no_api=no_api,
     )
     
     if args.login:

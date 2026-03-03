@@ -3,7 +3,8 @@ import { fetchProducts, type ProductRuntime } from '@/lib/notion-client'
 import { getCached, setCache } from '@/lib/notion-cache'
 import { sanitizeProducts, type PublicProduct } from '@/lib/api-sanitizer'
 
-export const dynamic = 'force-dynamic'
+// Allow Next.js to cache this route — products change infrequently
+// CDN will serve cached responses for up to 5 min (s-maxage below)
 
 // Allowed origins for product API access
 const ALLOWED_ORIGINS = [
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
     if (cached) {
       return NextResponse.json(cached, {
         headers: { 
-          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
           'X-Cache': 'HIT'
         },
       })
@@ -86,7 +87,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(publicProducts, {
       headers: { 
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
         'X-Cache': 'MISS'
       },
     })

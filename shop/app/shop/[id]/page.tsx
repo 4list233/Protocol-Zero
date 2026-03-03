@@ -2,19 +2,22 @@
 
 import { useRouter } from "next/navigation"
 import { useCart } from "@/lib/cart-context"
+import { useAuth } from "@/lib/auth-context"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect, use, useRef } from "react"
+import { useState, useEffect, use, useRef, useMemo } from "react"
 import type { RuntimeProduct } from "../../../lib/products"
 import { CartDrawer } from "@/components/cart-drawer"
 import { useToast } from "@/components/toast-provider"
 import { ArrowLeft, ShoppingCart, ChevronDown } from "lucide-react"
 import MultiVariantSelector from "@/components/multi-variant-selector"
+import { addRecentlyViewed } from "@/lib/recently-viewed"
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { addToast } = useToast()
   const { addItem, addonsUnlocked } = useCart()
+  const { user } = useAuth()
   const { id } = use(params)
   const [product, setProduct] = useState<RuntimeProduct | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,6 +45,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           setValidImages(['/images/placeholder.png'])
         }
         
+        // Track this product as recently viewed
+        addRecentlyViewed(id, user ? () => user.getIdToken() : undefined)
+
         setLoading(false)
       })
       .catch(err => {
@@ -81,9 +87,35 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   if (!selectedVariantId && defaultVariant) {
     setSelectedVariantId(defaultVariant.id)
   }
-  
-  // Use validated images instead of raw product images
-  const images = validImages.length > 0 ? validImages : ['/images/placeholder.png']
+
+  // Get variant-specific image if available
+  const selectedVariantImage = useMemo(() => {
+    if (!selectedVariant || !product.variantImages) return null
+    // variantImages is a Record<string, string> from the API
+    return product.variantImages[selectedVariant.sku || ''] || null
+  }, [selectedVariant, product.variantImages])
+
+  // Build image array: variant image first if available, then gallery
+  const images = useMemo(() => {
+    const imageList: string[] = []
+
+    // Add variant image first if one is selected
+    if (selectedVariantImage) {
+      imageList.push(selectedVariantImage)
+    }
+
+    // Add other gallery images
+    if (validImages.length > 0) {
+      imageList.push(...validImages.filter(img => img !== selectedVariantImage))
+    }
+
+    return imageList.length > 0 ? imageList : ['/images/placeholder.png']
+  }, [selectedVariantImage, validImages])
+
+  // Reset to first image when variant changes
+  useEffect(() => {
+    setSelectedImageIndex(0)
+  }, [selectedVariantId])
 
   const scrollToDetails = () => {
     detailsRef.current?.scrollIntoView({ behavior: 'smooth' })

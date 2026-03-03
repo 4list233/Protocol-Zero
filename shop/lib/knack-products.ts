@@ -19,14 +19,12 @@ const knackImageCache = new Map<string, {
   primaryImage?: string
   galleryImages: string[]
   detailImage?: string
+  variantImages: Map<string, string>  // variantId (SKU) → imageUrl
 }>()
 
 // Preload all images from Knack's Product Images table in a single batch query
 async function preloadKnackImages(): Promise<void> {
   if (!isKnackConfigured()) return
-
-  // Clear cache before reloading to prevent duplicate accumulation on repeated calls
-  knackImageCache.clear()
 
   try {
     // Fetch all product images from Knack
@@ -54,12 +52,16 @@ async function preloadKnackImages(): Promise<void> {
       // Get image type (Primary, Gallery, Detail, etc.)
       const imageType = String(getFieldValue(record, PRODUCT_IMAGE_FIELDS.imageType, 'Image Type') || 'Gallery')
 
+      // Get variantId if present (for Variant images)
+      const variantId = String(getFieldValue(record, PRODUCT_IMAGE_FIELDS.variantId, 'Variant ID') || '')
+
       // Get or create cache entry for this product
       if (!knackImageCache.has(productRecordId)) {
         knackImageCache.set(productRecordId, {
           primaryImage: undefined,
           galleryImages: [],
           detailImage: undefined,
+          variantImages: new Map<string, string>(),
         })
       }
       const cached = knackImageCache.get(productRecordId)!
@@ -69,8 +71,11 @@ async function preloadKnackImages(): Promise<void> {
         cached.primaryImage = imageUrl
       } else if (imageType === 'Detail') {
         cached.detailImage = imageUrl
+      } else if (imageType === 'Variant' && variantId) {
+        // Store variant-specific image keyed by variant SKU
+        cached.variantImages.set(variantId, imageUrl)
       } else {
-        // Gallery, Catalog, Variant all go into gallery
+        // Gallery, Catalog
         cached.galleryImages.push(imageUrl)
       }
     }
@@ -130,7 +135,7 @@ function extractProductRecordId(connection: unknown): string | null {
 }
 
 // Get images from Knack cache (by product record ID)
-function getImagesForProduct(productRecordId: string): { images: string[]; detailImage?: string } {
+function getImagesForProduct(productRecordId: string): { images: string[]; detailImage?: string; variantImages?: Record<string, string> } {
   const cached = knackImageCache.get(productRecordId)
 
   if (cached) {
@@ -142,9 +147,15 @@ function getImagesForProduct(productRecordId: string): { images: string[]; detai
     images.push(...cached.galleryImages)
 
     if (images.length > 0) {
+      // Convert variantImages Map to Record for consistency
+      const variantImagesRecord = cached.variantImages.size > 0
+        ? Object.fromEntries(cached.variantImages)
+        : undefined
+
       return {
         images,
         detailImage: cached.detailImage,
+        variantImages: variantImagesRecord,
       }
     }
   }
@@ -269,6 +280,7 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
   const imageData = getImagesForProduct(knackRecordId)
   const knackImages = imageData.images || []
   const knackDetailImage = imageData.detailImage
+  const knackVariantImages = imageData.variantImages
 
   // Use Knack images if available, otherwise fallback to placeholder
   const images = knackImages.length > 0 ? knackImages : ['/images/placeholder.png']
@@ -289,6 +301,7 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     primaryImage,
     images,
     detailLongImage,
+    variantImages: knackVariantImages,
     category: getFieldValue(record, PRODUCT_FIELDS.category, 'Category')
       ? String(getFieldValue(record, PRODUCT_FIELDS.category, 'Category'))
       : undefined,
