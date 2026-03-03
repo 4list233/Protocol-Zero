@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(perl -e 'alarm 10; exec @ARGV' git branch -a)"
+      "Bash(perl -e 'alarm 10; exec @ARGV' git branch -a)",
+      "Bash(git add \"shop/app/api/products/[id]/route.ts\" \"shop/app/api/products/route.ts\")"
     ]
   }
 }

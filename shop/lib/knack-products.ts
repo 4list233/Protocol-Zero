@@ -26,6 +26,10 @@ const knackImageCache = new Map<string, {
 async function preloadKnackImages(): Promise<void> {
   if (!isKnackConfigured()) return
 
+  // Clear previous cache to prevent duplicate images when called multiple times
+  // (e.g. fetchProducts + fetchProductById both call this)
+  knackImageCache.clear()
+
   try {
     // Fetch all product images from Knack
     const imageRecords = await getKnackRecords<Record<string, unknown>>(PRODUCT_IMAGES_OBJECT_KEY, {
