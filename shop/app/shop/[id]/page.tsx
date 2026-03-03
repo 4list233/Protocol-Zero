@@ -82,11 +82,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   // Always use variant pricing (all products should have variants)
   const displayPrice = selectedVariant?.price_cad || 0
   const displayStock = selectedVariant?.stock ?? product.stock
-  
+
   // Update selected variant ID if we defaulted to first variant
-  if (!selectedVariantId && defaultVariant) {
-    setSelectedVariantId(defaultVariant.id)
-  }
+  useEffect(() => {
+    if (!selectedVariantId && defaultVariant) {
+      setSelectedVariantId(defaultVariant.id)
+    }
+  }, [selectedVariantId, defaultVariant])
 
   // Get variant-specific image if available
   const selectedVariantImage = useMemo(() => {
