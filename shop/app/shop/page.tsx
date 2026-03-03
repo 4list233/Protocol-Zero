@@ -21,10 +21,7 @@ export default function ShopPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch('/api/products', {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' }
-      })
+      const res = await fetch('/api/products')
       const data = await res.json()
       setProducts(data)
       setLoading(false)
@@ -36,7 +33,8 @@ export default function ShopPage() {
 
   useEffect(() => {
     fetchProducts()
-    const refreshInterval = setInterval(fetchProducts, 30000)
+    // Poll every 5 minutes instead of 30s — products don't change that often
+    const refreshInterval = setInterval(fetchProducts, 300000)
     return () => clearInterval(refreshInterval)
   }, [])
 

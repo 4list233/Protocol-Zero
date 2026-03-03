@@ -3,7 +3,7 @@ import { fetchProductById } from '@/lib/notion-client'
 import { getCached, setCache } from '@/lib/notion-cache'
 import { sanitizeProduct, type PublicProduct } from '@/lib/api-sanitizer'
 
-export const dynamic = 'force-dynamic'
+// Removed force-dynamic so Vercel CDN respects the Cache-Control headers below
 
 // Allowed origins for product API access
 const ALLOWED_ORIGINS = [
