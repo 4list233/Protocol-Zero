@@ -14,7 +14,11 @@ const nextConfig = {
     return config
   },
   images: {
-    // Enable Next.js image optimization for faster loading
+    // Cache transformed images for 30 days (default is 60s — this alone saves ~99% of re-transformations)
+    minimumCacheTTL: 2592000,
+    // Fewer width variants = fewer transformations per image
+    deviceSizes: [640, 828, 1080, 1920],
+    imageSizes: [16, 32, 64, 128, 256],
     remotePatterns: [
       {
         protocol: 'https',

@@ -11,6 +11,27 @@ import { ShoppingCart, Check, Heart, Search, X } from "lucide-react"
 import { QuickViewButton } from "@/components/quick-view-modal"
 import { WishlistButton } from "@/components/wishlist-button"
 
+const PRODUCTS_CACHE_KEY = 'pz_products_v1'
+const PRODUCTS_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+function readProductsCache(): { data: RuntimeProduct[]; timestamp: number } | null {
+  try {
+    const raw = localStorage.getItem(PRODUCTS_CACHE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function writeProductsCache(data: RuntimeProduct[]) {
+  try {
+    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }))
+  } catch {
+    // localStorage may be unavailable (private browsing quota exceeded etc.)
+  }
+}
+
 export default function ShopPage() {
   const { addToast } = useToast()
   const { addItem, addonsUnlocked } = useCart()
@@ -19,24 +40,33 @@ export default function ShopPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (background = false) => {
     try {
-      const res = await fetch('/api/products', {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' }
-      })
+      const res = await fetch('/api/products')
       const data = await res.json()
       setProducts(data)
-      setLoading(false)
+      writeProductsCache(data)
+      if (!background) setLoading(false)
     } catch (err) {
       console.error('Failed to fetch products:', err)
-      setLoading(false)
+      if (!background) setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchProducts()
-    const refreshInterval = setInterval(fetchProducts, 30000)
+    // Show cached products instantly — no loading spinner on return visits
+    const cached = readProductsCache()
+    if (cached && Date.now() - cached.timestamp < PRODUCTS_CACHE_TTL) {
+      setProducts(cached.data)
+      setLoading(false)
+      // Refresh in the background so data stays current
+      fetchProducts(true)
+    } else {
+      fetchProducts(false)
+    }
+
+    // Poll every 5 minutes to keep data fresh while tab is open
+    const refreshInterval = setInterval(() => fetchProducts(true), 300000)
     return () => clearInterval(refreshInterval)
   }, [])
 
