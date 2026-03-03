@@ -191,6 +191,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   src={img}
                   alt={`${product.title} thumbnail ${idx + 1}`}
                   fill
+                  sizes="80px"
                   className="object-cover"
                 />
               </button>
@@ -205,6 +206,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 src={images[selectedImageIndex] || '/images/placeholder.png'}
                 alt={product.title}
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-contain"
                 priority
               />
@@ -226,6 +228,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     src={img}
                     alt={`Thumbnail ${idx + 1}`}
                     fill
+                    sizes="64px"
                     className="object-cover"
                   />
                 </button>
@@ -336,6 +339,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 height={8000}
                 className="rounded-xl border border-[#2C2C2C] w-full h-auto"
                 loading="lazy"
+                unoptimized
               />
             </div>
           </div>

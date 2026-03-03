@@ -3,7 +3,7 @@ import { fetchProductById } from '@/lib/notion-client'
 import { getCached, setCache } from '@/lib/notion-cache'
 import { sanitizeProduct, type PublicProduct } from '@/lib/api-sanitizer'
 
-// Allow Next.js to cache — individual product pages change infrequently
+// Removed force-dynamic so Vercel CDN respects the Cache-Control headers below
 
 // Allowed origins for product API access
 const ALLOWED_ORIGINS = [

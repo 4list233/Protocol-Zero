@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useEffect } from "react"
+import React, { useMemo } from "react"
 
 /**
  * Variant data structure with optional multi-dimensional options
@@ -10,62 +10,27 @@ export interface MultiVariant {
   title: string           // variantName - display name
   stock: number
   price_cad: number
-  // Multi-dimensional options
-  optionType1?: string    // e.g., "Color"
-  optionValue1?: string   // e.g., "Black"
-  optionType2?: string    // e.g., "Size"
-  optionValue2?: string   // e.g., "M"
+  // Multi-dimensional options (kept for "Available Options" dropdown support)
+  optionType1?: string
+  optionValue1?: string
+  optionType2?: string    // e.g., "Available Sizes"
+  optionValue2?: string   // e.g., "XXS,XS,S,M,L" (comma-separated)
 }
 
 export interface MultiVariantSelectorProps {
   variants: MultiVariant[]
   selectedVariantId: string
   onChange: (variantId: string) => void
-  onOption2Change?: (selectedOption: string) => void // For storing selected option (size/color) separately
-  selectedOption2?: string // Currently selected option from Option Value 2
+  onOption2Change?: (selectedOption: string) => void
+  selectedOption2?: string
 }
 
 /**
- * Extract unique option values for a given option type
- */
-function getUniqueOptions(
-  variants: MultiVariant[],
-  optionKey: 'optionValue1' | 'optionValue2'
-): string[] {
-  const values = new Set<string>()
-  for (const v of variants) {
-    const val = v[optionKey]
-    if (val) values.add(val)
-  }
-  return Array.from(values)
-}
-
-/**
- * Check if variants have multi-dimensional structured options
- */
-function hasStructuredOptions(variants: MultiVariant[]): boolean {
-  return variants.some(v => v.optionType1 && v.optionValue1)
-}
-
-/**
- * Find variant by option selections
- */
-function findVariantByOptions(
-  variants: MultiVariant[],
-  option1Value: string | null,
-  option2Value: string | null
-): MultiVariant | null {
-  for (const v of variants) {
-    const matches1 = !option1Value || v.optionValue1 === option1Value
-    const matches2 = !option2Value || !v.optionType2 || v.optionValue2 === option2Value
-    if (matches1 && matches2) return v
-  }
-  return null
-}
-
-/**
- * Multi-dimensional variant selector with Taobao-style option selection
- * Falls back to simple button list if variants don't have structured options
+ * Flat variant selector - displays all variants as individually selectable buttons
+ * using their full variant name. No categorization or grouping.
+ *
+ * If the selected variant has an "Available Options" type (comma-separated list
+ * in optionValue2), a dropdown is shown below for sub-selection (e.g., size picker).
  */
 export default function MultiVariantSelector({
   variants,
@@ -74,235 +39,87 @@ export default function MultiVariantSelector({
   onOption2Change,
   selectedOption2,
 }: MultiVariantSelectorProps) {
-  // Check if we have structured multi-dimensional options
-  const isMultiDimensional = useMemo(() => hasStructuredOptions(variants), [variants])
-
-  // Get the selected variant
   const selectedVariant = useMemo(() => {
-    // If the incoming selection matches, keep it
     const fromId = variants.find(v => v.id === selectedVariantId)
     if (fromId) return fromId
-
-    // Prefer a Single as the initial selection when none is provided
-    const firstSingle = variants.find(
-      v => v.optionValue1 && v.optionValue1.toLowerCase() === 'single'
-    )
-    if (firstSingle) return firstSingle
-
-    // Fallback to the first variant
     return variants[0]
   }, [variants, selectedVariantId])
 
-  // Extract option types and values
-  const optionType1 = useMemo(() => {
-    for (const v of variants) {
-      if (v.optionType1) return v.optionType1
-    }
-    return null
-  }, [variants])
+  // Check if the selected variant has an "Available Options" dropdown
+  const availableOptions = useMemo(() => {
+    if (!selectedVariant?.optionType2) return null
+    if (!selectedVariant.optionType2.toLowerCase().includes('available')) return null
+    if (!selectedVariant.optionValue2) return null
+    const options = selectedVariant.optionValue2.split(',').map(s => s.trim()).filter(Boolean)
+    return options.length > 0 ? options : null
+  }, [selectedVariant])
 
-  const optionType2 = useMemo(() => {
-    for (const v of variants) {
-      if (v.optionType2) return v.optionType2
-    }
-    return null
-  }, [variants])
+  const dropdownLabel = useMemo(() => {
+    if (!selectedVariant?.optionType2) return 'Option'
+    return selectedVariant.optionType2.replace(/available\s*/i, '').trim() || 'Option'
+  }, [selectedVariant])
 
-  const option1Values = useMemo(() => {
-    const values = getUniqueOptions(variants, 'optionValue1')
-    // Prefer showing Singles before Bundles for clearer UX
-    return values.sort((a, b) => {
-      const isA = a?.toLowerCase() === 'single'
-      const isB = b?.toLowerCase() === 'single'
-      if (isA && !isB) return -1
-      if (!isA && isB) return 1
-      return a.localeCompare(b)
-    })
-  }, [variants])
-  
-  // Check if Option 2 contains available options as comma-separated list
-  const isAvailableOptionsList = useMemo(() => {
-    return optionType2?.toLowerCase().includes('available') || false
-  }, [optionType2])
-
-  // Filter option2 values based on selected option1
-  const option2Values = useMemo(() => {
-    if (!optionType2) return []
-    
-    // If it's an "Available Options" list, parse from comma-separated string
-    if (isAvailableOptionsList && selectedVariant?.optionValue2) {
-      return selectedVariant.optionValue2.split(',').map(s => s.trim()).filter(Boolean)
-    }
-    
-    // Otherwise, get unique values from variants
-    const selectedOption1 = selectedVariant?.optionValue1
-    const filtered = variants.filter(v => !selectedOption1 || v.optionValue1 === selectedOption1)
-    return getUniqueOptions(filtered, 'optionValue2')
-  }, [variants, optionType2, selectedVariant, isAvailableOptionsList])
-
-  // Handle option1 selection
-  const handleOption1Change = (value: string) => {
-    // Find a variant with this option1 value
-    // Prefer one with the same option2 if possible
-    const currentOption2 = selectedVariant?.optionValue2
-    let newVariant = variants.find(v => v.optionValue1 === value && v.optionValue2 === currentOption2)
-    if (!newVariant) {
-      newVariant = variants.find(v => v.optionValue1 === value)
-    }
-    if (newVariant) {
-      onChange(newVariant.id)
-    }
-  }
-
-  // Handle option2 selection
-  const handleOption2Change = (value: string) => {
-    const currentOption1 = selectedVariant?.optionValue1
-    const newVariant = variants.find(
-      v => v.optionValue1 === currentOption1 && v.optionValue2 === value
-    )
-    if (newVariant) {
-      onChange(newVariant.id)
-    }
-  }
-
-  // Check if an option combination is available (has stock)
-  const isOption1Available = (value: string): boolean => {
-    return variants.some(v => v.optionValue1 === value && (v.stock ?? 0) > 0)
-  }
-
-  const isOption2Available = (value: string): boolean => {
-    const currentOption1 = selectedVariant?.optionValue1
-    return variants.some(
-      v => v.optionValue1 === currentOption1 && v.optionValue2 === value && (v.stock ?? 0) > 0
-    )
-  }
-
-  // If not multi-dimensional, render simple button list (backward compatible)
-  if (!isMultiDimensional) {
-    return (
-      <div className="flex gap-2 flex-wrap">
-        {variants.map((variant) => (
-          <button
-            key={variant.id}
-            type="button"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
-              selectedVariantId === variant.id
-                ? "bg-[#3D9A6C] text-black border-[#3D9A6C] shadow-md"
-                : "bg-[#1E1E1E] text-[#F5F5F5] border-[#2C2C2C] hover:border-[#3D9A6C]/50 hover:bg-[#2C2C2C]"
-            } ${variant.stock === 0 ? "opacity-50" : ""}`}
-            onClick={() => onChange(variant.id)}
-            disabled={variant.stock === 0}
-          >
-            {variant.title}
-            {variant.stock === 0 && <span className="ml-1.5 text-red-400 text-xs">(Sold out)</span>}
-          </button>
-        ))}
-      </div>
-    )
-  }
-
-  // Multi-dimensional selector UI
   return (
     <div className="space-y-4">
-      {/* Option 1 (e.g., Color) */}
-      {optionType1 && option1Values.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-[#A1A1A1] mb-2">
-            {optionType1}
-            {selectedVariant?.optionValue1 && (
-              <span className="ml-2 text-[#F5F5F5]">: {selectedVariant.optionValue1}</span>
-            )}
-          </label>
-          <div className="flex gap-2 flex-wrap">
-            {option1Values.map((value) => {
-              const isSelected = selectedVariant?.optionValue1 === value
-              const isAvailable = isOption1Available(value)
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleOption1Change(value)}
-                  disabled={!isAvailable}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
-                    isSelected
-                      ? "bg-[#3D9A6C] text-black border-[#3D9A6C] shadow-md"
-                      : isAvailable
-                        ? "bg-[#1E1E1E] text-[#F5F5F5] border-[#2C2C2C] hover:border-[#3D9A6C]/50 hover:bg-[#2C2C2C]"
-                        : "bg-[#1E1E1E] text-[#666] border-[#2C2C2C] opacity-50 cursor-not-allowed line-through"
-                  }`}
-                >
-                  {value}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* Flat variant button list */}
+      <div className="flex gap-2 flex-wrap">
+        {variants.map((variant) => {
+          const isSelected = selectedVariantId === variant.id
+          const isOutOfStock = variant.stock === 0
+          return (
+            <button
+              key={variant.id}
+              type="button"
+              onClick={() => {
+                onChange(variant.id)
+                // Clear the sub-option when switching variants
+                if (onOption2Change) {
+                  onOption2Change('')
+                }
+              }}
+              disabled={isOutOfStock}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                isSelected
+                  ? "bg-[#3D9A6C] text-black border-[#3D9A6C] shadow-md"
+                  : isOutOfStock
+                    ? "bg-[#1E1E1E] text-[#666] border-[#2C2C2C] opacity-50 cursor-not-allowed line-through"
+                    : "bg-[#1E1E1E] text-[#F5F5F5] border-[#2C2C2C] hover:border-[#3D9A6C]/50 hover:bg-[#2C2C2C]"
+              }`}
+            >
+              {variant.title}
+              {isOutOfStock && <span className="ml-1.5 text-red-400 text-xs">(Sold out)</span>}
+            </button>
+          )
+        })}
+      </div>
 
-      {/* Option 2 (e.g., Size) - Show as dropdown if it's an "Available Options" list */}
-      {optionType2 && option2Values.length > 0 && (
+      {/* "Available Options" dropdown for variants with comma-separated sub-options */}
+      {availableOptions && (
         <div>
           <label className="block text-sm font-medium text-[#A1A1A1] mb-2">
-            {optionType2.replace('Available ', '')}
+            {dropdownLabel}
             {selectedOption2 && (
               <span className="ml-2 text-[#F5F5F5]">: {selectedOption2}</span>
             )}
           </label>
-          {isAvailableOptionsList ? (
-            // Dropdown for available options list
-            <select
-              value={selectedOption2 || ''}
-              onChange={(e) => {
-                const value = e.target.value
-                if (onOption2Change) {
-                  onOption2Change(value)
-                }
-              }}
-              className="w-full px-4 py-2 rounded-lg text-sm font-medium bg-[#1E1E1E] text-[#F5F5F5] border border-[#2C2C2C] hover:border-[#3D9A6C]/50 focus:border-[#3D9A6C] focus:outline-none transition-all"
-            >
-              <option value="">Select {optionType2.replace('Available ', '')}</option>
-              {option2Values.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          ) : (
-            // Button list for regular option values
-            <div className="flex gap-2 flex-wrap">
-              {option2Values.map((value) => {
-                const isSelected = selectedVariant?.optionValue2 === value
-                const isAvailable = isOption2Available(value)
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => handleOption2Change(value)}
-                    disabled={!isAvailable}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
-                      isSelected
-                        ? "bg-[#3D9A6C] text-black border-[#3D9A6C] shadow-md"
-                        : isAvailable
-                          ? "bg-[#1E1E1E] text-[#F5F5F5] border-[#2C2C2C] hover:border-[#3D9A6C]/50 hover:bg-[#2C2C2C]"
-                          : "bg-[#1E1E1E] text-[#666] border-[#2C2C2C] opacity-50 cursor-not-allowed line-through"
-                    }`}
-                  >
-                    {value}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Show selected variant info */}
-      {selectedVariant && (
-        <div className="text-xs text-[#666] mt-2 pt-2 border-t border-[#2C2C2C]">
-          Selected: <span className="text-[#A1A1A1]">{selectedVariant.title}</span>
+          <select
+            value={selectedOption2 || ''}
+            onChange={(e) => {
+              if (onOption2Change) {
+                onOption2Change(e.target.value)
+              }
+            }}
+            className="w-full px-4 py-2 rounded-lg text-sm font-medium bg-[#1E1E1E] text-[#F5F5F5] border border-[#2C2C2C] hover:border-[#3D9A6C]/50 focus:border-[#3D9A6C] focus:outline-none transition-all"
+          >
+            <option value="">Select {dropdownLabel}</option>
+            {availableOptions.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
         </div>
       )}
     </div>
   )
 }
-

@@ -14,6 +14,10 @@ import {
   Loader2,
   GripVertical,
 } from "lucide-react"
+import {
+  getAdminCategories,
+  saveCustomCategory,
+} from "@/lib/admin-categories"
 
 type Variant = {
   id: string
@@ -51,19 +55,6 @@ type Product = {
   variants: Variant[]
 }
 
-const CATEGORIES = [
-  "Vests",
-  "Helmets",
-  "Pouches",
-  "Accessories",
-  "Clothing",
-  "Eyewear",
-  "Gloves",
-  "Footwear",
-  "Communications",
-  "Other",
-]
-
 const OPTION_TYPES = ["Color", "Size", "Style", "Material", "Length", "Width"]
 
 export default function ProductEditorPage() {
@@ -77,6 +68,12 @@ export default function ProductEditorPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"details" | "variants" | "images">("details")
+  const [adminCategories, setAdminCategories] = useState<string[]>([])
+
+  // Load categories after mount (localStorage is client-only)
+  useEffect(() => {
+    setAdminCategories(getAdminCategories())
+  }, [])
 
   useEffect(() => {
     async function fetchProduct() {
@@ -159,6 +156,12 @@ export default function ProductEditorPage() {
         if (failedCount > 0) {
           throw new Error(`${failedCount} variant(s) failed to save`)
         }
+      }
+
+      // Persist any newly typed category so it appears in future dropdowns
+      if (product.category) {
+        saveCustomCategory(product.category)
+        setAdminCategories(getAdminCategories())
       }
 
       setSuccess("Product saved successfully!")
@@ -266,7 +269,7 @@ export default function ProductEditorPage() {
 
       {/* Tab Content */}
       {activeTab === "details" && (
-        <ProductDetailsTab product={product} onChange={handleProductChange} />
+        <ProductDetailsTab product={product} onChange={handleProductChange} categories={adminCategories} />
       )}
       {activeTab === "variants" && (
         <VariantsTab
@@ -284,9 +287,11 @@ export default function ProductEditorPage() {
 function ProductDetailsTab({
   product,
   onChange,
+  categories,
 }: {
   product: Product
   onChange: (field: keyof Product, value: unknown) => void
+  categories: string[]
 }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -327,18 +332,22 @@ function ProductDetailsTab({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-zinc-400 mb-1">Category</label>
-            <select
+            <input
+              type="text"
+              list="admin-category-options"
               value={product.category || ""}
               onChange={(e) => onChange("category", e.target.value)}
-              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500"
-            >
-              <option value="">Select Category</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
+              placeholder="Select or type a category..."
+              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500 placeholder-zinc-600"
+            />
+            <datalist id="admin-category-options">
+              {categories.map((cat) => (
+                <option key={cat} value={cat} />
               ))}
-            </select>
+            </datalist>
+            <p className="text-xs text-zinc-600 mt-1">
+              Pick from the list or type a new one — new categories are saved on Save.
+            </p>
           </div>
 
           <div>
