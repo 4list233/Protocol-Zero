@@ -56,6 +56,45 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       })
   }, [id])
 
+  // All products should have at least 1 variant - default to first variant if none selected
+  const defaultVariant = product?.variants && product.variants.length > 0 ? product.variants[0] : null
+  const effectiveVariantId = selectedVariantId || defaultVariant?.id || null
+  const selectedVariant = product?.variants?.find(v => v.id === effectiveVariantId) || defaultVariant
+
+  // Always use variant pricing (all products should have variants)
+  const displayPrice = selectedVariant?.price_cad || 0
+  const displayStock = selectedVariant?.stock ?? product?.stock
+
+  // Update selected variant ID if we defaulted to first variant
+  useEffect(() => {
+    if (!selectedVariantId && defaultVariant) {
+      setSelectedVariantId(defaultVariant.id)
+    }
+  }, [selectedVariantId, defaultVariant])
+
+  // Get variant-specific image if available
+  const selectedVariantImage = useMemo(() => {
+    if (!selectedVariant || !product?.variantImages) return null
+    return product.variantImages[selectedVariant.sku || ''] || null
+  }, [selectedVariant, product?.variantImages])
+
+  // Build image array: variant image first if available, then gallery
+  const images = useMemo(() => {
+    const imageList: string[] = []
+    if (selectedVariantImage) {
+      imageList.push(selectedVariantImage)
+    }
+    if (validImages.length > 0) {
+      imageList.push(...validImages.filter(img => img !== selectedVariantImage))
+    }
+    return imageList.length > 0 ? imageList : ['/images/placeholder.png']
+  }, [selectedVariantImage, validImages])
+
+  // Reset to first image when variant changes
+  useEffect(() => {
+    setSelectedImageIndex(0)
+  }, [selectedVariantId])
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0D0D0D] text-[#F5F5F5]">
@@ -73,51 +112,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </div>
     )
   }
-
-  // All products should have at least 1 variant - default to first variant if none selected
-  const defaultVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null
-  const effectiveVariantId = selectedVariantId || defaultVariant?.id || null
-  const selectedVariant = product.variants?.find(v => v.id === effectiveVariantId) || defaultVariant
-  
-  // Always use variant pricing (all products should have variants)
-  const displayPrice = selectedVariant?.price_cad || 0
-  const displayStock = selectedVariant?.stock ?? product.stock
-
-  // Update selected variant ID if we defaulted to first variant
-  useEffect(() => {
-    if (!selectedVariantId && defaultVariant) {
-      setSelectedVariantId(defaultVariant.id)
-    }
-  }, [selectedVariantId, defaultVariant])
-
-  // Get variant-specific image if available
-  const selectedVariantImage = useMemo(() => {
-    if (!selectedVariant || !product.variantImages) return null
-    // variantImages is a Record<string, string> from the API
-    return product.variantImages[selectedVariant.sku || ''] || null
-  }, [selectedVariant, product.variantImages])
-
-  // Build image array: variant image first if available, then gallery
-  const images = useMemo(() => {
-    const imageList: string[] = []
-
-    // Add variant image first if one is selected
-    if (selectedVariantImage) {
-      imageList.push(selectedVariantImage)
-    }
-
-    // Add other gallery images
-    if (validImages.length > 0) {
-      imageList.push(...validImages.filter(img => img !== selectedVariantImage))
-    }
-
-    return imageList.length > 0 ? imageList : ['/images/placeholder.png']
-  }, [selectedVariantImage, validImages])
-
-  // Reset to first image when variant changes
-  useEffect(() => {
-    setSelectedImageIndex(0)
-  }, [selectedVariantId])
 
   const scrollToDetails = () => {
     detailsRef.current?.scrollIntoView({ behavior: 'smooth' })
