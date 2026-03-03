@@ -134,7 +134,7 @@ def scan_product_images(media_folder: str) -> Dict[str, List[str]]:
     return images
 
 
-def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: bool = False, with_images: bool = False) -> Optional[str]:
+def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: bool = False, with_images: bool = False, force_images: bool = False) -> Optional[str]:
     """Upload a single product and its variants to Knack
     
     Args:
@@ -250,18 +250,22 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
 
         # Upload images if requested
         if with_images:
-            # Get media folder from JSON, fallback to sequential naming
-            media_folder = product.get('media_folder', f"product_{product_index:03d}")
-            # Scan media directory for images using actual folder name
-            images = scan_product_images(media_folder)
-            # Count total images
-            total_images = sum(len(paths) for paths in images.values())
-            if total_images > 0:
-                print(f"   🖼️  Uploading {total_images} images from {media_folder}...")
-                img_count = upload_product_images(knack, product_record_id, images, product.get('variants', []), dry_run)
-                print(f"   → Uploaded {img_count} images")
+            # Check if images already exist (skip unless --force-images)
+            if not dry_run and not force_images and images_already_exist(knack, product_record_id):
+                print(f"   🖼️  Images already exist in Knack — skipping (use --force-images to re-upload)")
             else:
-                print(f"   ⚠️  No images found in media folder: {media_folder}")
+                # Get media folder from JSON, fallback to sequential naming
+                media_folder = product.get('media_folder', f"product_{product_index:03d}")
+                # Scan media directory for images using actual folder name
+                images = scan_product_images(media_folder)
+                # Count total images
+                total_images = sum(len(paths) for paths in images.values())
+                if total_images > 0:
+                    print(f"   🖼️  Uploading {total_images} images from {media_folder}...")
+                    img_count = upload_product_images(knack, product_record_id, images, product.get('variants', []), dry_run)
+                    print(f"   → Uploaded {img_count} images")
+                else:
+                    print(f"   ⚠️  No images found in media folder: {media_folder}")
 
         return product_record_id
 
@@ -270,6 +274,22 @@ def upload_product(knack: KnackAPI, product: Dict, product_index: int, dry_run: 
         print(f"   ❌ Error uploading product: {e}")
         traceback.print_exc()
         return None
+
+
+def images_already_exist(knack: KnackAPI, product_record_id: str) -> bool:
+    """
+    Check whether any image records already exist in Knack for this product.
+    Uses the product connection field (field_188) to query the Product Images table.
+    """
+    try:
+        existing = knack.find_record(
+            PRODUCT_IMAGES_OBJECT_KEY,
+            PRODUCT_IMAGE_FIELDS['product'],
+            product_record_id
+        )
+        return existing is not None
+    except Exception:
+        return False  # If query fails, assume no images so upload proceeds
 
 
 def upload_product_images(
@@ -432,6 +452,8 @@ Examples:
                         help='Preview changes without uploading to Knack')
     parser.add_argument('--with-images', action='store_true',
                         help='Also upload images to Knack Product Images table')
+    parser.add_argument('--force-images', action='store_true',
+                        help='Re-upload images even if they already exist in Knack')
     parser.add_argument('--sync-media', action='store_true',
                         help='Also sync media files to shop/public/images')
     parser.add_argument('--product-id', type=int,
@@ -483,7 +505,7 @@ Examples:
         print(f"\n[{i if not args.product_id else i}/{len(products) if not args.product_id else len(data.get('products', []))}] {product.get('title_en', 'Unknown')[:50]}")
         
         # Pass the actual product index for mapping to media folder
-        result = upload_product(knack, product, product_index=actual_index, dry_run=args.dry_run, with_images=args.with_images)
+        result = upload_product(knack, product, product_index=actual_index, dry_run=args.dry_run, with_images=args.with_images, force_images=args.force_images)
         if result or args.dry_run:
             success_count += 1
         else:
