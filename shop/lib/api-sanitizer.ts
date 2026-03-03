@@ -28,10 +28,9 @@ export type PublicProduct = Omit<ProductRuntime,
   | 'stock'          // Remove product-level stock (only variant stock is used)
   | 'price_cad'      // Remove product-level price (always 0, only variant prices used)
   | 'variants'
-  | 'variantImages'  // Will be converted from Map to Record
 > & {
   variants?: PublicProductVariant[]
-  variantImages?: Record<string, string>  // Converted from Map for JSON serialization
+  variantImages?: Record<string, string>  // Already Record from knack-products
 }
 
 /**
@@ -69,14 +68,10 @@ export function sanitizeProduct(product: ProductRuntime): PublicProduct {
     ...publicProduct
   } = product
 
-  // Convert variantImages Map to plain object for JSON serialization
-  const variantImagesObj = variantImages
-    ? Object.fromEntries(variantImages)
-    : undefined
-
+  // variantImages is already a Record<string, string> from knack-products.ts, pass through as-is
   return {
     ...publicProduct,
-    variantImages: variantImagesObj as any,  // Will be Record<string, string> in JSON
+    variantImages: variantImages,  // Already Record<string, string>
     variants: variants?.map(sanitizeVariant),
   }
 }
