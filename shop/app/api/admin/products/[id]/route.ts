@@ -150,6 +150,7 @@ export async function GET(
       description: String(getFieldValue(product, PRODUCT_FIELDS.description, 'Description') || ''),
       category: String(getFieldValue(product, PRODUCT_FIELDS.category, 'Category') || ''),
       status: String(getFieldValue(product, PRODUCT_FIELDS.status, 'Status') || 'Draft'),
+      priceCadBase: Number(getFieldValue(product, PRODUCT_FIELDS.priceCadBase, 'Price CAD Base') || 0),
       url: String(getFieldValue(product, PRODUCT_FIELDS.url, 'URL') || ''),
       primaryImage,
       images: galleryImages,
@@ -227,6 +228,7 @@ export async function PUT(
     if (body.status !== undefined) updateData[PRODUCT_FIELDS.status] = body.status
     if (body.sku !== undefined) updateData[PRODUCT_FIELDS.sku] = body.sku
     if (body.url !== undefined) updateData[PRODUCT_FIELDS.url] = body.url
+    if (body.priceCadBase !== undefined) updateData[PRODUCT_FIELDS.priceCadBase] = body.priceCadBase
 
     await updateKnackRecord(PRODUCTS_OBJECT_KEY, knackRecordId, updateData)
 

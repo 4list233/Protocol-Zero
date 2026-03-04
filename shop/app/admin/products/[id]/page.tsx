@@ -40,7 +40,7 @@ type Variant = {
 
 type Product = {
   id: string
-  knackRecordId: string
+  knackId: string
   sku: string
   title: string
   titleOriginal: string

@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         titleOriginal: String(getFieldValue(p, PRODUCT_FIELDS.titleOriginal, 'Title Original') || ''),
         category: String(getFieldValue(p, PRODUCT_FIELDS.category, 'Category') || ''),
         status: String(getFieldValue(p, PRODUCT_FIELDS.status, 'Status') || 'Draft'),
+        priceCadBase: Number(getFieldValue(p, PRODUCT_FIELDS.priceCadBase, 'Price CAD Base') || 0),
         variantCount: variantCountByProduct.get(id) || variantCountByProduct.get(String(p.id)) || 0,
         url: String(getFieldValue(p, PRODUCT_FIELDS.url, 'URL') || ''),
       }
