@@ -164,6 +164,13 @@ export default function ProductEditorPage() {
         setAdminCategories(getAdminCategories())
       }
 
+      // Refresh product data from server so textarea reflects saved state
+      const refreshRes = await adminFetch(`/api/admin/products/${productId}`)
+      if (refreshRes.ok) {
+        const refreshed = await refreshRes.json()
+        setProduct(refreshed)
+      }
+
       setSuccess("Product saved successfully!")
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
@@ -324,8 +331,9 @@ function ProductDetailsTab({
           <textarea
             value={product.description || ""}
             onChange={(e) => onChange("description", e.target.value)}
-            rows={4}
-            className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500 resize-none"
+            rows={6}
+            placeholder="Enter product description. Press Enter twice for a new paragraph."
+            className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500 resize-y"
           />
         </div>
 

@@ -145,13 +145,27 @@ export async function GET(
     }
 
     // Build response
+    // Strip HTML from description in case Knack returns rich text HTML (e.g. <p>...</p>)
+    // Convert <br> / <p> boundaries to newlines so the admin textarea shows clean text
+    const rawDescription = String(getFieldValue(product, PRODUCT_FIELDS.description, 'Description') || '')
+    const plainDescription = rawDescription
+      .replace(/<br\s*\/?>/gi, '\n')          // <br> → newline
+      .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n') // </p><p> → paragraph break
+      .replace(/<[^>]+>/g, '')                  // strip remaining tags
+      .replace(/&nbsp;/g, ' ')                  // decode common HTML entity
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .trim()
+
     const response = {
       id: String(getFieldValue(product, PRODUCT_FIELDS.id, 'ID') || knackRecordId),
       knackId: knackRecordId,
       sku: String(getFieldValue(product, PRODUCT_FIELDS.sku, 'SKU') || ''),
       title: String(getFieldValue(product, PRODUCT_FIELDS.title, 'Title') || ''),
       titleOriginal: String(getFieldValue(product, PRODUCT_FIELDS.titleOriginal, 'Title Original') || ''),
-      description: String(getFieldValue(product, PRODUCT_FIELDS.description, 'Description') || ''),
+      description: plainDescription,
       category: String(getFieldValue(product, PRODUCT_FIELDS.category, 'Category') || ''),
       status: String(getFieldValue(product, PRODUCT_FIELDS.status, 'Status') || 'Draft'),
       priceCadBase: Number(getFieldValue(product, PRODUCT_FIELDS.priceCadBase, 'Price CAD Base') || 0),

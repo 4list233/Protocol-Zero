@@ -267,8 +267,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             {product.description && (
-              <div className="prose prose-invert max-w-none text-[#A1A1A1]">
-                <p>{product.description}</p>
+              <div className="prose prose-invert max-w-none text-[#A1A1A1] space-y-2">
+                {product.description.split(/\n\n+/).map((para, i) => (
+                  <p key={i} className="whitespace-pre-line">{para}</p>
+                ))}
               </div>
             )}
 
