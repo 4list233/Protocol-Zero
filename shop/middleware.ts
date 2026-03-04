@@ -16,6 +16,7 @@ const rateLimitStore = new Map<string, RateLimitEntry>()
 // Rate limit configuration by route pattern
 const RATE_LIMITS: Record<string, { requests: number; windowMs: number }> = {
   '/api/checkout': { requests: 5, windowMs: 60 * 1000 }, // 5 requests per minute
+  '/api/admin': { requests: 30, windowMs: 60 * 1000 },   // 30 requests per minute (write-heavy)
   '/api/products': { requests: 60, windowMs: 60 * 1000 }, // 60 requests per minute
   '/api/addons': { requests: 60, windowMs: 60 * 1000 }, // 60 requests per minute
   '/api/revalidate': { requests: 10, windowMs: 60 * 1000 }, // 10 requests per minute

@@ -18,6 +18,7 @@ import {
   getAdminCategories,
   saveCustomCategory,
 } from "@/lib/admin-categories"
+import { useAdminFetch } from "@/hooks/use-admin-fetch"
 
 type Variant = {
   id: string
@@ -69,6 +70,7 @@ export default function ProductEditorPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"details" | "variants" | "images">("details")
   const [adminCategories, setAdminCategories] = useState<string[]>([])
+  const adminFetch = useAdminFetch()
 
   // Load categories after mount (localStorage is client-only)
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function ProductEditorPage() {
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const res = await fetch(`/api/admin/products/${productId}`)
+        const res = await adminFetch(`/api/admin/products/${productId}`)
         if (!res.ok) throw new Error("Product not found")
         const data = await res.json()
         setProduct(data)
@@ -93,7 +95,7 @@ export default function ProductEditorPage() {
     if (productId) {
       fetchProduct()
     }
-  }, [productId])
+  }, [productId, adminFetch])
 
   const handleProductChange = (field: keyof Product, value: unknown) => {
     if (!product) return
@@ -118,9 +120,8 @@ export default function ProductEditorPage() {
     setSuccess(null)
 
     try {
-      const res = await fetch(`/api/admin/products/${productId}`, {
+      const res = await adminFetch(`/api/admin/products/${productId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
       })
 
@@ -132,9 +133,8 @@ export default function ProductEditorPage() {
       // Save each variant
       if (product.variants.length > 0) {
         const variantSaves = product.variants.map((v) =>
-          fetch(`/api/admin/variants/${v.id}`, {
+          adminFetch(`/api/admin/variants/${v.id}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               variantName: v.variantName,
               priceCad: v.priceCad,

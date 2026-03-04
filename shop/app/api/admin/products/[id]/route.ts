@@ -6,6 +6,7 @@ import {
   deleteKnackRecord,
 } from '@/lib/knack-client'
 import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const { id } = await params
     let product: Record<string, unknown> | null = null
     let knackRecordId = ''
@@ -174,6 +178,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const { id } = await params
     const body = await request.json()
 
@@ -252,6 +259,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const { id } = await params
 
     // Find the product to get its Knack record ID

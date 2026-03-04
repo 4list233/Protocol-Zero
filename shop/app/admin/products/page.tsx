@@ -14,6 +14,7 @@ import {
   Package,
   AlertCircle,
 } from "lucide-react"
+import { useAdminFetch } from "@/hooks/use-admin-fetch"
 
 type Product = {
   id: string
@@ -48,6 +49,7 @@ export default function AdminProductsPage() {
     category: searchParams.get("category") || "",
     search: searchParams.get("search") || "",
   })
+  const adminFetch = useAdminFetch()
 
   const pageSize = 20
 
@@ -63,7 +65,7 @@ export default function AdminProductsPage() {
       if (filters.category) params.set("category", filters.category)
       if (filters.search) params.set("search", filters.search)
 
-      const res = await fetch(`/api/admin/products?${params}`)
+      const res = await adminFetch(`/api/admin/products?${params}`)
       if (!res.ok) throw new Error("Failed to fetch products")
 
       const data = await res.json()
@@ -75,7 +77,7 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, filters])
+  }, [page, filters, adminFetch])
 
   useEffect(() => {
     fetchProducts()

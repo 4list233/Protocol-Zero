@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getKnackRecords, createKnackRecord } from '@/lib/knack-client'
 import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,9 @@ const IMAGE_FIELDS = KNACK_CONFIG.fields.productImages
 // GET /api/admin/images - List all images or filter by product
 export async function GET(request: NextRequest) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const searchParams = request.nextUrl.searchParams
     const productId = searchParams.get('productId')
 
@@ -54,6 +58,9 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/images - Create a new image record
 export async function POST(request: NextRequest) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const body = await request.json()
 
     // Validate required fields

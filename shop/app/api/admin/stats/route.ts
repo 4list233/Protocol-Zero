@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getKnackRecords } from '@/lib/knack-client'
 import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,8 +11,11 @@ const ORDERS_OBJECT_KEY = KNACK_CONFIG.objectKeys.orders
 const PRODUCT_FIELDS = KNACK_CONFIG.fields.products
 const ORDER_FIELDS = KNACK_CONFIG.fields.orders
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     // Fetch all products to count by status
     const products = await getKnackRecords<Record<string, unknown>>(PRODUCTS_OBJECT_KEY)
 

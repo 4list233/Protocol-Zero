@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Package, ShoppingCart, DollarSign, AlertCircle, ArrowRight } from "lucide-react"
+import { useAdminFetch } from "@/hooks/use-admin-fetch"
 
 type Stats = {
   totalProducts: number
@@ -25,12 +26,13 @@ export default function AdminDashboard() {
   const [recentProducts, setRecentProducts] = useState<RecentProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const adminFetch = useAdminFetch()
 
   useEffect(() => {
     async function fetchData() {
       try {
         // Fetch stats (includes recentProducts)
-        const statsRes = await fetch("/api/admin/stats")
+        const statsRes = await adminFetch("/api/admin/stats")
         if (statsRes.ok) {
           const statsData = await statsRes.json()
           setStats(statsData)
@@ -45,7 +47,7 @@ export default function AdminDashboard() {
     }
 
     fetchData()
-  }, [])
+  }, [adminFetch])
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getKnackRecords, createKnackRecord } from '@/lib/knack-client'
 import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +13,9 @@ const VARIANT_FIELDS = KNACK_CONFIG.fields.variants
 // GET /api/admin/products - List all products with filters
 export async function GET(request: NextRequest) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const searchParams = request.nextUrl.searchParams
     const status = searchParams.get('status')
     const category = searchParams.get('category')
@@ -111,6 +115,9 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/products - Create a new product
 export async function POST(request: NextRequest) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const body = await request.json()
 
     // Validate required fields

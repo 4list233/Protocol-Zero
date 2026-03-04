@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getKnackRecords, createKnackRecord } from '@/lib/knack-client'
 import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +13,9 @@ const VARIANT_FIELDS = KNACK_CONFIG.fields.variants
 // POST /api/admin/variants - Create a new variant
 export async function POST(request: NextRequest) {
   try {
+    const authCheck = await requireAdmin(request)
+    if (authCheck instanceof NextResponse) return authCheck
+
     const body = await request.json()
 
     // Validate required fields
