@@ -42,29 +42,56 @@ export async function GET(request: NextRequest) {
     // Fetch all variants to count per product
     const allVariants = await getKnackRecords<Record<string, unknown>>(VARIANTS_OBJECT_KEY)
 
-    // Build map of variant counts by product ID
+    // Build maps of variant counts + prices by product ID / Knack record ID
     const variantCountByProduct = new Map<string, number>()
+    const variantPricesByProduct = new Map<string, number[]>()
     for (const variant of allVariants) {
       const productConnection = getFieldValue(variant, VARIANT_FIELDS.product, 'Product')
       const productId = extractProductIdFromConnection(productConnection, PRODUCT_FIELDS.id)
       if (productId) {
         variantCountByProduct.set(productId, (variantCountByProduct.get(productId) || 0) + 1)
+        const vPrice = Number(getFieldValue(variant, VARIANT_FIELDS.priceCad, 'Selling Price') || 0)
+        if (vPrice > 0) {
+          const arr = variantPricesByProduct.get(productId) || []
+          arr.push(vPrice)
+          variantPricesByProduct.set(productId, arr)
+        }
       }
     }
 
     // Map to response format
     let mappedProducts = products.map(p => {
       const id = String(getFieldValue(p, PRODUCT_FIELDS.id, 'ID') || p.id || '')
+      const knackId = String(p.id || '')
+      // Get variant prices — try both the field ID and the Knack record ID
+      const variantPrices = variantPricesByProduct.get(id) || variantPricesByProduct.get(knackId) || []
+      const priceMin = variantPrices.length > 0 ? Math.min(...variantPrices) : 0
+      const priceMax = variantPrices.length > 0 ? Math.max(...variantPrices) : 0
+      // Category may be a comma-separated list from Knack
+      const rawCategory = String(getFieldValue(p, PRODUCT_FIELDS.category, 'Category') || '')
+      // Strip HTML tags that Knack may wrap around values
+      const cleanCategory = rawCategory.replace(/<[^>]*>/g, '').trim()
+      // Description — strip HTML
+      const rawDesc = String(getFieldValue(p, PRODUCT_FIELDS.description, 'Description') || '')
+      const description = rawDesc
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+        .trim()
       return {
         id,
-        knackId: String(p.id || ''),
+        knackId,
         sku: String(getFieldValue(p, PRODUCT_FIELDS.sku, 'SKU') || ''),
         title: String(getFieldValue(p, PRODUCT_FIELDS.title, 'Title') || ''),
         titleOriginal: String(getFieldValue(p, PRODUCT_FIELDS.titleOriginal, 'Title Original') || ''),
-        category: String(getFieldValue(p, PRODUCT_FIELDS.category, 'Category') || ''),
+        category: cleanCategory,
+        description,
         status: String(getFieldValue(p, PRODUCT_FIELDS.status, 'Status') || 'Draft'),
         priceCadBase: Number(getFieldValue(p, PRODUCT_FIELDS.priceCadBase, 'Price CAD Base') || 0),
-        variantCount: variantCountByProduct.get(id) || variantCountByProduct.get(String(p.id)) || 0,
+        priceMin,
+        priceMax,
+        variantCount: variantCountByProduct.get(id) || variantCountByProduct.get(knackId) || 0,
         url: String(getFieldValue(p, PRODUCT_FIELDS.url, 'URL') || ''),
       }
     })

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -13,6 +13,7 @@ import {
   Check,
   Loader2,
   GripVertical,
+  X,
 } from "lucide-react"
 import {
   getAdminCategories,
@@ -300,6 +301,43 @@ function ProductDetailsTab({
   onChange: (field: keyof Product, value: unknown) => void
   categories: string[]
 }) {
+  const [catInput, setCatInput] = useState("")
+  const catInputRef = useRef<HTMLInputElement>(null)
+
+  // Parse current categories as array of tags
+  const currentCats = (product.category || "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean)
+
+  const addCategory = (cat: string) => {
+    const trimmed = cat.trim()
+    if (!trimmed || currentCats.includes(trimmed)) return
+    onChange("category", [...currentCats, trimmed].join(", "))
+    setCatInput("")
+  }
+
+  const removeCategory = (cat: string) => {
+    onChange("category", currentCats.filter((c) => c !== cat).join(", "))
+  }
+
+  const handleCatKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault()
+      addCategory(catInput)
+    }
+    if (e.key === "Backspace" && catInput === "" && currentCats.length > 0) {
+      removeCategory(currentCats[currentCats.length - 1])
+    }
+  }
+
+  const catSuggestions =
+    catInput.length > 0
+      ? categories.filter(
+          (c) => c.toLowerCase().includes(catInput.toLowerCase()) && !currentCats.includes(c)
+        )
+      : []
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Basic Info */}
@@ -339,22 +377,56 @@ function ProductDetailsTab({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-zinc-400 mb-1">Category</label>
-            <input
-              type="text"
-              list="admin-category-options"
-              value={product.category || ""}
-              onChange={(e) => onChange("category", e.target.value)}
-              placeholder="Select or type a category..."
-              className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-orange-500 placeholder-zinc-600"
-            />
-            <datalist id="admin-category-options">
-              {categories.map((cat) => (
-                <option key={cat} value={cat} />
+            <label className="block text-sm text-zinc-400 mb-1">Categories</label>
+            <div className="flex flex-wrap items-center gap-1.5 p-2 bg-zinc-800 border border-zinc-700 rounded-lg min-h-[40px]">
+              {currentCats.map((cat) => (
+                <span
+                  key={cat}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-900/30 text-orange-400 text-xs rounded-full border border-orange-800/50"
+                >
+                  {cat}
+                  <button
+                    onClick={() => removeCategory(cat)}
+                    className="hover:text-white transition-colors"
+                    type="button"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
               ))}
-            </datalist>
+              <div className="relative">
+                <input
+                  ref={catInputRef}
+                  type="text"
+                  value={catInput}
+                  onChange={(e) => setCatInput(e.target.value)}
+                  onKeyDown={handleCatKeyDown}
+                  onBlur={() => setTimeout(() => setCatInput(""), 150)}
+                  placeholder={currentCats.length === 0 ? "Type to add categories..." : "Add more..."}
+                  className="w-32 px-1 py-0.5 text-sm bg-transparent border-none text-white focus:outline-none placeholder:text-zinc-600"
+                />
+                {catSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 mt-1 z-20 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg max-h-36 overflow-y-auto">
+                    {catSuggestions.slice(0, 8).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          addCategory(s)
+                          catInputRef.current?.focus()
+                        }}
+                        className="w-full text-left px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
             <p className="text-xs text-zinc-600 mt-1">
-              Pick from the list or type a new one — new categories are saved on Save.
+              Press Enter or comma to add. Backspace to remove last.
             </p>
           </div>
 
