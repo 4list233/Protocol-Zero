@@ -20,6 +20,7 @@ const RATE_LIMITS: Record<string, { requests: number; windowMs: number }> = {
   '/api/products': { requests: 60, windowMs: 60 * 1000 }, // 60 requests per minute
   '/api/addons': { requests: 60, windowMs: 60 * 1000 }, // 60 requests per minute
   '/api/revalidate': { requests: 10, windowMs: 60 * 1000 }, // 10 requests per minute
+  '/api/promo': { requests: 10, windowMs: 60 * 1000 }, // 10 requests per minute (prevent enumeration)
   default: { requests: 100, windowMs: 60 * 1000 }, // 100 requests per minute
 }
 

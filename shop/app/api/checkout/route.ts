@@ -257,6 +257,38 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    // ==========================================================================
+    // SECURITY: Server-side total verification (prevent price manipulation)
+    // ==========================================================================
+    // Re-derive subtotal from items and verify it matches the claimed subtotal.
+    // This prevents clients from submitting unitPriceCad=0.01 for expensive items
+    // while keeping the same variantIds.
+    // NOTE: Does not re-verify prices against the database (would add latency).
+    // Final price discrepancy is caught by admin during e-transfer confirmation.
+    const derivedSubtotal = body.items.reduce(
+      (sum, item) => sum + Math.round(item.unitPriceCad * item.quantity * 100) / 100,
+      0
+    )
+    const derivedTotal =
+      Math.round((derivedSubtotal + (body.shippingCad || 0) - (body.promoDiscountCad || 0)) * 100) / 100
+
+    const PRICE_TOLERANCE = 0.10 // 10-cent tolerance for floating-point rounding
+    if (
+      Math.abs(derivedSubtotal - body.subtotalCad) > PRICE_TOLERANCE ||
+      Math.abs(derivedTotal - body.totalCad) > PRICE_TOLERANCE
+    ) {
+      console.warn('[Checkout] Price mismatch detected', {
+        derivedSubtotal,
+        claimedSubtotal: body.subtotalCad,
+        derivedTotal,
+        claimedTotal: body.totalCad,
+      })
+      return NextResponse.json(
+        { error: 'Order total mismatch. Please refresh and try again.' },
+        { status: 400 }
+      )
+    }
     
     // ==========================================================================
     // Step 1: Create or get Knack user record

@@ -42,6 +42,25 @@ These operations are necessary for business functionality and are protected by:
 - Input validation and sanitization
 - Timing checks
 
+## Credential Management
+
+### `firebase-admin-key.json` (LOCAL ONLY)
+
+⚠️ **This file contains a live Google service account private key.**
+
+- It is listed in `.gitignore` and must **never** be committed.
+- It is only present for local development fallback (`applicationDefault()` on the SDK reads it via `GOOGLE_APPLICATION_CREDENTIALS`).
+- **In production (Vercel):** The key must be stored as the `FIREBASE_SERVICE_ACCOUNT_KEY` environment variable (JSON blob).
+  Set it in the Vercel dashboard → Settings → Environment Variables.
+  The code in `lib/firebase-admin.ts` reads this env var first.
+- If you suspect the key has been exposed, revoke it immediately in the Firebase console:
+  https://console.firebase.google.com → Project Settings → Service Accounts → Revoke key.
+
+### Environment Variables
+
+Never commit `.env.local`, `.env.production`, or any file containing real keys.
+All secrets must live in Vercel environment variables or local `.env.local` (gitignored).
+
 ## Local Development
 
 In local development (`NODE_ENV !== 'production'`), all write operations are enabled for testing and data seeding.
