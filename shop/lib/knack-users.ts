@@ -189,48 +189,26 @@ export async function updateUser(
 }
 
 /**
- * Save user persistent data (cart + recently viewed) to Knack
- * Looks up the user by Firebase UID, then writes the data fields.
+ * @deprecated Cart data is now stored in the dedicated Carts object (object_15).
+ * Use knack-carts.ts instead. This function is kept for backward compatibility
+ * with any remaining /api/user/cart or /api/user/data routes.
  */
 export async function saveUserData(
-  firebaseUid: string,
-  data: { cartJson?: string; recentlyViewed?: string }
+  _firebaseUid: string,
+  _data: { cartJson?: string; recentlyViewed?: string }
 ): Promise<void> {
-  if (!isKnackConfigured()) return
-
-  const records = await getKnackRecords<Record<string, unknown>>(USERS_OBJECT_KEY, {
-    filters: { [USER_FIELDS.userId]: firebaseUid },
-  })
-  if (records.length === 0) return
-
-  const knackId = String(records[0].id || '')
-  const updates: Record<string, unknown> = {
-    [USER_FIELDS.updatedAt]: new Date().toISOString(),
-  }
-  if (data.cartJson !== undefined) updates[USER_FIELDS.cartJson] = data.cartJson
-  if (data.recentlyViewed !== undefined) updates[USER_FIELDS.recentlyViewed] = data.recentlyViewed
-
-  await updateKnackRecord(USERS_OBJECT_KEY, knackId, updates)
+  // No-op — cart persistence moved to Carts object (object_15).
+  // See lib/knack-carts.ts for the new implementation.
+  return
 }
 
 /**
- * Load user persistent data (cart + recently viewed) from Knack
- * Returns raw JSON strings — caller parses them.
+ * @deprecated Cart data is now stored in the dedicated Carts object (object_15).
+ * Use knack-carts.ts instead.
  */
 export async function loadUserData(
-  firebaseUid: string
+  _firebaseUid: string
 ): Promise<{ cartJson: string; recentlyViewed: string }> {
-  if (!isKnackConfigured()) return { cartJson: '', recentlyViewed: '' }
-
-  const records = await getKnackRecords<Record<string, unknown>>(USERS_OBJECT_KEY, {
-    filters: { [USER_FIELDS.userId]: firebaseUid },
-  })
-  if (records.length === 0) return { cartJson: '', recentlyViewed: '' }
-
-  const record = records[0]
-  return {
-    cartJson: String(getFieldValue(record, USER_FIELDS.cartJson, 'Cart Data') || ''),
-    recentlyViewed: String(getFieldValue(record, USER_FIELDS.recentlyViewed, 'Recently Viewed') || ''),
-  }
+  // No-op — cart persistence moved to Carts object (object_15).
+  return { cartJson: '', recentlyViewed: '' }
 }
-
