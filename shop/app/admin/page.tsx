@@ -172,6 +172,13 @@ export default function AdminDashboard() {
               <ShoppingCart className="w-5 h-5 text-orange-500" />
               <span className="text-white">View Orders</span>
             </Link>
+            <Link
+              href="/admin/carts"
+              className="flex items-center gap-3 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+            >
+              <ShoppingCart className="w-5 h-5 text-orange-500" />
+              <span className="text-white">View Carts</span>
+            </Link>
             <a
               href="https://builder.knack.com"
               target="_blank"

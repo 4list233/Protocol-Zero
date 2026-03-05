@@ -1,8 +1,7 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 import { useAuth } from "@/lib/auth-context"
-import type { ProductVariant } from "./products"
 
 // ============ CONFIGURATION ============
 export const ADDON_THRESHOLD = 30 // $30 CAD minimum cart to unlock add-on pricing
@@ -76,18 +75,18 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | null>(null)
 
-// ============ LOCAL STORAGE ============
+// ============ LOCAL STORAGE (fast offline cache) ============
 
 const CART_KEY = "protocol-zero-cart-v2"
 const PROMO_KEY = "protocol-zero-promo"
 
-function saveCart(items: CartItem[]): void {
+function saveCartLocal(items: CartItem[]): void {
   if (typeof window === "undefined") return
   localStorage.setItem(CART_KEY, JSON.stringify(items))
   window.dispatchEvent(new Event("cartUpdated"))
 }
 
-function loadCart(): CartItem[] {
+function loadCartLocal(): CartItem[] {
   if (typeof window === "undefined") return []
   try {
     const data = localStorage.getItem(CART_KEY)
@@ -123,19 +122,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [promoCode, setPromoCode] = useState<PromoCode | null>(null)
   const [mounted, setMounted] = useState(false)
   const { user } = useAuth()
+  const prevUidRef = useRef<string | null>(null)
+  const mergedRef = useRef(false)
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (instant display)
   useEffect(() => {
-    setItems(loadCart())
-    const cachedPromo = loadPromo()
-    setPromoCode(cachedPromo)
+    setItems(loadCartLocal())
+    setPromoCode(loadPromo())
     setMounted(true)
   }, [])
 
   // Save to localStorage on change (only after mount)
   useEffect(() => {
     if (mounted) {
-      saveCart(items)
+      saveCartLocal(items)
     }
   }, [items, mounted])
 
@@ -145,41 +145,97 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [promoCode, mounted])
 
-  // ============ SERVER SYNC (logged-in users only) ============
+  // ============ SERVER SYNC (guests + logged-in via /api/cart) ============
 
-  // On login: load cart from Knack and override local state
+  // On login: merge guest cart + localStorage + server cart
   useEffect(() => {
-    if (!user || !mounted) return
-    user.getIdToken().then(token =>
-      fetch('/api/user/data', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data?.cart && Array.isArray(data.cart) && data.cart.length > 0) {
-            setItems(data.cart)
-          }
-        })
-        .catch(() => {}) // silent — keep localStorage on error
-    )
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid, mounted])
+    if (!mounted) return
 
-  // On cart change: debounce sync to Knack (logged-in users only)
-  useEffect(() => {
-    if (!user || !mounted) return
-    const timer = setTimeout(() => {
-      user.getIdToken().then(token =>
-        fetch('/api/user/cart', {
-          method: 'PUT',
+    const currentUid = user?.uid || null
+    const previousUid = prevUidRef.current
+    prevUidRef.current = currentUid
+
+    // User just logged in (uid changed from null → something)
+    if (currentUid && !previousUid && !mergedRef.current) {
+      mergedRef.current = true
+      const localItems = loadCartLocal()
+
+      user!.getIdToken().then(token =>
+        fetch('/api/cart/merge', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({ localItems }),
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data?.items && Array.isArray(data.items)) {
+              setItems(data.items)
+            }
+          })
+          .catch(() => {}) // keep localStorage on error
+      )
+      return
+    }
+
+    // User just logged out — reset merge flag, fetch guest cart
+    if (!currentUid && previousUid) {
+      mergedRef.current = false
+      fetch('/api/cart')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
+            setItems(data.items)
+          }
+        })
+        .catch(() => {})
+      return
+    }
+
+    // Already logged in on mount (page refresh) — load server cart
+    if (currentUid && !mergedRef.current) {
+      mergedRef.current = true
+      user!.getIdToken().then(token =>
+        fetch('/api/cart', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
+              setItems(data.items)
+            }
+          })
+          .catch(() => {})
+      )
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, mounted])
+
+  // On cart change: debounce sync to /api/cart (works for both guest + logged in)
+  useEffect(() => {
+    if (!mounted) return
+
+    const timer = setTimeout(() => {
+      const doSync = async () => {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+        if (user) {
+          const token = await user.getIdToken()
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        await fetch('/api/cart', {
+          method: 'PUT',
+          headers,
           body: JSON.stringify({ items }),
         }).catch(() => {})
-      )
-    }, 2000) // 2s debounce — avoids hammering on rapid changes
+      }
+
+      doSync()
+    }, 2000) // 2s debounce
+
     return () => clearTimeout(timer)
   }, [items, user, mounted])
 
@@ -370,7 +426,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([])
     setPromoCode(null)
-  }, [])
+    // Also clear server-side cart
+    const doDelete = async () => {
+      const headers: Record<string, string> = {}
+      if (user) {
+        const token = await user.getIdToken()
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      await fetch('/api/cart', { method: 'DELETE', headers }).catch(() => {})
+    }
+    doDelete()
+  }, [user])
   
   // Validate cached promo code after mount (in case it was removed from Knack)
   useEffect(() => {

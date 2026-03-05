@@ -63,6 +63,7 @@ export const KNACK_CONFIG = {
     clips: process.env.KNACK_OBJECT_KEY_CLIPS || 'object_11',
     signups: process.env.KNACK_OBJECT_KEY_SIGNUPS || 'object_12',
     productImages: process.env.KNACK_OBJECT_KEY_PRODUCT_IMAGES || 'object_14',
+    carts: process.env.KNACK_OBJECT_KEY_CARTS || 'object_15',
   },
 
   // Field Mappings - Updated with actual field keys from Knack Builder
@@ -229,6 +230,21 @@ export const KNACK_CONFIG = {
       date: process.env.KNACK_FIELD_SIGNUPS_DATE || 'field_131',
       timestamp: process.env.KNACK_FIELD_SIGNUPS_TIMESTAMP || 'field_132',
       createdAt: process.env.KNACK_FIELD_SIGNUPS_CREATED_AT || 'field_133',
+    },
+
+    // Carts Object Fields (object_15)
+    carts: {
+      anonymousId: 'field_194',       // Short Text - UUID cookie for guests
+      user: 'field_196',              // Connection to Users (object_8)
+      email: 'field_197',             // Email
+      itemsJson: 'field_198',         // Paragraph Text - serialized CartItem[]
+      itemCount: 'field_199',         // Number - denormalized count
+      totalCad: 'field_200',          // Short Text - denormalized total
+      status: 'field_201',            // Multiple Choice: Active, Abandoned, Converted, Expired
+      lastActivityAt: 'field_202',    // Date/Time
+      reminderSentAt: 'field_203',    // Date/Time
+      createdAt: 'field_204',         // Date/Time
+      updatedAt: 'field_205',         // Date/Time
     },
   },
 }

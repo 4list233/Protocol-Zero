@@ -388,6 +388,35 @@ export async function POST(request: Request) {
     
     const orderId = await createKnackRecord(ORDERS_OBJECT_KEY, orderData)
     
+    // ==========================================================================
+    // Step 4: Mark cart as converted
+    // ==========================================================================
+    try {
+      const { getCartByFirebaseUid, getCartByAnonymousId, updateCartStatus } = await import('@/lib/knack-carts')
+      const { getAnonymousCartId } = await import('@/lib/cart-identity')
+
+      let cartToConvert = null
+
+      if (body.firebaseUid) {
+        const { cart } = await getCartByFirebaseUid(body.firebaseUid)
+        cartToConvert = cart
+      }
+
+      if (!cartToConvert) {
+        const anonId = await getAnonymousCartId()
+        if (anonId) {
+          cartToConvert = await getCartByAnonymousId(anonId)
+        }
+      }
+
+      if (cartToConvert) {
+        await updateCartStatus(cartToConvert.id, 'Converted')
+      }
+    } catch (cartError) {
+      // Don't fail checkout if cart status update fails
+      console.error('[Checkout] Failed to mark cart as converted:', cartError)
+    }
+
     // Return success with order details
     return NextResponse.json({
       success: true,
