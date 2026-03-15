@@ -12,11 +12,11 @@ export const dynamic = 'force-dynamic'
 // Allowed writes:
 //   - Orders (required for e-commerce functionality)
 //   - Users (required for order tracking)
-// 
+//   - Promo code usage tracking (updates usage count and total discount on the promoCodes table)
+//
 // DISABLED in production:
 //   - Products/Variants (must be managed locally)
 //   - Notion (must be managed locally)
-//   - Promo code tracking (disabled to prevent tampering)
 //
 // All product/variant/Notion seeding and updates must happen from local scripts.
 
@@ -75,17 +75,8 @@ type CheckoutRequest = {
   fax?: string            // Honeypot: bots fill this
 }
 
-// Track promo code usage
-// SECURITY: Promo code tracking is disabled in production to prevent tampering
-// All promo code management should be done locally
+// Track promo code usage in the Knack promoCodes table
 async function trackPromoCodeUsage(code: string, discountAmount: number): Promise<void> {
-  // SECURITY: Disable promo tracking in production
-  // Promo code management should be done locally to prevent tampering
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-    // Silently skip tracking in production
-    return
-  }
-
   const PROMO_FIELDS = KNACK_CONFIG.fields.promoCodes
   const PROMO_OBJECT_KEY = PROMO_FIELDS.objectKey
   

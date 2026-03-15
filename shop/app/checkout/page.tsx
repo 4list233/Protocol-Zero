@@ -117,12 +117,17 @@ export default function CheckoutPage() {
     setPromoLoading(true)
     setPromoError("")
     
-    const success = await applyPromoCode(promoInput)
-    
-    if (!success) {
-      setPromoError("Invalid promo code")
-    } else {
-      setPromoInput("") // Clear input on success
+    try {
+      const success = await applyPromoCode(promoInput)
+      
+      if (!success) {
+        setPromoError("Invalid promo code. Please check the code and try again.")
+      } else {
+        setPromoInput("") // Clear input on success
+      }
+    } catch (error) {
+      console.error('[Cart] Failed to validate promo code:', error)
+      setPromoError("Unable to validate promo code. Please try again.")
     }
     
     setPromoLoading(false)

@@ -52,9 +52,12 @@ export async function GET(request: Request) {
     }
     
     const promo = records[0]
-    const isActive = promo[PROMO_FIELDS.isActive] === true || 
+    const isActive = promo[PROMO_FIELDS.isActive] === true ||
+                     promo[PROMO_FIELDS.isActive] === 1 ||
                      promo[PROMO_FIELDS.isActive] === 'Yes' ||
-                     promo[PROMO_FIELDS.isActive] === 'yes'
+                     promo[PROMO_FIELDS.isActive] === 'yes' ||
+                     promo[PROMO_FIELDS.isActive] === 'true' ||
+                     promo[PROMO_FIELDS.isActive] === '1'
     
     if (!isActive) {
       return NextResponse.json({
