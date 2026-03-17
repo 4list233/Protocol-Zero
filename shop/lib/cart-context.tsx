@@ -382,6 +382,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       if (!response.ok) {
         console.error(`[Cart] API error: ${response.status}`)
+        if (response.status >= 500) {
+          // Server-side error – do not mark code as invalid, let caller handle it
+          throw new Error('server_error')
+        }
         setPromoCode({
           code: normalizedCode,
           discount: 0,
@@ -410,12 +414,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('[Cart] Error validating promo code:', error)
-      setPromoCode({
-        code: normalizedCode,
-        discount: 0,
-        isValid: false,
-      })
-      return false
+      // Re-throw server/network errors so callers can show a specific message
+      throw error
     }
   }, [])
 
@@ -438,16 +438,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     doDelete()
   }, [user])
   
-  // Validate cached promo code after mount (in case it was removed from Knack)
+  // Validate cached promo code once after mount (in case it was deactivated in Knack)
+  // Reads directly from localStorage to avoid a dependency on the `promoCode` state,
+  // which would cause an infinite loop (applyPromoCode updates promoCode → effect fires again).
   useEffect(() => {
     if (!mounted) return
-    
-    const cachedPromo = promoCode
+
+    const cachedPromo = loadPromo()
     if (cachedPromo && cachedPromo.isValid) {
-      // Re-validate against Knack to ensure it's still valid
+      // Re-validate against Knack to ensure it's still active
       applyPromoCode(cachedPromo.code).catch(console.error)
     }
-  }, [mounted, applyPromoCode, promoCode])
+  }, [mounted, applyPromoCode])
 
   // ============ CONTEXT VALUE ============
 
