@@ -31,13 +31,16 @@ export async function GET(request: NextRequest) {
       else if (status === 'Archived') archivedCount++
     }
 
-    // Fetch orders to count pending
+    // Fetch orders to count by payment status
+    let totalOrdersCount = 0
     let pendingOrdersCount = 0
     try {
-      const orders = await getKnackRecords<Record<string, unknown>>(ORDERS_OBJECT_KEY, {
-        filters: { [ORDER_FIELDS.status]: 'Pending' }
-      })
-      pendingOrdersCount = orders.length
+      const orders = await getKnackRecords<Record<string, unknown>>(ORDERS_OBJECT_KEY)
+      totalOrdersCount = orders.length
+      pendingOrdersCount = orders.filter(o => {
+        const paymentStatus = getFieldValue(o, ORDER_FIELDS.paymentStatus, 'paymentStatus')
+        return paymentStatus === 'Pending'
+      }).length
     } catch {
       // Orders might not be set up yet
     }
@@ -63,6 +66,7 @@ export async function GET(request: NextRequest) {
       activeProducts: activeCount,
       draftProducts: draftCount,
       archivedProducts: archivedCount,
+      totalOrders: totalOrdersCount,
       pendingOrders: pendingOrdersCount,
       recentProducts,
     })

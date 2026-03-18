@@ -30,10 +30,19 @@ export async function GET(request: NextRequest) {
       lastActivityAt: cart.lastActivityAt?.toISOString() || null,
       createdAt: cart.createdAt.toISOString(),
       items: cart.items.map(item => ({
+        productId: item.productId,
         productTitle: item.productTitle,
+        productImage: item.productImage,
+        category: item.category || null,
+        variantId: item.variantId,
         variantTitle: item.variantTitle,
-        quantity: item.quantity,
+        sku: item.sku || null,
+        selectedOption: item.selectedOption || null,
         regularPrice: item.regularPrice,
+        addonPrice: item.addonPrice || null,
+        isAddonEligible: item.isAddonEligible || false,
+        quantity: item.quantity,
+        itemType: item.itemType || 'regular',
       })),
     }))
 
