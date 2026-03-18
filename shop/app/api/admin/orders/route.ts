@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 const ORDERS_OBJECT_KEY = KNACK_CONFIG.objectKeys.orders
 const ORDER_FIELDS = KNACK_CONFIG.fields.orders
 const USER_FIELDS = KNACK_CONFIG.fields.users
+const VARIANT_FIELDS = KNACK_CONFIG.fields.variants
 
 type OrderItem = {
   variantId: string
@@ -99,6 +100,20 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Build variant cost map for profit calculation
+    const variantCostMap = new Map<string, number>()
+    try {
+      const variants = await getKnackRecords<Record<string, unknown>>(
+        KNACK_CONFIG.objectKeys.variants,
+        { perPage: 1000 }
+      )
+      for (const v of variants) {
+        variantCostMap.set(String(v.id), Number(getFieldValue(v, VARIANT_FIELDS.costCad, 'costCad') || 0))
+      }
+    } catch {
+      // Continue without cost data
+    }
+
     const orders = records.map(r => {
       const items = parseJson<OrderItem[]>(getFieldValue(r, ORDER_FIELDS.itemsJson, 'itemsJson')) || []
       const statusHistory = parseJson<{ status: string; at: string }[]>(
@@ -130,6 +145,14 @@ export async function GET(request: NextRequest) {
         customerPhone = String(getFieldValue(userRecord, USER_FIELDS.phone, 'Phone') || '')
       }
 
+      // Calculate cost and profit for this order
+      const totalCad = Number(getFieldValue(r, ORDER_FIELDS.totalCad, 'totalCad') || 0)
+      let orderCost = 0
+      for (const item of items) {
+        const costPerUnit = variantCostMap.get(item.variantId) || 0
+        orderCost += costPerUnit * item.quantity
+      }
+
       return {
         id: String(r.id),
         orderNumber: String(getFieldValue(r, ORDER_FIELDS.orderNumber, 'orderNumber') || ''),
@@ -142,7 +165,9 @@ export async function GET(request: NextRequest) {
         shippingCad: Number(getFieldValue(r, ORDER_FIELDS.shippingCad, 'shippingCad') || 0),
         promoCode: String(getFieldValue(r, ORDER_FIELDS.promoCode, 'promoCode') || '') || null,
         promoDiscountCad: Number(getFieldValue(r, ORDER_FIELDS.promoDiscountCad, 'promoDiscountCad') || 0),
-        totalCad: Number(getFieldValue(r, ORDER_FIELDS.totalCad, 'totalCad') || 0),
+        totalCad,
+        costCad: orderCost,
+        profitCad: totalCad - orderCost,
         paymentMethod: String(getFieldValue(r, ORDER_FIELDS.paymentMethod, 'paymentMethod') || ''),
         paymentStatus: String(getFieldValue(r, ORDER_FIELDS.paymentStatus, 'paymentStatus') || ''),
         etransferRef: String(getFieldValue(r, ORDER_FIELDS.etransferRef, 'etransferRef') || '') || null,

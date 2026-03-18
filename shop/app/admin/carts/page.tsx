@@ -21,10 +21,18 @@ type AdminCartItem = {
   itemType: string
 }
 
+type LinkedUser = {
+  displayName: string
+  name: string
+  email: string
+  phone: string
+}
+
 type AdminCart = {
   id: string
   anonymousId: string | null
   email: string | null
+  linkedUser: LinkedUser | null
   itemCount: number
   totalCad: number
   status: string
@@ -137,8 +145,27 @@ export default function AdminCartsPage() {
               {carts.map(cart => (
                 <Fragment key={cart.id}>
                   <tr className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors">
-                    <td className="py-3 px-4 text-sm text-zinc-300">
-                      {cart.email || (cart.anonymousId ? `Anon ${cart.anonymousId.slice(0, 8)}...` : "Unknown")}
+                    <td className="py-3 px-4">
+                      {cart.linkedUser ? (
+                        <div>
+                          <div className="text-sm text-white font-medium">
+                            {cart.linkedUser.displayName || cart.linkedUser.name || "—"}
+                          </div>
+                          <div className="text-xs text-zinc-500">{cart.linkedUser.email || cart.email || "—"}</div>
+                          {cart.linkedUser.phone && (
+                            <div className="text-xs text-zinc-500">{cart.linkedUser.phone}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="text-sm text-zinc-300">
+                            {cart.email || "Guest"}
+                          </div>
+                          {cart.anonymousId && (
+                            <div className="text-xs text-zinc-600 font-mono">{cart.anonymousId.slice(0, 8)}...</div>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-zinc-300">{cart.itemCount}</td>
                     <td className="py-3 px-4 text-sm font-medium text-white">${Number(cart.totalCad).toFixed(2)}</td>
