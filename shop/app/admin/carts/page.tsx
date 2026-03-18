@@ -1,14 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Fragment } from "react"
 import { useAdminFetch } from "@/hooks/use-admin-fetch"
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart, Sparkles, ChevronDown, ChevronUp } from "lucide-react"
+import Image from "next/image"
 
 type AdminCartItem = {
+  productId: string
   productTitle: string
+  productImage: string
+  category: string | null
+  variantId: string
   variantTitle: string
-  quantity: number
+  sku: string | null
+  selectedOption: string | null
   regularPrice: number
+  addonPrice: number | null
+  isAddonEligible: boolean
+  quantity: number
+  itemType: string
 }
 
 type AdminCart = {
@@ -57,14 +67,14 @@ export default function AdminCartsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
         <ShoppingCart className="w-6 h-6 text-orange-500" />
         <h1 className="text-2xl font-bold text-white">Carts</h1>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
           <div className="text-xs text-zinc-500 uppercase">Total</div>
           <div className="text-xl font-bold text-white">{stats.total}</div>
@@ -84,7 +94,7 @@ export default function AdminCartsPage() {
       </div>
 
       {/* Filter buttons */}
-      <div className="mb-4 flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap">
         {["all", "Active", "Abandoned", "Converted", "Expired"].map(s => (
           <button
             key={s}
@@ -106,7 +116,7 @@ export default function AdminCartsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500" />
         </div>
       ) : carts.length === 0 ? (
-        <div className="text-center py-12 text-zinc-500">
+        <div className="text-center py-12 bg-zinc-900 rounded-lg border border-zinc-800 text-zinc-500">
           <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-50" />
           <p>No carts found</p>
         </div>
@@ -152,28 +162,93 @@ export default function AdminCartsPage() {
                         onClick={() => setExpandedId(expandedId === cart.id ? null : cart.id)}
                         className="text-orange-500 hover:text-orange-400 transition-colors"
                       >
-                        {expandedId === cart.id ? "Hide" : "View"}
+                        {expandedId === cart.id ? (
+                          <ChevronUp className="w-5 h-5" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5" />
+                        )}
                       </button>
                     </td>
                   </tr>
                   {expandedId === cart.id && (
                     <tr className="border-b border-zinc-800 bg-zinc-800/30">
-                      <td colSpan={6} className="py-3 px-6">
+                      <td colSpan={6} className="py-4 px-6">
                         {cart.items.length === 0 ? (
                           <p className="text-zinc-500 text-sm">Cart is empty</p>
                         ) : (
-                          <ul className="text-sm space-y-1">
+                          <div className="space-y-3">
                             {cart.items.map((item, i) => (
-                              <li key={i} className="flex justify-between text-zinc-300">
-                                <span>
-                                  {item.productTitle} — {item.variantTitle} &times; {item.quantity}
-                                </span>
-                                <span className="text-zinc-500">
-                                  ${(item.regularPrice * item.quantity).toFixed(2)}
-                                </span>
-                              </li>
+                              <div
+                                key={i}
+                                className={`flex items-center gap-4 p-3 rounded-lg border ${
+                                  item.itemType === "addon"
+                                    ? "bg-green-900/10 border-green-800/30"
+                                    : "bg-zinc-900/50 border-zinc-700/50"
+                                }`}
+                              >
+                                {/* Product Image */}
+                                {item.productImage && (
+                                  <div className="relative w-14 h-14 rounded-md overflow-hidden bg-zinc-800 flex-shrink-0">
+                                    <Image
+                                      src={item.productImage}
+                                      alt={item.productTitle}
+                                      fill
+                                      className="object-cover"
+                                      sizes="56px"
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Product Info */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm text-white font-medium truncate">
+                                      {item.productTitle}
+                                    </span>
+                                    {item.itemType === "addon" && (
+                                      <span className="inline-flex items-center gap-1 text-xs text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">
+                                        <Sparkles className="w-3 h-3" />
+                                        Add-on
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-zinc-400 mt-0.5 space-x-3">
+                                    <span>{item.variantTitle}</span>
+                                    {item.selectedOption && (
+                                      <span>Size: {item.selectedOption}</span>
+                                    )}
+                                    {item.sku && (
+                                      <span className="font-mono">SKU: {item.sku}</span>
+                                    )}
+                                    {item.category && (
+                                      <span>{item.category}</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Qty & Price */}
+                                <div className="flex items-center gap-4 text-sm flex-shrink-0">
+                                  <span className="text-zinc-400">
+                                    &times;{item.quantity}
+                                  </span>
+                                  <div className="text-right">
+                                    <div className="text-white font-medium">
+                                      ${(
+                                        (item.itemType === "addon" && item.addonPrice
+                                          ? item.addonPrice
+                                          : item.regularPrice) * item.quantity
+                                      ).toFixed(2)}
+                                    </div>
+                                    {item.itemType === "addon" && item.addonPrice && (
+                                      <div className="text-xs text-zinc-600 line-through">
+                                        ${(item.regularPrice * item.quantity).toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -187,6 +262,3 @@ export default function AdminCartsPage() {
     </div>
   )
 }
-
-// Need Fragment import
-import { Fragment } from "react"
