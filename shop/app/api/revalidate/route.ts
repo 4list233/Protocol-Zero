@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { clearCache } from '@/lib/notion-cache'
+import { clearCache } from '@/lib/cache'
 
 export async function POST(request: Request) {
   try {

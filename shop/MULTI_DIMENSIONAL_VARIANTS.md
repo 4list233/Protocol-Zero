@@ -131,7 +131,7 @@ Add ability to manually edit option fields in admin panel.
 
 - `shop/lib/knack-config.ts` - Add new field mappings
 - `shop/lib/knack-products.ts` - Update variant mapping
-- `shop/lib/notion-client.ts` - Update types
+- `shop/lib/catalog.ts` - Update types
 - `shop/components/variant-selector.tsx` - New multi-dimensional UI
 - `shared/scripts/parse-variant-options.js` - Migration script
 

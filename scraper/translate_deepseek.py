@@ -3,7 +3,6 @@
 BULK translate products using DeepSeek API (maximum cost optimization)
 - 1 API call for ALL products
 - 1 API call for ALL variants
-- Uses original prompts from translate.py
 """
 import os
 import sys
@@ -13,10 +12,12 @@ import argparse
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
+import re
 
-# Add utilities to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'utilities'))
-from translate import TRANSLATION_PROMPT, VARIANT_PROMPT, contains_chinese
+def contains_chinese(text: str) -> bool:
+    if not text:
+        return False
+    return bool(re.search(r'[\u4e00-\u9fff]', text))
 
 # Load environment
 load_dotenv()

@@ -47,7 +47,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'int
 
 from variant_engine import extract_variants, VariantExtractionResult
 from knack_integration import KnackAPI, PRODUCT_FIELDS, VARIANT_FIELDS, PRODUCTS_OBJECT_KEY, VARIANTS_OBJECT_KEY
-from notion_integration import push_product_to_notion
 
 # ============================================================================
 # CONFIGURATION
@@ -67,7 +66,6 @@ env_path = os.path.join(project_root, '.env')
 load_dotenv(env_path)
 
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_AI_API_KEY')  # Fallback for vision tasks
 
 # Timing
 PAGE_LOAD_WAIT = 15
@@ -321,24 +319,20 @@ DIMENSION_LABELS = {
 # Using DeepSeek for cost-efficient translation
 DEEPSEEK_MODEL = 'deepseek-chat'  # Most cost-efficient
 
-# Gemini models kept for vision tasks only (price extraction)
-GEMINI_MODELS = [
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-3-flash',
-]
-
 # Delay between API calls
 TRANSLATION_DELAY = 0.5  # DeepSeek has generous rate limits
 INTERNAL_DELAY = 0.1     # Shorter delay for batched calls
 
 
 class AITranslator:
-    """Translate Chinese text using DeepSeek API (with Gemini fallback for vision)"""
+    """Translate Chinese text using DeepSeek API.
+
+    This repo's intended workflow is scrape-only in `ai_scraper.py`,
+    then translate separately with `translate_deepseek.py`.
+    """
     
     def __init__(self, no_api: bool = False):
         self.deepseek_key = DEEPSEEK_API_KEY if not no_api else None
-        self.gemini_key = GEMINI_API_KEY if not no_api else None
         self.no_api = no_api
         
         # Initialize DeepSeek client (OpenAI-compatible)
@@ -350,8 +344,6 @@ class AITranslator:
         else:
             self.client = None
         
-        # Gemini setup for vision tasks
-        self.gemini_base_url = "https://generativelanguage.googleapis.com/v1beta/models"
         self.failed_models = set()
         self.last_call_time = 0
         
@@ -374,129 +366,13 @@ class AITranslator:
             time.sleep(wait_time)
         self.last_call_time = time.time()
     
-    def _get_gemini_endpoint(self, model: str) -> str:
-        """Get Gemini API endpoint (for vision tasks only)"""
-        return f"{self.gemini_base_url}/{model}:generateContent?key={self.gemini_key}"
-    
-    def _try_gemini_model(self, model: str, payload: dict) -> tuple[bool, str]:
-        """Try a specific Gemini model (for vision). Returns (success, result_or_error)"""
-        try:
-            endpoint = self._get_gemini_endpoint(model)
-            response = requests.post(endpoint, json=payload, timeout=30)
-            
-            if response.ok:
-                result = response.json()
-                translated = result['candidates'][0]['content']['parts'][0]['text'].strip()
-                translated = translated.replace('"', '').replace("'", '').strip()
-                return True, translated
-            elif response.status_code == 429:
-                print(f"      ⚠️  {model}: Rate limited")
-                self.failed_models.add(model)
-                return False, "rate_limited"
-            else:
-                return False, f"error_{response.status_code}"
-        except Exception as e:
-            return False, str(e)
-    
     def extract_price_from_screenshot(self, screenshot_path: str, is_tmall: bool = False) -> float:
         """
-        Use Gemini Vision to extract the highlighted price from a screenshot.
-        Supports both Taobao and Tmall layouts.
-
-        Args:
-            screenshot_path: Path to the screenshot image
-            is_tmall: Whether this is a Tmall page (different layout)
+        Legacy hook: previously used a vision model to read the price from a screenshot.
+        This codebase is being cleaned to remove Gemini/Notion dependencies.
+        Price extraction from screenshots is disabled (returns 0.0).
         """
-        if not self.gemini_key:
-            print("      ⚠️  No GEMINI_API_KEY - cannot use Vision for price")
-            return 0.0
-
-        if not os.path.exists(screenshot_path):
-            return 0.0
-
-        # Wait for rate limit
-        self._rate_limit_wait()
-
-        try:
-            # Read and encode image
-            with open(screenshot_path, 'rb') as f:
-                image_data = base64.b64encode(f.read()).decode('utf-8')
-
-            # Different prompts for Taobao vs Tmall
-            if is_tmall:
-                prompt = """You are reading a Tmall product page screenshot to find the MAIN PRODUCT PRICE.
-
-CRITICAL INSTRUCTIONS for TMALL:
-1. Find the LARGE RED/ORANGE price number - on Tmall it's typically in a prominent position
-2. Tmall often shows "天猫价" (Tmall Price) or "促销价" (Promo Price) - look for the main sale price
-3. The price format is: ¥XX.X or ¥XXX (may show as just numbers without ¥)
-4. Read the COMPLETE number - if you see "56.9", return "56.9" NOT "5" or "6.9"
-5. Ignore crossed-out prices (原价/original price) - we want the current selling price
-6. The price is typically between ¥20 and ¥2000 for tactical/airsoft gear
-
-Return ONLY the complete price number. Example: 56.9 or 128 or 89"""
-            else:
-                prompt = """You are reading a Taobao product page screenshot to find the MAIN PRODUCT PRICE.
-
-CRITICAL INSTRUCTIONS:
-1. Find the LARGE ORANGE-RED price number in the product info area (right side, upper portion)
-2. The price format is: ¥XX.X or ¥XXX (the ¥ symbol is small, the NUMBER is large)
-3. Read the COMPLETE number - if you see "56.9", return "56.9" NOT "5" or "6.9"
-4. The price is typically between ¥20 and ¥500 for tactical/airsoft gear
-5. Look for "已售" (already sold) text - the price is to its LEFT
-
-EXAMPLE: If the price display shows "¥56.9 已售 1000+", you should return: 56.9
-
-DO NOT return:
-- Partial numbers (like "5" from "56.9")
-- Shipping costs
-- Small numbers in badges or buttons
-
-Return ONLY the complete price number. Example: 56.9 or 128 or 89"""
-
-            payload = {
-                "contents": [{
-                    "parts": [
-                        {"text": prompt},
-                        {
-                            "inline_data": {
-                                "mime_type": "image/png",
-                                "data": image_data
-                            }
-                        }
-                    ]
-                }],
-                "generationConfig": {"temperature": 0.1, "maxOutputTokens": 50}
-            }
-            
-            # Try Gemini models for vision
-            for model in GEMINI_MODELS:
-                if model in self.failed_models:
-                    continue
-                
-                success, result = self._try_gemini_model(model, payload)
-                if success:
-                    # Parse the number
-                    clean = re.sub(r'[^\d.]', '', result)
-                    if clean:
-                        try:
-                            price = float(clean)
-                            # Validate: Price should be realistic for tactical gear (¥10-¥2000)
-                            if price < 10:
-                                print(f"      ⚠️  Vision returned ¥{price} - likely partial read, retrying...")
-                                continue  # Try next model
-                            if price > 2000:
-                                print(f"      ⚠️  Vision returned ¥{price} - unusually high, but accepting")
-                            print(f"      💰 Vision detected price: ¥{price}")
-                            return price
-                        except:
-                            pass
-            
-            return 0.0
-            
-        except Exception as e:
-            print(f"      ⚠️  Vision price error: {e}")
-            return 0.0
+        return 0.0
         
     def translate(self, text: str, context: str = "airsoft/tactical gear", use_short_delay: bool = False) -> str:
         """Translate Chinese to English using DeepSeek"""
@@ -2576,24 +2452,7 @@ class AIScraper:
             print(f"      → Notion: Pushing image URLs...")
             
             # Convert ScrapedProduct to dict for Notion
-            product_dict = {
-                'product_id': product.product_id,
-                'product_sku': product.product_sku,
-                'title_en': product.title_en,
-                'title_zh': product.title_zh,
-                'url': product.url,
-                'images': product.images,
-                'variants': [
-                    {
-                        'variant_name_en': v.variant_name_en,
-                        'sku': v.sku,
-                        'image_url': getattr(v, 'image_url', None)
-                    }
-                    for v in product.variants
-                ]
-            }
-            
-            push_product_to_notion(product_dict, dry_run=self.dry_run)
+            # Notion integration removed (Knack is the only upload target).
                 
         except Exception as e:
             print(f"      ⚠️  Push error: {e}")
@@ -2760,8 +2619,6 @@ class AIScraper:
             print(f"\n🚀 AI Scraper V3 - {len(urls)} URLs")
             if self.no_api:
                 print("   Mode: 📦 SCRAPE ONLY (no translation - use translate_deepseek.py after)")
-            else:
-                print("   Mode: 📝 TRANSLATE (during scraping)")
             if self.dry_run:
                 print("   Mode: 🧪 DRY RUN (no Knack changes)")
             if self.skip_knack:
@@ -2778,12 +2635,8 @@ class AIScraper:
                     print(f"   ⏳ Browsing pause ({delay:.0f}s) before next product...")
                     human_browse_pause(self.driver)
 
-            # Batch translate after all products collected (only if not in no-api mode)
-            if not self.no_api:
-                self._batch_translate_all_products()
-            else:
-                print(f"\n⏭️  Skipping translation (scrape-only mode)")
-                print(f"   Run translate_deepseek.py to translate later")
+            print(f"\n⏭️  Skipping translation (scrape-only mode)")
+            print(f"   Run translate_deepseek.py to translate later")
             
             self._export()
             
@@ -2971,16 +2824,13 @@ def main():
     parser.add_argument('--push-knack', action='store_true', help='Push to Knack after scraping (default: scrape only)')
     parser.add_argument('--dry-run', action='store_true', help='Simulate Knack updates')
     parser.add_argument('--skip-knack', action='store_true', help='[DEPRECATED] Use default behavior instead')
-    parser.add_argument('--translate', action='store_true', help='Translate during scraping (default: scrape only, translate later with translate_deepseek.py)')
-    parser.add_argument('--no-api', action='store_true', help='[DEPRECATED] Use default behavior instead (scraper now scrapes-only by default)')
     args = parser.parse_args()
 
     # Default is now to skip Knack unless --push-knack is specified
     skip_knack = not args.push_knack
 
-    # Default is now to skip translation unless --translate is specified
-    # This saves API costs by allowing bulk translation later
-    no_api = not args.translate
+    # Always scrape-only. Translation happens as a separate step via translate_deepseek.py.
+    no_api = True
 
     scraper = AIScraper(
         headless=args.headless,

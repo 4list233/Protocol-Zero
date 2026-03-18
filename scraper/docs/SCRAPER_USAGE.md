@@ -2,7 +2,13 @@
 
 ## Overview
 
-The `ai_scraper.py` script scrapes Taobao product pages, extracts variant information, translates Chinese text to English, and calculates CAD pricing with margins.
+This scraper workflow is intentionally split into separate steps:
+
+- `ai_scraper.py`: **scrape only** (no translation)
+- Manual review: remove unwanted detail images
+- `utilities/stitch_details.py`: stitch detail images into `Details_Long.jpg`
+- `translate_deepseek.py`: bulk translate Chinese → English (separate step)
+- `upload_to_knack.py`: upload products + images to **Knack only**
 
 ## Prerequisites
 
@@ -13,9 +19,9 @@ The `ai_scraper.py` script scrapes Taobao product pages, extracts variant inform
 
 2. **Chrome browser** installed
 
-3. **Environment variables** in `shop/.env.local`:
+3. **Environment variables** in repo root `.env`:
    ```
-   GEMINI_API_KEY=your_gemini_api_key
+   DEEPSEEK_API_KEY=your_deepseek_api_key
    KNACK_APPLICATION_ID=your_knack_app_id
    KNACK_REST_API_KEY=your_knack_api_key
    ```
@@ -39,8 +45,6 @@ python3 ai_scraper.py [OPTIONS]
 | `--headless` | Run browser in headless mode (no visible window) |
 | `--push-knack` | Push to Knack after scraping (default: scrape only) |
 | `--dry-run` | Simulate Knack updates without making changes |
-| `--no-api` | No API calls (DOM/rule-based translation only) |
-| `--batch-translate` | Batch all translations at end (more efficient) |
 
 ## Usage Examples
 
@@ -54,12 +58,6 @@ python3 ai_scraper.py
 ```bash
 # Test on first URL only
 python3 ai_scraper.py --test
-```
-
-### Batch Translation (API Efficient)
-```bash
-# Collect all texts, translate in single API call at end
-python3 ai_scraper.py --batch-translate
 ```
 
 ### Headless Mode
@@ -78,12 +76,6 @@ python3 ai_scraper.py --push-knack
 ```bash
 # See what would be uploaded without making changes
 python3 ai_scraper.py --push-knack --dry-run
-```
-
-### No API Mode (Offline)
-```bash
-# Use only rule-based translation (no Gemini API)
-python3 ai_scraper.py --no-api
 ```
 
 ## Input File
@@ -156,15 +148,25 @@ The AI translator follows these rules:
 
 ### Step 1: Scrape Products
 ```bash
-python3 ai_scraper.py --batch-translate
+python3 ai_scraper.py
 ```
 
 ### Step 2: Review Output
 - Check `output/products.csv` for data accuracy
 - Review images in `media/` folder
-- Stitch detail images if needed (`Details_Long.jpg`)
+- Manually delete unwanted images in each product `Details/` folder
 
-### Step 3: Upload to Knack (After Review)
+### Step 3: Stitch detail images
+```bash
+python3 utilities/stitch_details.py
+```
+
+### Step 4: Translate with DeepSeek
+```bash
+python3 translate_deepseek.py
+```
+
+### Step 5: Upload to Knack (After Review)
 ```bash
 python3 upload_to_knack.py --dry-run    # Preview first
 python3 upload_to_knack.py --sync-media # Upload + sync images
@@ -177,10 +179,6 @@ python3 upload_to_knack.py --sync-media # Upload + sync images
 # Re-run login setup
 python3 ai_scraper.py --login
 ```
-
-### Rate Limiting
-The scraper automatically handles Gemini API rate limits with 15-second delays and model fallback chain:
-`gemini-2.5-flash → gemini-2.5-flash-lite → gemini-3-flash → gemma-3-27b`
 
 ### Timeout Errors
 If products time out, they may have complex page structures. Try running again or use `--no-api` for offline mode.
