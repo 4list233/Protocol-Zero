@@ -144,7 +144,9 @@ function mapOrderToKnackRecord(order: Omit<Order, 'id' | 'createdAt' | 'updatedA
   record[ORDER_FIELDS.paymentStatus] = order.payment.status
   record[ORDER_FIELDS.etransferRef] = order.payment.etransferRef || null
   record[ORDER_FIELDS.paymentReceivedAt] = order.payment.receivedAt 
-    ? order.payment.receivedAt.toISOString() 
+    ? (typeof (order.payment.receivedAt as any).toDate === 'function'
+      ? (order.payment.receivedAt as any).toDate().toISOString()
+      : (order.payment.receivedAt as Date).toISOString())
     : null
   record[ORDER_FIELDS.status] = order.status
   record[ORDER_FIELDS.shippingInfo] = order.shipping ? JSON.stringify(order.shipping) : null
