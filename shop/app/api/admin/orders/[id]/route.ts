@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 const ORDERS_OBJECT_KEY = KNACK_CONFIG.objectKeys.orders
 const ORDER_FIELDS = KNACK_CONFIG.fields.orders
 const VARIANT_FIELDS = KNACK_CONFIG.fields.variants
+const PRODUCT_FIELDS = KNACK_CONFIG.fields.products
 
 type OrderItem = {
   variantId: string
@@ -120,13 +121,12 @@ export async function GET(
       getFieldValue(record, ORDER_FIELDS.itemsJson, 'itemsJson')
     ) || []
 
-    // Fetch variant records to get Taobao links and Chinese names
+    // Fetch variant records for cost and Chinese names
     const variantIds = items.map(i => i.variantId).filter(Boolean)
-    const variantMap = new Map<string, { taobaoLink: string; chineseName: string; costCad: number }>()
+    const variantMap = new Map<string, { chineseName: string; costCad: number }>()
 
     if (variantIds.length > 0) {
       try {
-        // Fetch all variants and filter — Knack doesn't support "in" filters easily
         const allVariants = await getKnackRecords<Record<string, unknown>>(
           KNACK_CONFIG.objectKeys.variants,
           { perPage: 1000 }
@@ -135,9 +135,8 @@ export async function GET(
           const vid = String(v.id)
           if (variantIds.includes(vid)) {
             variantMap.set(vid, {
-              taobaoLink: String(getFieldValue(v, VARIANT_FIELDS.chineseLink, 'chineseLink') || ''),
               chineseName: String(getFieldValue(v, VARIANT_FIELDS.chineseName, 'chineseName') || ''),
-              costCad: Number(getFieldValue(v, VARIANT_FIELDS.costCad, 'costCad') || 0),
+              costCad: Number(getFieldValue(v, VARIANT_FIELDS.totalCostCad, 'totalCostCad') || 0),
             })
           }
         }
@@ -146,15 +145,39 @@ export async function GET(
       }
     }
 
-    // Enrich items with Taobao data and cost
+    // Fetch products to get Taobao URL (field_55 on Object 6)
+    const productIds = [...new Set(items.map(i => i.productId).filter(Boolean))]
+    const productUrlMap = new Map<string, string>()
+    if (productIds.length > 0) {
+      try {
+        const allProducts = await getKnackRecords<Record<string, unknown>>(
+          KNACK_CONFIG.objectKeys.products,
+          { perPage: 1000 }
+        )
+        for (const p of allProducts) {
+          // Match by field_45 (ID field) which is what itemsJson stores as productId
+          const idField = String(getFieldValue(p, PRODUCT_FIELDS.id, 'ID') || '')
+          const url = String(getFieldValue(p, PRODUCT_FIELDS.url, 'URL') || '')
+          if (idField && url) productUrlMap.set(idField, url)
+          // Also map by Knack record ID
+          if (url) productUrlMap.set(String(p.id), url)
+        }
+      } catch {
+        // Continue without product URLs
+      }
+    }
+
+    // Enrich items with Taobao URL (from product), cost, and Chinese name (from variant)
     let orderCost = 0
     const enrichedItems = items.map(item => {
       const variantData = variantMap.get(item.variantId)
       const costPerUnit = variantData?.costCad || 0
       orderCost += costPerUnit * item.quantity
+      // Taobao link from product URL (field_55)
+      const taobaoLink = productUrlMap.get(item.productId) || null
       return {
         ...item,
-        taobaoLink: variantData?.taobaoLink || null,
+        taobaoLink,
         chineseName: variantData?.chineseName || null,
         costCad: costPerUnit,
       }

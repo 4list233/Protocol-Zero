@@ -250,13 +250,18 @@ export const KNACK_CONFIG = {
 }
 
 /**
- * Helper function to get field value from Knack record
- * Handles both field keys (field_1) and field names (Title)
+ * Helper function to get field value from Knack record.
+ * For connection and file fields, checks _raw suffix first (Knack returns
+ * formatted HTML in field_XX but raw arrays/objects in field_XX_raw).
  */
 export function getFieldValue(record: Record<string, unknown>, fieldKey: string, fieldName?: string): unknown {
   // Skip if field key is empty (optional fields)
   if (!fieldKey) return undefined
-  // Try field key first
+  // Try _raw suffix first — Knack returns raw data (arrays, objects) there
+  // while field_XX may contain formatted HTML for connection/file fields
+  const rawKey = `${fieldKey}_raw`
+  if (record[rawKey] !== undefined && record[rawKey] !== null) return record[rawKey]
+  // Try field key
   if (record[fieldKey] !== undefined && record[fieldKey] !== null) return record[fieldKey]
   // Try field name if provided
   if (fieldName && record[fieldName] !== undefined && record[fieldName] !== null) return record[fieldName]
