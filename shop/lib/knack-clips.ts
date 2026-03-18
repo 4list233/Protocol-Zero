@@ -171,7 +171,7 @@ export async function updateClip(clipId: string, updates: Partial<ClipData>): Pr
   if (updates.tags !== undefined) updateData[CLIP_FIELDS.tags] = JSON.stringify(updates.tags)
   if (updates.likes !== undefined) updateData[CLIP_FIELDS.likes] = updates.likes
   if (updates.likedBy !== undefined) updateData[CLIP_FIELDS.likedBy] = JSON.stringify(updates.likedBy)
-  if (updates.comments !== undefined) updateData[CLIP_FIELDS.comments] = updates.comments
+  if (updates.comments !== undefined && (CLIP_FIELDS as any).comments) updateData[(CLIP_FIELDS as any).comments] = updates.comments
   if (updates.date !== undefined) updateData[CLIP_FIELDS.date] = updates.date
 
   await updateKnackRecord(CLIPS_OBJECT_KEY, clipId, updateData)
