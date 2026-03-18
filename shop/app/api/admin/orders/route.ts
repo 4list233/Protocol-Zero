@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         { perPage: 1000 }
       )
       for (const v of variants) {
-        variantCostMap.set(String(v.id), Number(getFieldValue(v, VARIANT_FIELDS.costCad, 'costCad') || 0))
+        variantCostMap.set(String(v.id), Number(getFieldValue(v, VARIANT_FIELDS.totalCostCad, 'totalCostCad') || 0))
       }
     } catch {
       // Continue without cost data
