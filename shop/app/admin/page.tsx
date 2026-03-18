@@ -11,6 +11,10 @@ type Stats = {
   draftProducts: number
   totalOrders: number
   pendingOrders: number
+  totalRevenue: number
+  totalCost: number
+  totalProfit: number
+  totalPromoDiscount: number
 }
 
 type RecentProduct = {
@@ -88,18 +92,45 @@ export default function AdminDashboard() {
           color="green"
         />
         <StatCard
-          title="Draft Products"
-          value={stats?.draftProducts ?? "-"}
-          icon={AlertCircle}
-          color="yellow"
-          href="/admin/products?status=draft"
-        />
-        <StatCard
           title="Pending Orders"
           value={stats?.pendingOrders ?? "-"}
           icon={ShoppingCart}
           color="orange"
-          href="/admin/orders?status=pending"
+          href="/admin/orders?payment=Pending"
+        />
+        <StatCard
+          title="Total Orders"
+          value={stats?.totalOrders ?? "-"}
+          icon={ShoppingCart}
+          href="/admin/orders"
+        />
+      </div>
+
+      {/* Financial Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Revenue (Paid)"
+          value={stats ? `$${stats.totalRevenue.toFixed(2)}` : "-"}
+          icon={DollarSign}
+          color="green"
+        />
+        <StatCard
+          title="Cost of Goods"
+          value={stats ? `$${stats.totalCost.toFixed(2)}` : "-"}
+          icon={DollarSign}
+          color="orange"
+        />
+        <StatCard
+          title="Profit"
+          value={stats ? `$${stats.totalProfit.toFixed(2)}` : "-"}
+          icon={DollarSign}
+          color={stats && stats.totalProfit > 0 ? "green" : "yellow"}
+        />
+        <StatCard
+          title="Promo Discounts"
+          value={stats ? `$${stats.totalPromoDiscount.toFixed(2)}` : "-"}
+          icon={AlertCircle}
+          color="yellow"
         />
       </div>
 

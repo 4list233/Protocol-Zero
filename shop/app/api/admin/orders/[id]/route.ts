@@ -122,7 +122,7 @@ export async function GET(
 
     // Fetch variant records to get Taobao links and Chinese names
     const variantIds = items.map(i => i.variantId).filter(Boolean)
-    const variantMap = new Map<string, { taobaoLink: string; chineseName: string }>()
+    const variantMap = new Map<string, { taobaoLink: string; chineseName: string; costCad: number }>()
 
     if (variantIds.length > 0) {
       try {
@@ -137,6 +137,7 @@ export async function GET(
             variantMap.set(vid, {
               taobaoLink: String(getFieldValue(v, VARIANT_FIELDS.chineseLink, 'chineseLink') || ''),
               chineseName: String(getFieldValue(v, VARIANT_FIELDS.chineseName, 'chineseName') || ''),
+              costCad: Number(getFieldValue(v, VARIANT_FIELDS.costCad, 'costCad') || 0),
             })
           }
         }
@@ -145,13 +146,17 @@ export async function GET(
       }
     }
 
-    // Enrich items with Taobao data
+    // Enrich items with Taobao data and cost
+    let orderCost = 0
     const enrichedItems = items.map(item => {
       const variantData = variantMap.get(item.variantId)
+      const costPerUnit = variantData?.costCad || 0
+      orderCost += costPerUnit * item.quantity
       return {
         ...item,
         taobaoLink: variantData?.taobaoLink || null,
         chineseName: variantData?.chineseName || null,
+        costCad: costPerUnit,
       }
     })
 
@@ -189,6 +194,8 @@ export async function GET(
       getFieldValue(record, ORDER_FIELDS.statusHistory, 'statusHistory')
     ) || []
 
+    const totalCad = Number(getFieldValue(record, ORDER_FIELDS.totalCad, 'totalCad') || 0)
+
     return NextResponse.json({
       id: String(record.id),
       orderNumber: String(getFieldValue(record, ORDER_FIELDS.orderNumber, 'orderNumber') || ''),
@@ -200,7 +207,9 @@ export async function GET(
       shippingCad: Number(getFieldValue(record, ORDER_FIELDS.shippingCad, 'shippingCad') || 0),
       promoCode: String(getFieldValue(record, ORDER_FIELDS.promoCode, 'promoCode') || '') || null,
       promoDiscountCad: Number(getFieldValue(record, ORDER_FIELDS.promoDiscountCad, 'promoDiscountCad') || 0),
-      totalCad: Number(getFieldValue(record, ORDER_FIELDS.totalCad, 'totalCad') || 0),
+      totalCad,
+      costCad: orderCost,
+      profitCad: totalCad - orderCost,
       paymentMethod: String(getFieldValue(record, ORDER_FIELDS.paymentMethod, 'paymentMethod') || ''),
       paymentStatus: String(getFieldValue(record, ORDER_FIELDS.paymentStatus, 'paymentStatus') || ''),
       etransferRef: String(getFieldValue(record, ORDER_FIELDS.etransferRef, 'etransferRef') || '') || null,

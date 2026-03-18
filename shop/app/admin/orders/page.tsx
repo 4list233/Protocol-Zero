@@ -37,6 +37,7 @@ type OrderItem = {
   addonPrice?: number
   taobaoLink?: string | null
   chineseName?: string | null
+  costCad?: number
 }
 
 type Order = {
@@ -52,6 +53,8 @@ type Order = {
   promoCode: string | null
   promoDiscountCad: number
   totalCad: number
+  costCad: number
+  profitCad: number
   paymentMethod: string
   paymentStatus: string
   etransferRef: string | null
@@ -214,13 +217,14 @@ export default function OrdersPage() {
   }
 
   // Stats
+  const paidOrders = orders.filter(o => o.paymentStatus === "Received")
   const stats = {
     total: orders.length,
     pending: orders.filter(o => o.paymentStatus === "Pending").length,
-    received: orders.filter(o => o.paymentStatus === "Received").length,
-    totalRevenue: orders
-      .filter(o => o.paymentStatus === "Received")
-      .reduce((sum, o) => sum + o.totalCad, 0),
+    received: paidOrders.length,
+    totalRevenue: paidOrders.reduce((sum, o) => sum + o.totalCad, 0),
+    totalCost: paidOrders.reduce((sum, o) => sum + (o.costCad || 0), 0),
+    totalProfit: paidOrders.reduce((sum, o) => sum + (o.profitCad || 0), 0),
   }
 
   return (
@@ -235,7 +239,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
           <div className="text-xs text-zinc-500 uppercase">Total Orders</div>
           <div className="text-xl font-bold text-white">{stats.total}</div>
@@ -251,6 +255,16 @@ export default function OrdersPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
           <div className="text-xs text-orange-500 uppercase">Revenue</div>
           <div className="text-xl font-bold text-orange-400">${stats.totalRevenue.toFixed(2)}</div>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+          <div className="text-xs text-red-500 uppercase">Cost</div>
+          <div className="text-xl font-bold text-red-400">${stats.totalCost.toFixed(2)}</div>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+          <div className={`text-xs uppercase ${stats.totalProfit >= 0 ? "text-green-500" : "text-red-500"}`}>Profit</div>
+          <div className={`text-xl font-bold ${stats.totalProfit >= 0 ? "text-green-400" : "text-red-400"}`}>
+            ${stats.totalProfit.toFixed(2)}
+          </div>
         </div>
       </div>
 
@@ -319,6 +333,7 @@ export default function OrdersPage() {
                   <th className="py-3 px-4">Customer</th>
                   <th className="py-3 px-4">Items</th>
                   <th className="py-3 px-4">Total</th>
+                  <th className="py-3 px-4">Profit</th>
                   <th className="py-3 px-4">Payment</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Date</th>
@@ -340,6 +355,11 @@ export default function OrdersPage() {
                       <td className="py-3 px-4 text-sm text-zinc-300">{order.itemCount}</td>
                       <td className="py-3 px-4 text-sm font-medium text-white">
                         ${Number(order.totalCad).toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium">
+                        <span className={order.profitCad >= 0 ? "text-green-400" : "text-red-400"}>
+                          ${(order.profitCad || 0).toFixed(2)}
+                        </span>
                       </td>
                       <td className="py-3 px-4">
                         <span
@@ -389,7 +409,7 @@ export default function OrdersPage() {
                     {/* Expanded Detail */}
                     {expandedId === order.id && (
                       <tr className="border-b border-zinc-800">
-                        <td colSpan={8} className="p-0">
+                        <td colSpan={9} className="p-0">
                           {detailLoading ? (
                             <div className="flex items-center justify-center py-8">
                               <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
@@ -497,6 +517,19 @@ function OrderDetail({
             <div className="text-lg font-bold text-orange-400">
               Total: ${Number(order.totalCad).toFixed(2)} CAD
             </div>
+            {order.costCad > 0 && (
+              <div className="pt-2 border-t border-zinc-800 space-y-1">
+                <div className="text-sm text-zinc-400">
+                  Cost: <span className="text-red-400">${order.costCad.toFixed(2)}</span>
+                </div>
+                <div className="text-sm font-medium">
+                  Profit:{" "}
+                  <span className={order.profitCad >= 0 ? "text-green-400" : "text-red-400"}>
+                    ${order.profitCad.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
             {order.paymentReceivedAt && (
               <div className="text-xs text-green-400">
                 Paid on {new Date(order.paymentReceivedAt).toLocaleDateString("en-CA", {
@@ -611,28 +644,28 @@ function OrderDetail({
                       Size/Option: <span className="text-zinc-300">{item.selectedSize}</span>
                     </div>
                   )}
-                  {item.sku && (
+                  {item.chineseName && (
                     <div>
-                      SKU: <span className="text-zinc-300 font-mono">{item.sku}</span>
+                      Chinese: <span className="text-zinc-300">{item.chineseName}</span>
                     </div>
                   )}
-                  {(item as OrderItem & { chineseName?: string | null }).chineseName && (
+                  {item.costCad !== undefined && item.costCad > 0 && (
                     <div>
-                      Chinese: <span className="text-zinc-300">{(item as OrderItem & { chineseName?: string | null }).chineseName}</span>
+                      Cost: <span className="text-zinc-300">${item.costCad.toFixed(2)}/unit</span>
                     </div>
                   )}
                 </div>
 
                 {/* Taobao Link */}
-                {(item as OrderItem & { taobaoLink?: string | null }).taobaoLink && (
+                {item.taobaoLink && (
                   <a
-                    href={(item as OrderItem & { taobaoLink?: string | null }).taobaoLink!}
+                    href={item.taobaoLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-red-900/30 border border-red-800/50 rounded-lg text-xs text-red-400 hover:bg-red-900/50 hover:text-red-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 mt-1.5 text-xs text-red-400 hover:text-red-300 underline transition-colors"
                   >
                     <ExternalLink className="w-3 h-3" />
-                    Buy on Taobao
+                    Taobao Link
                   </a>
                 )}
               </div>
