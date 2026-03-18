@@ -347,9 +347,9 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
   // Extract add-on pricing fields
   const isAddonItem = getFieldValue(record, VARIANT_FIELDS.isAddonItem, 'Is Add-on Item')
   const addonPriceCad = getFieldValue(record, VARIANT_FIELDS.addonPriceCad, 'Add-on Price CAD')
-  const addonCostCad = getFieldValue(record, VARIANT_FIELDS.addonCostCad, 'Add-on Cost CAD')
-  const addonMargin = getFieldValue(record, VARIANT_FIELDS.addonMargin, 'Add-on Margin')
-  const minCartForAddon = getFieldValue(record, VARIANT_FIELDS.minCartForAddon, 'Min Cart for Add-on')
+  const addonCostCad = getFieldValue(record, (VARIANT_FIELDS as any).addonCostCad, 'Add-on Cost CAD')
+  const addonMargin = getFieldValue(record, (VARIANT_FIELDS as any).addonMargin, 'Add-on Margin')
+  const minCartForAddon = getFieldValue(record, (VARIANT_FIELDS as any).minCartForAddon, 'Min Cart for Add-on')
   
   return {
     id: String(record.id || ''),
