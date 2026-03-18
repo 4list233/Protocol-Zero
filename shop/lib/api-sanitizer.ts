@@ -1,7 +1,7 @@
 // API Sanitizer - Remove sensitive business data and internal fields before sending to public API responses
 // This prevents exposing internal pricing, margins, cost information, and data not displayed on pages
 
-import type { ProductRuntime, ProductVariant } from './notion-client'
+import type { ProductRuntime, ProductVariant } from './catalog'
 
 /**
  * Sanitized variant type for public API responses

@@ -43,9 +43,9 @@ type ScheduleConfig = {
 export function getWeekSchedule(): DaySchedule[] {
   const days = (scheduleConfig as ScheduleConfig).weekSchedule
   return days.map((day) => {
-    const pricing = day.pricing || {}
+    const pricing = day.pricing
     let lnHours: string | undefined
-    if (pricing.lateNight?.hours) {
+    if (pricing?.lateNight?.hours) {
       const parts = String(pricing.lateNight.hours).split('-')
       if (parts.length === 2) {
         lnHours = `${to12Hour(parts[0])}-${to12Hour(parts[1])}`
@@ -57,10 +57,10 @@ export function getWeekSchedule(): DaySchedule[] {
       dayIndex: day.dayIndex,
       name: day.name,
       hours: formatHours(day.hours),
-      basePrice: pricing.base,
-      discountedPrice: pricing.discounted,
-      discountLabel: pricing.discountType || pricing.special,
-      lateNightPrice: pricing.lateNight?.price,
+      basePrice: pricing?.base ?? 0,
+      discountedPrice: pricing?.discounted,
+      discountLabel: pricing?.discountType || pricing?.special,
+      lateNightPrice: pricing?.lateNight?.price,
       lateNightHours: lnHours
     }
   })

@@ -16,9 +16,8 @@ export const dynamic = 'force-dynamic'
 //
 // DISABLED in production:
 //   - Products/Variants (must be managed locally)
-//   - Notion (must be managed locally)
 //
-// All product/variant/Notion seeding and updates must happen from local scripts.
+// All product/variant creation and updates must happen via Knack/admin tooling.
 
 // =============================================================================
 // SECURITY: Bot/Spam Protection

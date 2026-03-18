@@ -4,7 +4,7 @@
  */
 
 import 'dotenv/config'
-import { fetchProducts } from '../lib/notion-client'
+import { fetchProducts } from '../lib/catalog'
 
 async function verifyFix() {
   console.log('='.repeat(80))

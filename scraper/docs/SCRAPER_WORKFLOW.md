@@ -1,6 +1,6 @@
 # Scraper Workflow Guide
 
-Complete workflow for scraping Taobao products, translating with Gemini AI, and seeding to Notion.
+Complete workflow for scraping Taobao products, translating with DeepSeek, and uploading to Knack.
 
 ## Prerequisites
 
@@ -15,12 +15,13 @@ Required packages:
 - requests
 - Pillow
 - python-dotenv
-- google-generativeai
 
 ### 2. Configure Environment Variables
-Create or update `scraper/.env`:
+Create or update repo root `.env`:
 ```bash
-GEMINI_API_KEY=your_gemini_api_key_here
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+KNACK_APPLICATION_ID=your_knack_app_id_here
+KNACK_REST_API_KEY=your_knack_api_key_here
 ```
 
 ### 3. Setup Taobao Links
@@ -44,7 +45,7 @@ python3 scraper.py --login-setup
 ### Step 1: Scrape Products
 ```bash
 cd scraper
-python3 scraper.py
+python3 ai_scraper.py
 ```
 
 **What it does:**
@@ -68,184 +69,123 @@ scraper/media/product_X_slug/
 - 黑色 → Black
 - 狼灰色 → Wolf Grey
 
-### Step 2: Enhance Translations with Gemini AI
+### Step 2: Review detail images (manual)
+- Open `scraper/ai_scraper_output/media/<product>/Details/`
+- Delete any irrelevant images (recommended products, ads, etc.)
+
+### Step 3: Stitch detail images
 ```bash
-python3 translate.py
+python3 utilities/stitch_details.py
 ```
 
-**What it does:**
-- Reads `protocol_zero_variants.csv`
-- Uses **Gemini 2.5 Pro** for high-quality translation
-- Updates `Translated Title` column with AI translations
-- Caches results in `translation_cache.json`
+**What it does:** creates `Details_Long.jpg` per product (only the stitched image is uploaded).
 
-**Gemini translation features:**
-- ✅ Removes brand names (WOSPORT, FMA, TMC, Emerson)
-- ✅ Removes proprietary model numbers (TB-FMA-0023, HLD-2)
-- ✅ Keeps military designations (PVS-14, AN/PEQ-15, MICH 2000)
-- ✅ Keeps standard models (6094, JPC, AVS plate carriers)
-- ✅ Airsoft/military terminology context
-- ✅ E-commerce friendly naming
-
-**Example:**
-```
-Before: WOSPORT战术头盔FAST高切版FMA款PVS-14夜视仪支架
-After:  FAST High-Cut Tactical Helmet with PVS-14 NVG Mount
-```
-
-**Options:**
+### Step 4: Translate with DeepSeek (separate step)
 ```bash
-python3 translate.py              # Translate only untranslated titles
-python3 translate.py --force      # Re-translate all titles
-python3 translate.py --input custom.csv  # Custom CSV file
+python3 translate_deepseek.py
 ```
 
-### Step 3: Sync Media to Shop
+### Step 5: Upload to Knack
 ```bash
-cd ../shared/scripts
-npm run sync-media
+python3 upload_to_knack.py --dry-run
+python3 upload_to_knack.py --with-images
 ```
 
-**What it does:**
-- Copies images from `scraper/media/` to `shop/public/images/`
-- Updates manifest paths to match shop structure
-- Ensures images are accessible at `/images/...`
-
-### Step 4: Seed to Notion
-```bash
-npm run seed-notion
-```
-
-**What it does:**
-- Reads `shared/data/products_manifest.json`
-- Creates product pages in Notion Products database
-- Creates variant pages in Notion Variants database
-- Uploads images as Notion Files (external URLs)
-- Auto-translates any remaining Chinese text (fallback)
-
-**Note:** Seeding script now includes JavaScript translation fallback for any titles missed by Gemini.
+Notes:
+- `ai_scraper.py` is **scrape-only**.
+- `translate_deepseek.py` is the only translation step.
+- Upload targets **Knack only** (Notion removed).
 
 ## Complete Command Sequence
 
 Run all steps in order:
 
 ```bash
-# 1. Scrape products with basic translation
-cd /Users/5425855/Documents/protocol-zero/scraper
-python3 scraper.py
+# 1. Scrape only
+cd scraper
+python3 ai_scraper.py
 
-# 2. Enhance with Gemini AI translation
-python3 translate.py
+# 2. Manual review: delete unwanted detail images
+# (open: scraper/ai_scraper_output/media/<product>/Details/)
 
-# 3. Sync media to shop public folder
-cd ../shared/scripts
-npm run sync-media
+# 3. Stitch detail images into Details_Long.jpg
+python3 utilities/stitch_details.py
 
-# 4. Seed to Notion
-npm run seed-notion
+# 4. Translate with DeepSeek (writes products_translated.json)
+python3 translate_deepseek.py
 
-# 5. Verify in shop (optional)
-cd ../../shop
-npm run dev
-# Open http://localhost:3000/shop
+# 5. Upload to Knack
+python3 upload_to_knack.py --dry-run
+python3 upload_to_knack.py --with-images
 ```
 
 ## Output Files
 
 After complete workflow:
-- `scraper/protocol_zero_variants.csv` - Full product data with AI translations
-- `scraper/translation_cache.json` - Cached Gemini translations (saves API calls)
-- `shared/data/products_manifest.json` - Shop-compatible JSON
-- `shop/public/images/product_X_slug/` - Images ready for Next.js
+- `scraper/ai_scraper_output/products.json` - Scrape output (Chinese + raw fields)
+- `scraper/ai_scraper_output/products_translated.json` - DeepSeek translations applied
+- `scraper/ai_scraper_output/translation_cache.json` - Cached DeepSeek translations
+- `scraper/ai_scraper_output/media/<product>/Details/Details_Long.jpg` - Stitched detail image (after stitch step)
 
 ## Troubleshooting
 
-### Scraper stuck on login
+### Missing DeepSeek API key
+Add to repo root `.env`:
 ```bash
-python3 scraper.py --login-setup
+DEEPSEEK_API_KEY=your_key_here
 ```
-Complete login manually and save session.
 
-### Translation rate limits
-Gemini free tier: 15 requests/minute. Script includes automatic rate limiting.
-
-### Missing Gemini API key
-Add to `scraper/.env`:
+### Re-translate
 ```bash
-GEMINI_API_KEY=your_key_here
-```
-Get key from: https://aistudio.google.com/apikey
-
-### Images not showing in shop
-Ensure `sync-media` step completed successfully. Check that:
-- `shop/public/images/` contains product folders
-- Manifest paths start with `/images/...`
-
-### Re-translate specific products
-```bash
-# Edit CSV to clear 'Translated Title' for specific rows
-python3 translate.py  # Will only translate empty rows
+python3 translate_deepseek.py --force
 ```
 
 ## Tips
 
 **Avoid duplicate API calls:**
-- Translation cache persists in `translation_cache.json`
-- Re-running `translate.py` only translates new/empty titles
-- Use `--force` only when needed
+- Translation cache persists in `ai_scraper_output/translation_cache.json`
+- Re-running `translate_deepseek.py` only translates missing items unless `--force`
 
 **Manual detail image filtering:**
 After scraping, review `Details/` folders and delete unwanted images (ads, unrelated content) before stitching or seeding.
 
 **Incremental scraping:**
-Add new URLs to `taobao_links.txt` and re-run workflow. Existing products won't be duplicated in CSV.
+Add new URLs to `taobao_links.txt` and re-run workflow.
 
 **Price updates:**
-Re-scrape to get latest prices. Notion seeding will create new pages (no upsert yet - see enhancement roadmap).
+Re-scrape to get latest prices, then re-run translation/upload as needed.
 
 ## Next Steps
 
-After seeding, your shop will display products live from Notion:
-- Visit `/shop` for product listing
-- Visit `/shop/[id]` for product details
-- Variant selection and cart work with live data
-- Images served from Next.js public folder
+After upload, your shop will display products from Knack (shop-side).
 
 ## Workflow Diagram
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ 1. python3 scraper.py                               │
-│    ↓ Scrapes Taobao → Basic translation             │
+│ 1. python3 ai_scraper.py                            │
+│    ↓ Scrapes Taobao (no translation)                │
 │    ↓ Downloads images                               │
-│    ↓ Exports CSV + JSON manifest                    │
+│    ↓ Exports JSON/CSV into ai_scraper_output/       │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│ 2. python3 translate.py                             │
-│    ↓ Reads CSV                                      │
-│    ↓ Gemini AI translation (airsoft/military)       │
-│    ↓ Updates CSV with enhanced titles               │
-│    ↓ Caches results                                 │
+│ 2. Manual review of Details/ images                 │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│ 3. npm run sync-media                               │
-│    ↓ Copies scraper/media → shop/public/images      │
-│    ↓ Updates manifest paths                         │
+│ 3. python3 utilities/stitch_details.py              │
+│    ↓ Creates Details_Long.jpg per product           │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│ 4. npm run seed-notion                              │
-│    ↓ Reads manifest                                 │
-│    ↓ Creates Notion product + variant pages         │
-│    ↓ Uploads images as Files                        │
+│ 4. python3 translate_deepseek.py                    │
+│    ↓ DeepSeek bulk translation                      │
+│    ↓ Writes products_translated.json                │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│ 5. Shop displays live Notion data                   │
-│    ↓ Runtime API fetches from Notion                │
-│    ↓ Images served from /images/                    │
-│    ↓ Variants, pricing, stock all dynamic           │
+│ 5. python3 upload_to_knack.py --with-images         │
+│    ↓ Uploads products, variants, and images to Knack │
 └─────────────────────────────────────────────────────┘
 ```
