@@ -7,7 +7,7 @@ import {
   updateKnackRecord,
   isKnackConfigured,
 } from './knack-client'
-import { KNACK_CONFIG, getFieldValue } from './knack-config'
+import { KNACK_CONFIG, getFieldValue, parseKnackNumber } from './knack-config'
 import type { ProductRuntime, ProductVariant } from './catalog'
 
 // Product Images object and fields from config
