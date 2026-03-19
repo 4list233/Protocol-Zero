@@ -7,7 +7,7 @@ import {
   updateKnackRecord,
   isKnackConfigured,
 } from './knack-client'
-import { KNACK_CONFIG, getFieldValue, parseKnackNumber } from './knack-config'
+import { KNACK_CONFIG, getFieldValue, parseKnackNumber, extractCleanUrl } from './knack-config'
 import type { ProductRuntime, ProductVariant } from './catalog'
 
 // Product Images object and fields from config
@@ -315,9 +315,7 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     status: status,
     // Stock is a yes/no (boolean) field in Knack - converted to number (1 = in stock, 0 = out of stock)
     stock: convertKnackStockToNumber(getFieldValue(record, PRODUCT_FIELDS.stock, 'Stock')),
-    url: getFieldValue(record, PRODUCT_FIELDS.url, 'URL')
-      ? String(getFieldValue(record, PRODUCT_FIELDS.url, 'URL'))
-      : undefined,
+    url: extractCleanUrl(getFieldValue(record, PRODUCT_FIELDS.url, 'URL')) || undefined,
     variants: variants.length > 0 ? variants : undefined,
   }
 }
