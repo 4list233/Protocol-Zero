@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getKnackRecords, createKnackRecord } from '@/lib/knack-client'
-import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { KNACK_CONFIG, getFieldValue, extractCleanUrl } from '@/lib/knack-config'
 import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         priceMin,
         priceMax,
         variantCount: variantCountByProduct.get(id) || variantCountByProduct.get(knackId) || 0,
-        url: String(getFieldValue(p, PRODUCT_FIELDS.url, 'URL') || ''),
+        url: extractCleanUrl(getFieldValue(p, PRODUCT_FIELDS.url, 'URL')),
       }
     })
 

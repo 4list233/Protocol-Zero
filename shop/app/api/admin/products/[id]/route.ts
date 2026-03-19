@@ -5,7 +5,7 @@ import {
   updateKnackRecord,
   deleteKnackRecord,
 } from '@/lib/knack-client'
-import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { KNACK_CONFIG, getFieldValue, extractCleanUrl } from '@/lib/knack-config'
 import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
@@ -169,7 +169,7 @@ export async function GET(
       category: String(getFieldValue(product, PRODUCT_FIELDS.category, 'Category') || ''),
       status: String(getFieldValue(product, PRODUCT_FIELDS.status, 'Status') || 'Draft'),
       priceCadBase: Number(getFieldValue(product, PRODUCT_FIELDS.priceCadBase, 'Price CAD Base') || 0),
-      url: String(getFieldValue(product, PRODUCT_FIELDS.url, 'URL') || ''),
+      url: extractCleanUrl(getFieldValue(product, PRODUCT_FIELDS.url, 'URL')),
       primaryImage,
       images: galleryImages,
       detailImage,

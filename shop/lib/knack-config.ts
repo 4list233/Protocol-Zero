@@ -285,6 +285,60 @@ export function getFieldValue(record: Record<string, unknown>, fieldKey: string,
 }
 
 /**
+ * Extract a clean URL from a Knack URL field value.
+ * Knack URL fields can contain deeply nested HTML anchor tags like:
+ *   <a href="<a href="https://...">https://...</a>">...</a>
+ * This extracts the actual URL from any level of nesting.
+ */
+export function extractCleanUrl(value: unknown): string {
+  if (!value) return ''
+  let str = typeof value === 'object' && value !== null && 'url' in (value as Record<string, unknown>)
+    ? String((value as Record<string, unknown>).url || '')
+    : String(value)
+  if (!str) return ''
+
+  // If it's already a clean URL (no HTML), return as-is
+  if (!str.includes('<') && (str.startsWith('http://') || str.startsWith('https://'))) {
+    return str
+  }
+
+  // Extract the innermost href URL from nested <a> tags
+  // Decode any HTML entities first
+  str = str.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+
+  // Find the deepest href="https://..." that doesn't contain more HTML
+  const hrefPattern = /href="(https?:\/\/[^"<>]+)"/g
+  let cleanUrl = ''
+  let match
+  while ((match = hrefPattern.exec(str)) !== null) {
+    // Prefer URLs that don't contain HTML artifacts
+    const candidate = match[1]
+    if (!candidate.includes('<') && !candidate.includes('%3C')) {
+      cleanUrl = candidate
+      break
+    }
+  }
+
+  // If no clean href found, try to find a bare https:// URL
+  if (!cleanUrl) {
+    const bareUrlMatch = str.match(/https?:\/\/[^\s"'<>]+/)
+    if (bareUrlMatch) cleanUrl = bareUrlMatch[0]
+  }
+
+  // Decode any remaining URL encoding
+  if (cleanUrl.includes('%3C') || cleanUrl.includes('%22')) {
+    try { cleanUrl = decodeURIComponent(cleanUrl) } catch { /* keep as-is */ }
+    // After decoding, re-extract if HTML appeared
+    if (cleanUrl.includes('<')) {
+      const innerMatch = cleanUrl.match(/https?:\/\/[^\s"'<>]+/)
+      if (innerMatch) cleanUrl = innerMatch[0]
+    }
+  }
+
+  return cleanUrl
+}
+
+/**
  * Parse a numeric value from Knack. Handles formatted currency strings like "$29.99"
  * or "1,234.56" by stripping non-numeric characters (except . and -).
  */

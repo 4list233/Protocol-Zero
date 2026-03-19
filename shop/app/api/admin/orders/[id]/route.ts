@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
 import { getKnackRecord, getKnackRecords, updateKnackRecord } from '@/lib/knack-client'
-import { KNACK_CONFIG, getFieldValue } from '@/lib/knack-config'
+import { KNACK_CONFIG, getFieldValue, extractCleanUrl } from '@/lib/knack-config'
 
 export const dynamic = 'force-dynamic'
 
@@ -157,7 +157,7 @@ export async function GET(
         for (const p of allProducts) {
           // Match by field_45 (ID field) which is what itemsJson stores as productId
           const idField = String(getFieldValue(p, PRODUCT_FIELDS.id, 'ID') || '')
-          const url = String(getFieldValue(p, PRODUCT_FIELDS.url, 'URL') || '')
+          const url = extractCleanUrl(getFieldValue(p, PRODUCT_FIELDS.url, 'URL'))
           if (idField && url) productUrlMap.set(idField, url)
           // Also map by Knack record ID
           if (url) productUrlMap.set(String(p.id), url)
