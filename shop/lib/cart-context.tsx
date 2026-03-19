@@ -272,7 +272,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (item.itemType === "addon" && item.addonPrice) {
       return item.addonPrice
     }
-    return item.regularPrice
+    return item.regularPrice ?? 0
   }, [])
 
   const isPromoApplicable = useCallback((item: CartItem): boolean => {
