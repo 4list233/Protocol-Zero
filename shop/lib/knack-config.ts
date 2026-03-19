@@ -285,6 +285,18 @@ export function getFieldValue(record: Record<string, unknown>, fieldKey: string,
 }
 
 /**
+ * Parse a numeric value from Knack. Handles formatted currency strings like "$29.99"
+ * or "1,234.56" by stripping non-numeric characters (except . and -).
+ */
+export function parseKnackNumber(value: unknown): number {
+  if (value === null || value === undefined) return 0
+  if (typeof value === 'number') return isNaN(value) ? 0 : value
+  const str = String(value).replace(/[^0-9.\-]/g, '')
+  const num = Number(str)
+  return isNaN(num) ? 0 : num
+}
+
+/**
  * Helper function to set field value in Knack record format
  */
 export function setFieldValue(data: Record<string, unknown>, fieldKey: string, value: unknown): void {

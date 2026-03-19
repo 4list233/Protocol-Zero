@@ -7,7 +7,7 @@ import {
   updateKnackRecord,
   isKnackConfigured,
 } from './knack-client'
-import { KNACK_CONFIG, getFieldValue } from './knack-config'
+import { KNACK_CONFIG, getFieldValue, parseKnackNumber } from './knack-config'
 import type { ProductRuntime, ProductVariant } from './catalog'
 
 // Product Images object and fields from config
@@ -301,7 +301,7 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     // Price is in field_138, but we'll use variant pricing instead
     // Set base price to 0 since all products should have variants with pricing
     price_cad: 0, // Variant pricing will be used instead
-    margin: Number(getFieldValue(record, PRODUCT_FIELDS.margin, 'Margin') || 0.5),
+    margin: parseKnackNumber(getFieldValue(record, PRODUCT_FIELDS.margin, 'Margin')) || 0.5,
     primaryImage,
     images,
     detailLongImage,
@@ -327,10 +327,10 @@ const CNY_TO_CAD_RATE = 0.19
 
 // Map Knack variant record to ProductVariant type
 function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVariant {
-  const priceCny = Number(getFieldValue(record, VARIANT_FIELDS.priceCny, 'Price CNY') || 0)
+  const priceCny = parseKnackNumber(getFieldValue(record, VARIANT_FIELDS.priceCny, 'Price CNY'))
   // Variant CAD price is in field_138 (Selling Price)
   const priceCadValue = getFieldValue(record, VARIANT_FIELDS.priceCad, 'Selling Price')
-  const priceCad = priceCadValue ? Number(priceCadValue) : undefined
+  const priceCad = priceCadValue ? parseKnackNumber(priceCadValue) : undefined
   
   // Extract shipping and cost fields
   const shippingCny = getFieldValue(record, VARIANT_FIELDS.shippingCny, 'Shipping CNY')
@@ -360,10 +360,10 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
     price_cny: priceCny,
     // shipping_cny is internal - used for cost calculation but not exposed
     // cost_cad includes (price_cny + shipping_cny) * exchange_rate
-    cost_cad: costCad ? Number(costCad) : undefined,
+    cost_cad: costCad ? parseKnackNumber(costCad) : undefined,
     price_cad: priceCad,
-    margin: marginStandard ? Number(marginStandard) : undefined,
-    margin_promo: marginPromo ? Number(marginPromo) : undefined,
+    margin: marginStandard ? parseKnackNumber(marginStandard) : undefined,
+    margin_promo: marginPromo ? parseKnackNumber(marginPromo) : undefined,
     // Stock is a yes/no (boolean) field in Knack - converted to number (1 = in stock, 0 = out of stock)
     // Uses the same conversion logic as products
     stock: convertKnackStockToNumber(getFieldValue(record, VARIANT_FIELDS.stock, 'Stock')),
@@ -378,10 +378,10 @@ function mapKnackRecordToVariant(record: Record<string, unknown>): ProductVarian
     optionValue2: optionValue2 ? String(optionValue2) : undefined,
     // Add-on pricing (for items cheaper when added to another order)
     isAddonEligible: isAddonItem === true || isAddonItem === 'Yes' || isAddonItem === 'yes',
-    addonPrice: addonPriceCad ? Number(addonPriceCad) : undefined,
-    addonCost: addonCostCad ? Number(addonCostCad) : undefined,
-    addonMargin: addonMargin ? Number(addonMargin) : undefined,
-    minCartForAddon: minCartForAddon ? Number(minCartForAddon) : undefined,
+    addonPrice: addonPriceCad ? parseKnackNumber(addonPriceCad) : undefined,
+    addonCost: addonCostCad ? parseKnackNumber(addonCostCad) : undefined,
+    addonMargin: addonMargin ? parseKnackNumber(addonMargin) : undefined,
+    minCartForAddon: minCartForAddon ? parseKnackNumber(minCartForAddon) : undefined,
   }
 }
 

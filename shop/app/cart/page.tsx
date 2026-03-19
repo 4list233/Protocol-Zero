@@ -167,7 +167,7 @@ export default function CartPage() {
               {items.map((item) => {
                 const itemPrice = getItemPrice(item)
                 const isAddon = item.itemType === "addon"
-                const savings = isAddon && item.addonPrice ? item.regularPrice - item.addonPrice : 0
+                const savings = isAddon && item.addonPrice ? (item.regularPrice ?? 0) - item.addonPrice : 0
                 
                 return (
                   <div 
@@ -221,7 +221,7 @@ export default function CartPage() {
                               </span>
                               {isAddon && (
                                 <span className="text-sm text-[#666] line-through">
-                                  ${item.regularPrice.toFixed(2)}
+                                  ${(item.regularPrice ?? 0).toFixed(2)}
                                 </span>
                               )}
                             </div>

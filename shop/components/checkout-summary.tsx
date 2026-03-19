@@ -8,7 +8,7 @@ type CheckoutSummaryProps = {
 }
 
 export function CheckoutSummary({ cart }: CheckoutSummaryProps) {
-  const subtotal = cart.reduce((sum, item) => sum + (item.product.price_cad * item.quantity), 0)
+  const subtotal = cart.reduce((sum, item) => sum + ((item.product.price_cad ?? 0) * item.quantity), 0)
 
   return (
     <div className="bg-[#1C1C1C] rounded-lg border border-[#2C2C2C] p-6">
@@ -38,7 +38,7 @@ export function CheckoutSummary({ cart }: CheckoutSummaryProps) {
             
             {/* Price */}
             <div className="text-right flex-shrink-0">
-              <p className="font-medium text-[#F5F5F5]">${(item.product.price_cad * item.quantity).toFixed(2)}</p>
+              <p className="font-medium text-[#F5F5F5]">${((item.product.price_cad ?? 0) * item.quantity).toFixed(2)}</p>
             </div>
           </div>
         ))}
