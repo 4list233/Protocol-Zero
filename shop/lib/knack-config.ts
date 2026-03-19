@@ -261,11 +261,17 @@ export function getFieldValue(record: Record<string, unknown>, fieldKey: string,
   // Try field key first
   const value = record[fieldKey]
   if (value !== undefined && value !== null) {
-    // If the value looks like HTML (connection/file fields), prefer _raw instead
+    // If the value looks like HTML (connection/file/URL fields), prefer _raw instead
     if (typeof value === 'string' && value.includes('<') && value.includes('>')) {
       const rawKey = `${fieldKey}_raw`
       const rawValue = record[rawKey]
-      if (rawValue !== undefined && rawValue !== null) return rawValue
+      if (rawValue !== undefined && rawValue !== null) {
+        // Knack URL _raw is {url: "...", label: "..."} — extract the url string
+        if (typeof rawValue === 'object' && !Array.isArray(rawValue) && 'url' in (rawValue as Record<string, unknown>)) {
+          return (rawValue as Record<string, unknown>).url
+        }
+        return rawValue
+      }
     }
     return value
   }
