@@ -18,7 +18,8 @@ from pathlib import Path
 from PIL import Image
 
 # Configuration
-MEDIA_DIR = Path("/Users/5425855/Documents/protocol-zero/scraper/ai_scraper_output/media")
+SCRIPT_DIR = Path(__file__).resolve().parent.parent
+MEDIA_DIR = SCRIPT_DIR / "ai_scraper_output" / "media"
 MAX_WIDTH = 1200
 SPACING = 0  # Pixels between images (0 => seamless)
 

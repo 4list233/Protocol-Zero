@@ -10,8 +10,8 @@ const USER_FIELDS = KNACK_CONFIG.fields.users
 const CART_FIELDS = KNACK_CONFIG.fields.carts
 
 export async function GET(request: NextRequest) {
-  const adminError = await requireAdmin(request)
-  if (adminError) return adminError
+  const authCheck = await requireAdmin(request)
+  if (authCheck instanceof NextResponse) return authCheck
 
   try {
     const { searchParams } = new URL(request.url)

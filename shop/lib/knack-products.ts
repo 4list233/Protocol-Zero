@@ -7,8 +7,8 @@ import {
   updateKnackRecord,
   isKnackConfigured,
 } from './knack-client'
-import { KNACK_CONFIG, getFieldValue, parseKnackNumber } from './knack-config'
-import type { ProductRuntime, ProductVariant } from './notion-client'
+import { KNACK_CONFIG, getFieldValue } from './knack-config'
+import type { ProductRuntime, ProductVariant } from './catalog'
 
 // Product Images object and fields from config
 const PRODUCT_IMAGES_OBJECT_KEY = KNACK_CONFIG.objectKeys.productImages
@@ -393,7 +393,7 @@ export async function fetchProducts(): Promise<ProductRuntime[]> {
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
 
-  // Preload all images from Notion (single batch query)
+  // Preload all images from Knack Product Images table (single batch query)
   await preloadKnackImages()
 
   // Fetch only products with status=Active
@@ -556,7 +556,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
     throw new Error('Knack is not configured. Please set KNACK_APPLICATION_ID and KNACK_REST_API_KEY.')
   }
 
-  // Preload all images from Notion (single batch query)
+  // Preload all images from Knack Product Images table (single batch query)
   await preloadKnackImages()
 
   let product: Record<string, unknown> | null = null
@@ -699,7 +699,7 @@ export async function fetchProductById(id: string): Promise<ProductRuntime | nul
 
 /**
  * Create a new product
- * Data goes to Knack, images go to Notion (linked by ID/SKU)
+ * Data and images live in Knack (linked by ID/SKU).
  */
 export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<string> {
   if (!isKnackConfigured()) {
@@ -709,7 +709,7 @@ export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<s
   // Use SKU as product ID (or generate one if not provided)
   const productId = data.sku || `PROD-${Date.now()}`
 
-  // Create product in Knack (WITHOUT images - those go to Notion)
+  // Create product in Knack
   const productData: Record<string, unknown> = {}
   productData[PRODUCT_FIELDS.id] = productId
   productData[PRODUCT_FIELDS.sku] = data.sku
@@ -721,7 +721,7 @@ export async function createProduct(data: Omit<ProductRuntime, 'id'>): Promise<s
   productData[PRODUCT_FIELDS.margin] = data.margin || 0.5
   productData[PRODUCT_FIELDS.stock] = data.stock || null
   productData[PRODUCT_FIELDS.url] = data.url || null
-  // Don't store images in Knack - they go to Notion
+  // Images are stored in Knack Product Images table
   productData[PRODUCT_FIELDS.primaryImage] = null
   productData[PRODUCT_FIELDS.images] = null
   productData[PRODUCT_FIELDS.detailImage] = null

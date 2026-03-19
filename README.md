@@ -1,326 +1,238 @@
-# Protocol Zero - Integrated E-Commerce Platform
+# Protocol Zero — Airsoft E-Commerce Platform
 
-**Automated Taobao Product Scraping + Next.js E-Commerce Shop**
-
-**Status:** � Ready for Refactoring | Documentation Complete
+**Automated Taobao product scraping pipeline connected to a production Next.js storefront, backed by [Knack](https://www.knack.com) as the database and Firebase for authentication.**
 
 ---
 
-## 🎯 **For External Developer: START HERE**
+## Overview
 
-**Complete refactoring documentation has been prepared for you:**
-
-### 📚 Essential Reading (3 hours total)
-1. **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Master index of all documents
-2. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - One-page overview (10 min)
-3. **[ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md)** - Visual system diagrams (15 min)
-4. **[REFACTOR_PLAN.md](REFACTOR_PLAN.md)** - Complete refactoring plan (30 min)
-5. **[SCRAPER_SPECIFICATIONS.md](SCRAPER_SPECIFICATIONS.md)** - Scraper technical specs (45 min)
-6. **[WEBSITE_SPECIFICATIONS.md](WEBSITE_SPECIFICATIONS.md)** - Website technical specs (45 min)
-7. **[HANDOFF_GUIDE.md](HANDOFF_GUIDE.md)** - Step-by-step implementation (60 min)
-
-### 🎯 Project Goal
-Migrate from **Knack/Notion** → **Supabase**, build complete e-commerce frontend, and deploy to **Vercel**. 4-week timeline.
-
-### ✅ What You'll Build
-- Refactored scraper (Python + Supabase)
-- Product pages with variant selection
-- Shopping cart & checkout
-- Admin dashboard
-- Production deployment on Vercel
-
-**👉 Start with: [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)**
+| Layer | Tech | Purpose |
+|---|---|---|
+| **Scraper** | Python 3.12, Selenium, DeepSeek API | Scrape Taobao/Tmall → translate → upload to Knack |
+| **Shop** | Next.js 15, React 18, TypeScript | E-commerce storefront + admin dashboard |
+| **Database** | Knack (REST API) | Products, variants, orders, carts, users |
+| **Auth** | Firebase Auth | Customer login, admin route protection |
+| **Hosting** | Vercel | Shop deployment |
 
 ---
 
-## 📋 Current Project Information
-
-📋 **[View Full TODO List](TODO.md)** | 🗺️ **[Integration Roadmap](INTEGRATION_ROADMAP.md)** | 📖 **[Setup Guide](SETUP.md)**
-
-## 🏗️ Monorepo Structure
+## Repository Structure
 
 ```
 protocol-zero/
-├── scraper/          # Python Selenium scraper for Taobao/Tmall
-│   ├── scraper.py              # Main scraping logic
-│   └── classify_variants.py    # Variant classification & linking
-├── shop/            # Next.js 15 e-commerce storefront
-└── shared/          # Data bridge between scraper and shop
-    ├── media/       # Product images (source of truth)
-    ├── data/        # JSON manifests and sync files
-    └── scripts/     # Automation scripts
+├── scraper/                    # Python scraper pipeline
+│   ├── ai_scraper.py           # Scrape-only entrypoint (no translation during scrape)
+│   ├── translate_deepseek.py   # Bulk DeepSeek translation (separate step)
+│   ├── upload_to_knack.py      # Upload products + images to Knack
+│   ├── taobao_links.txt        # Input — one Taobao/Tmall URL per line
+│   ├── requirements.txt
+│   ├── core/                   # Scraping engine (variant extraction, pricing)
+│   ├── integrations/           # Knack API client
+│   └── utilities/              # stitch_details.py, quality_control.py
+│
+├── shop/                       # Next.js app
+│   ├── app/                    # App Router pages + API routes
+│   ├── components/             # Shared React components
+│   ├── lib/                    # Business logic (Knack client, cart, Firebase admin)
+│   ├── public/                 # Static assets
+│   ├── .env.example            # Shop env template
+│   └── vercel.json
+│
+└── shared/                     # Legacy bridge (schedule config, scrape queue JSON)
 ```
 
-## 🎯 Variant Management System
-
-**Key Architecture:** Archived variants are the source of truth for options. Active variants extract and display options from linked archived variants.
-
-**Quick Overview:**
-- **Scraper** → Captures ALL clickable options as individual variants
-- **Classification** → Groups into base models (Active) + options (Archived)
-- **Product Linking** → Both active and archived variants connect to SAME product
-- **Field Inheritance** → Archived variants duplicate ALL pricing/media fields from base
-- **Database** → Archived variants link to active variants (bidirectional)
-- **Frontend** → Reads only active variants, displays extracted options
-- **Orders** → Stores base variant ID + selected option for full traceability
-
-📚 **Documentation:**
-- **[Full Architecture](docs/variants/VARIANT_ARCHITECTURE_VISUAL.md)** - Visual workflow and data flow
-- **[Linking System](docs/variants/VARIANT_LINKING_REFERENCE.md)** - Bidirectional linking details
-- **[Field Inheritance](docs/variants/FIELD_INHERITANCE_GUIDE.md)** - Product linking and field duplication
-- **[Workflow Guide](docs/workflows/COMPLETE_VARIANT_WORKFLOW.md)** - End-to-end technical workflow
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.12+ with pip
-- Node.js 18+ with npm
-- Google Chrome browser
-- PostgreSQL database (for shop)
-
-### Setup Scraper
-```bash
-cd scraper
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install selenium requests pillow
-```
-
-### Setup Shop
-```bash
-cd shop
-npm install
-cp .env.example .env.local
-# Edit .env.local with your database and Firebase credentials
-npx prisma generate
-npx prisma db push
-npm run dev
-```
-
-## 📦 Projects
-
-### Scraper (`/scraper`)
-**Technology**: Python 3.12, Selenium WebDriver
-
-**Features**:
-- Automated Taobao/Tmall product extraction
-- Rule-based Chinese→English translation (tactical gear vocabulary)
-- Per-variant price scraping with CNY→CAD conversion (0.202 rate + $15 shipping)
-- Multi-layer media capture: Main/Detail/Catalogue images
-- Persistent Chrome profile for login preservation
-- Selenium Manager auto-recovery for driver version matching
-
-**Usage**:
-```bash
-cd scraper
-# One-time: Login to Taobao
-python3 scraper.py --login-setup
-
-# Add URLs to taobao_links.txt, then run:
-python3 scraper.py
-```
-
-**Outputs**:
-- `../shared/data/products_manifest.json` - Shop-compatible product catalog
-- `../shared/media/product_*/` - Organized media files
-- `protocol_zero_variants.csv` - Detailed variant data
-
-### Shop (`/shop`)
-**Technology**: Next.js 14, React, TypeScript, Prisma, PostgreSQL, Firebase
-
-**Features**:
-- Server-side rendered e-commerce platform
-- Product catalog with variants and options
-- Shopping cart with persistent storage
-- User authentication (NextAuth + Firebase)
-- Admin panel for order management
-- Responsive design with Tailwind CSS + Radix UI
-
-**Key Routes**:
-- `/` - Homepage with featured products
-- `/shop` - Product catalog
-- `/shop/[id]` - Product detail page
-- `/cart` - Shopping cart
-- `/checkout` - Checkout flow
-- `/admin` - Admin dashboard
-- `/admin/scraper` - Scrape queue management (upcoming)
-
-**Development**:
-```bash
-cd shop
-npm run dev
-# Visit http://localhost:3000
-```
-
-**Production**:
-```bash
-npm run build
-npm start
-```
-
-## 🔄 Integration Workflow
-
-### Data Flow: Scraper → Shop
-
-1. **Scrape Products**
-   ```bash
-   cd scraper
-   python3 scraper.py
-   ```
-   Outputs: `shared/data/products_manifest.json` + media files
-
-2. **Sync Media to Shop**
-   ```bash
-   cd shared/scripts
-   npm run sync-media
-   ```
-   Copies images from `shared/media/` → `shop/public/images/`
-
-3. **Generate TypeScript Products**
-   ```bash
-   npm run generate-products
-   ```
-   Creates `shop/lib/products.generated.ts` from JSON manifest
-
-4. **Shop Auto-Detects**
-   - `shop/lib/products.ts` imports `generatedProducts`
-   - If generated products exist, uses them; otherwise falls back to base products
-
-### Bi-Directional Communication
-
-**Shop → Scraper** (Scrape Queue):
-- Admin adds Taobao URL via `/admin/scraper`
-- Appends to `shared/data/scrape_queue.json`
-- Scraper reads queue, processes, marks complete
-
-**Scraper → Shop** (Catalog Sync):
-- `shared/data/catalog_index.json` tracks existing products
-- Prevents duplicate scraping
-- Detects price changes for updates
-
-## 🤖 Automation
-
-### Manual Sync
-```bash
-cd scraper && python3 scraper.py
-cd ../shared/scripts && npm run sync-media && npm run generate-products
-cd ../../shop && npm run build
-```
-
-### GitHub Actions (Recommended)
-See `.github/workflows/sync-products.yml`:
-- Daily scrape at 2 AM
-- Automatic media sync
-- Auto-generate TypeScript products
-- Commit and push changes
-
-## 📂 Shared Directory
-
-### `shared/media/`
-Organized product images (source of truth):
-```
-media/
-├── product_1_molle-pda/
-│   ├── Main.jpg
-│   ├── Detail_01.jpg
-│   └── ...
-└── product_2_m67-grenade/
-    └── ...
-```
-
-### `shared/data/`
-- `products_manifest.json` - Shop-compatible product catalog
-- `protocol_zero_variants.csv` - Raw scraper output
-- `scrape_queue.json` - Shop → Scraper requests
-- `catalog_index.json` - Duplicate detection index
-
-### `shared/scripts/`
-- `media/sync-media.js` - Copy media → shop/public/images/
-- `products/generate-products.js` - JSON → products.generated.ts
-- `watch-queue.py` - Monitor scrape_queue.json (optional)
-
-## 🛠️ Development
-
-### Adding New Products
-
-1. **Via Scraper**:
-   Add URLs to `scraper/taobao_links.txt`, run scraper
-
-2. **Via Shop Admin** (upcoming):
-   Go to `/admin/scraper`, paste Taobao URL, submit
-
-### Product Data Structure
-
-```typescript
-type Product = {
-  id: string              // Slug from translated title
-  sku: string            // Auto-generated SKU
-  title: string          // English translated title
-  price_cad: number      // Final CAD price
-  primaryImage: string   // Main product image
-  images: string[]       // All product images
-  url: string            // Original Taobao URL
-  category?: string      // Auto-categorized
-  description?: string   // Product description
-  options?: {            // Variants (color, size, etc.)
-    name: string
-    values: string[]
-  }[]
-  variants?: {           // Per-variant data
-    option: string
-    price_cad: number
-    image?: string
-  }[]
-}
-```
-
-## 🔒 Security
-
-- `.env` files excluded from git
-- Shop requires authentication for checkout
-- Admin routes protected
-- Scraper cookies stored locally (not committed)
-
-## 📝 Documentation
-
-- [Scraper README](scraper/README.md) - Detailed scraper documentation
-- [Shop README](shop/README.md) - Shop setup and features
-- [Integration Plan](scraper/docs/INTEGRATION_PLAN.md) - Architecture details
-- [Scraper Requirements](shop/SCRAPER_REQUIREMENTS.md) - Original requirements
-
-## 🤝 Contributing
-
-1. Work on feature branches
-2. Test scraper output before committing
-3. Run `npm run lint` in shop before pushing
-4. Update documentation for new features
-
-## 📄 License
-
-- Scraper: MIT License
-- Shop: MIT License
-- ChromeDriver: See [THIRD_PARTY_NOTICES.chromedriver](scraper/THIRD_PARTY_NOTICES.chromedriver)
-
-## 🐛 Troubleshooting
-
-### Scraper Issues
-- **Timeout errors**: Manually solve CAPTCHAs in Chrome window
-- **Price showing 0.0**: Taobao may require login or has price protection
-- **Translation failures**: Check translation dictionaries in scraper.py
-
-### Shop Issues
-- **Database errors**: Run `npx prisma db push` to sync schema
-- **Images not showing**: Run `cd shared/scripts && npm run sync-media`
-- **Products not updating**: Check `shop/lib/products.generated.ts` was created
-
-## 📞 Support
-
-For issues:
-1. Check relevant README files
-2. Review `.log` files in scraper/
-3. Check browser console for shop errors
-4. Review GitHub issues
+> `scraper/ai_scraper_output/` is gitignored — all scraped images and JSON live locally.
 
 ---
 
-**Built with** ❤️ **for Protocol Zero Airsoft**
+## Environment Variables
+
+All secrets live in **one file**: repo root **`.env`** (gitignored).
+
+```bash
+# Copy the template and fill in your values
+cp .env.example .env
+```
+
+The shop reads env from `shop/.env.local`. The simplest local setup is a symlink:
+
+```bash
+ln -sf ../.env shop/.env.local
+```
+
+For **Vercel production**, set all variables in **Project → Settings → Environment Variables** — do not commit `.env`.
+
+### Required
+
+| Variable | Used by | Where to get it |
+|---|---|---|
+| `KNACK_APPLICATION_ID` | shop + scraper | Knack Builder → API & Code |
+| `KNACK_REST_API_KEY` | shop + scraper | Knack Builder → API & Code |
+| `DEEPSEEK_API_KEY` | scraper | [platform.deepseek.com](https://platform.deepseek.com) |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | shop (client) | Firebase Console → Project Settings |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | shop (client) | Firebase Console |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | shop (client) | Firebase Console |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | shop (client) | Firebase Console |
+| `FIREBASE_SERVICE_ACCOUNT_KEY` | shop (server) | Firebase Console → Service Accounts → Generate key (paste as single-line JSON string) |
+
+### Optional
+
+| Variable | Default | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_BASE_URL` | `http://localhost:3000` | Set to your production domain on Vercel |
+| `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` | — | Firebase Analytics (optional) |
+| `CACHE_TTL_SECONDS` | `300` | Per-instance product cache TTL in seconds |
+
+---
+
+## Scraper Workflow
+
+The pipeline is split into discrete steps so you can review images manually before anything is uploaded.
+
+### First-time setup
+
+```bash
+cd scraper
+pip3 install -r requirements.txt
+
+# One-time: opens Chrome so you can log in to Taobao manually
+python3 ai_scraper.py --login
+```
+
+After login, the Chrome session is saved to `scraper/chrome_profile_selenium/` and reused on every subsequent run.
+
+### Add product URLs
+
+Edit `scraper/taobao_links.txt` — one Taobao or Tmall URL per line. Lines starting with `#` are ignored.
+
+### Run the full pipeline
+
+```bash
+# 1. Scrape — downloads images and extracts variants (no translation)
+python3 ai_scraper.py
+
+# 2. Manual review
+#    Open:  scraper/ai_scraper_output/media/<product>/Details/
+#    Delete any irrelevant images (ads, unrelated items, etc.)
+
+# 3. Stitch — combines detail images into one scrollable image
+python3 utilities/stitch_details.py
+
+# 4. Translate — one DeepSeek bulk API call for all products + variants
+python3 translate_deepseek.py
+
+# 5. Preview what will be uploaded (no changes made)
+python3 upload_to_knack.py --dry-run
+
+# 6. Upload products, variants, and images to Knack
+python3 upload_to_knack.py --with-images
+```
+
+### Scraper output layout
+
+All output lands in `scraper/ai_scraper_output/` (gitignored):
+
+```
+products.json                   Raw scrape (Chinese titles)
+products_translated.json        After DeepSeek translation
+translation_cache.json          Cache — avoids repeat API calls on re-runs
+media/
+  <product-id>/
+    Main/Main.jpg               Hero image
+    Catalogue/Catalogue_01.jpg  Gallery images
+    Details/Detail_01.jpg       Individual detail images (review + delete here)
+    Details/Details_Long.jpg    Stitched detail image (created by stitch step)
+```
+
+---
+
+## Shop — Local Development
+
+```bash
+cd shop
+npm install
+npm run dev
+# → http://localhost:3000
+```
+
+### Key routes
+
+| Route | Description |
+|---|---|
+| `/` | Homepage — featured products |
+| `/shop` | Product catalog |
+| `/shop/[id]` | Product detail page with variant selector |
+| `/cart` | Shopping cart |
+| `/checkout` | Checkout flow (e-transfer) |
+| `/admin` | Admin dashboard |
+| `/admin/products` | Product list + inline editor |
+| `/admin/orders` | Order management |
+| `/admin/carts` | Abandoned cart management |
+| `/auth/signin` | Firebase sign-in |
+
+### Production build
+
+```bash
+cd shop
+npm run build   # TypeScript + ESLint errors will fail the build (strict mode)
+npm start
+```
+
+### Deploy to Vercel
+
+1. Connect this GitHub repo to a new Vercel project.
+2. Set **Root Directory** to `shop`.
+3. Add all required environment variables in the Vercel dashboard.
+4. Push to main — Vercel builds and deploys automatically.
+
+---
+
+## Shop Architecture
+
+| Area | Details |
+|---|---|
+| **Products + variants** | Fetched live from Knack REST API on every request (with 5-min in-process cache) |
+| **Images** | Uploaded by scraper and served from Knack's CDN |
+| **Cart** | Persistent server-side cart stored in Knack; guest carts identified by anonymous cookie |
+| **Auth** | Firebase Auth (client) + `firebase-admin` JWT verification on every protected API route |
+| **Admin access** | Firebase custom claim `admin: true` — set with `node shop/scripts/set-admin-claim.js <uid>` |
+| **Promo codes** | Stored in Knack, rate-limited server-side, discount tracked per order |
+| **Abandoned carts** | Cron at `/api/cron/abandoned-carts` — call via Vercel Cron or external scheduler |
+| **Public API safety** | Margins, CNY cost, and internal fields are stripped before any response leaves the server |
+
+---
+
+## Security Notes
+
+- `.env` and `.env.local` are gitignored — never commit real secrets.
+- `shop/firebase-admin-key.json` must **not** be committed — use `FIREBASE_SERVICE_ACCOUNT_KEY` env var instead.
+- All admin API routes require a valid Firebase ID token with the `admin` claim.
+- Scraper cookies and Chrome profile data are gitignored.
+
+---
+
+## Troubleshooting
+
+**Scraper: CAPTCHA or login loop**
+```bash
+python3 ai_scraper.py --login   # re-authenticate, refreshes saved session
+```
+
+**Scraper: price shows 0**
+Taobao hides prices for logged-out sessions. Re-run `--login` and try again.
+
+**Shop: products not showing**
+Verify `KNACK_APPLICATION_ID` and `KNACK_REST_API_KEY` are correct and present in your env.
+
+**Shop: Firebase error on API routes**
+`FIREBASE_SERVICE_ACCOUNT_KEY` must be valid JSON as a **single-line string**. Verify with:
+```bash
+node -e "JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)" && echo OK
+```
+
+**Shop: build fails on Vercel**
+TypeScript and ESLint errors now block production builds (strict mode enabled). Check the Vercel build log for the specific file and line.
+
+---
+
+**Built for Protocol Zero Airsoft — [pzairsoft.ca](https://pzairsoft.ca)**

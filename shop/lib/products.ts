@@ -45,7 +45,7 @@ export function getFeaturedProducts(count: number = 3): Product[] {
 }
 
 // ------------------------------
-// Runtime Notion integration types/functions (non-breaking additions)
+// Runtime catalog helpers
 // ------------------------------
 
 export type ProductVariant = {

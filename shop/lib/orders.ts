@@ -166,7 +166,7 @@ export async function getOrders(opts?: {
   const snap = await getDocs(q)
   const orders: Order[] = []
   snap.forEach((d) => {
-    const data = d.data() as Order
+    const { id: _, ...data } = d.data() as Order
     orders.push({ id: d.id, ...data })
   })
   return orders
@@ -180,7 +180,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
   const ref = doc(requireDb(), 'orders', orderId)
   const snap = await getDoc(ref)
   if (!snap.exists()) return null
-  const data = snap.data() as Order
+  const { id: _, ...data } = snap.data() as Order
   return { id: snap.id, ...data }
 }
 

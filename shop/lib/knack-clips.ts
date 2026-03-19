@@ -58,7 +58,7 @@ function mapKnackRecordToClip(record: Record<string, unknown>): Clip {
     tags,
     likes: Number(getFieldValue(record, CLIP_FIELDS.likes, 'Likes') || 0),
     likedBy,
-    comments: Number(getFieldValue(record, CLIP_FIELDS.comments, 'Comments') || 0),
+    comments: Number(getFieldValue(record, (CLIP_FIELDS as any).comments, 'Comments') || 0),
     timestamp,
     date: getFieldValue(record, CLIP_FIELDS.date, 'Date') ? String(getFieldValue(record, CLIP_FIELDS.date, 'Date')) : undefined,
   }
@@ -85,7 +85,9 @@ export async function addClip(
   recordData[CLIP_FIELDS.tags] = JSON.stringify(clipData.tags || [])
   recordData[CLIP_FIELDS.likes] = 0
   recordData[CLIP_FIELDS.likedBy] = JSON.stringify([])
-  recordData[CLIP_FIELDS.comments] = 0
+  if ((CLIP_FIELDS as any).comments) {
+    recordData[(CLIP_FIELDS as any).comments] = 0
+  }
   recordData[CLIP_FIELDS.timestamp] = new Date().toISOString()
   if (clipData.date) {
     recordData[CLIP_FIELDS.date] = clipData.date
@@ -169,7 +171,7 @@ export async function updateClip(clipId: string, updates: Partial<ClipData>): Pr
   if (updates.tags !== undefined) updateData[CLIP_FIELDS.tags] = JSON.stringify(updates.tags)
   if (updates.likes !== undefined) updateData[CLIP_FIELDS.likes] = updates.likes
   if (updates.likedBy !== undefined) updateData[CLIP_FIELDS.likedBy] = JSON.stringify(updates.likedBy)
-  if (updates.comments !== undefined) updateData[CLIP_FIELDS.comments] = updates.comments
+  if (updates.comments !== undefined && (CLIP_FIELDS as any).comments) updateData[(CLIP_FIELDS as any).comments] = updates.comments
   if (updates.date !== undefined) updateData[CLIP_FIELDS.date] = updates.date
 
   await updateKnackRecord(CLIPS_OBJECT_KEY, clipId, updateData)

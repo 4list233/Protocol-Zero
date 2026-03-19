@@ -160,6 +160,9 @@ export const KNACK_CONFIG = {
       costCad: 'field_173',            // Landed cost in CAD (SCY price + shipping) × rate
       isAddonItem: 'field_158',        // Yes/No — can be used as add-on item
       addonPriceCad: 'field_159',      // Discounted add-on price in CAD
+      addonCostCad: 'field_160',       // Add-on cost in CAD
+      addonMargin: 'field_161',        // Add-on margin %
+      minCartForAddon: 'field_162',    // Min cart value to unlock add-on pricing
     },
 
     // Orders Object Fields (object_10)

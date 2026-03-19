@@ -4,10 +4,11 @@ interface CacheEntry<T> {
 }
 
 const cache = new Map<string, CacheEntry<unknown>>()
-// Reduced TTL for live updates - 15 seconds for products when using Knack
-// Can be overridden with NOTION_CACHE_TTL_SECONDS env var
+
 const DEFAULT_TTL = 300 // 5 minutes — Vercel CDN also caches; this is per-instance fallback
-const TTL = (parseInt(process.env.NOTION_CACHE_TTL_SECONDS || String(DEFAULT_TTL)) || DEFAULT_TTL) * 1000
+const TTL_SECONDS =
+  parseInt(process.env.CACHE_TTL_SECONDS || String(DEFAULT_TTL)) || DEFAULT_TTL
+const TTL = TTL_SECONDS * 1000
 
 export function getCached<T>(key: string): T | null {
   const entry = cache.get(key)
@@ -28,3 +29,4 @@ export function clearCache(key?: string): void {
   if (key) cache.delete(key)
   else cache.clear()
 }
+

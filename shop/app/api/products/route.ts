@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { fetchProducts, type ProductRuntime } from '@/lib/notion-client'
-import { getCached, setCache } from '@/lib/notion-cache'
+import { fetchProducts } from '@/lib/catalog'
+import { getCached, setCache } from '@/lib/cache'
 import { sanitizeProducts, type PublicProduct } from '@/lib/api-sanitizer'
 
 // Removed force-dynamic so Vercel CDN respects the Cache-Control headers below
