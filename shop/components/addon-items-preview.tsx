@@ -165,10 +165,10 @@ export function AddonItemsPreview({ addonItems = [], compact = false }: AddonIte
                   {/* Pricing */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-[#3D9A6C]">
-                      ${addon.addonPrice.toFixed(2)}
+                      ${(addon.addonPrice ?? 0).toFixed(2)}
                     </span>
                     <span className="text-xs text-[#666] line-through">
-                      ${addon.regularPrice.toFixed(2)}
+                      ${(addon.regularPrice ?? 0).toFixed(2)}
                     </span>
                   </div>
                 </div>

@@ -254,16 +254,16 @@ export default function OrdersPage() {
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
           <div className="text-xs text-orange-500 uppercase">Revenue</div>
-          <div className="text-xl font-bold text-orange-400">${stats.totalRevenue.toFixed(2)}</div>
+          <div className="text-xl font-bold text-orange-400">${(stats.totalRevenue ?? 0).toFixed(2)}</div>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
           <div className="text-xs text-red-500 uppercase">Cost</div>
-          <div className="text-xl font-bold text-red-400">${stats.totalCost.toFixed(2)}</div>
+          <div className="text-xl font-bold text-red-400">${(stats.totalCost ?? 0).toFixed(2)}</div>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
-          <div className={`text-xs uppercase ${stats.totalProfit >= 0 ? "text-green-500" : "text-red-500"}`}>Profit</div>
-          <div className={`text-xl font-bold ${stats.totalProfit >= 0 ? "text-green-400" : "text-red-400"}`}>
-            ${stats.totalProfit.toFixed(2)}
+          <div className={`text-xs uppercase ${(stats.totalProfit ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>Profit</div>
+          <div className={`text-xl font-bold ${(stats.totalProfit ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
+            ${(stats.totalProfit ?? 0).toFixed(2)}
           </div>
         </div>
       </div>
@@ -354,7 +354,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="py-3 px-4 text-sm text-zinc-300">{order.itemCount}</td>
                       <td className="py-3 px-4 text-sm font-medium text-white">
-                        ${Number(order.totalCad).toFixed(2)}
+                        ${(Number(order.totalCad) || 0).toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-sm font-medium">
                         <span className={order.profitCad >= 0 ? "text-green-400" : "text-red-400"}>
@@ -508,24 +508,24 @@ function OrderDetail({
               <div className="text-sm text-zinc-400 flex items-center gap-1">
                 <Tag className="w-3 h-3 text-green-400" />
                 Promo: <span className="text-green-400 font-mono">{order.promoCode}</span>
-                <span className="text-green-400">(-${order.promoDiscountCad.toFixed(2)})</span>
+                <span className="text-green-400">(-${(order.promoDiscountCad ?? 0).toFixed(2)})</span>
               </div>
             )}
             <div className="text-sm text-zinc-400">
-              Subtotal: <span className="text-white">${order.subtotalCad.toFixed(2)}</span>
+              Subtotal: <span className="text-white">${(order.subtotalCad ?? 0).toFixed(2)}</span>
             </div>
             <div className="text-lg font-bold text-orange-400">
-              Total: ${Number(order.totalCad).toFixed(2)} CAD
+              Total: ${(Number(order.totalCad) || 0).toFixed(2)} CAD
             </div>
-            {order.costCad > 0 && (
+            {(order.costCad ?? 0) > 0 && (
               <div className="pt-2 border-t border-zinc-800 space-y-1">
                 <div className="text-sm text-zinc-400">
-                  Cost: <span className="text-red-400">${order.costCad.toFixed(2)}</span>
+                  Cost: <span className="text-red-400">${(order.costCad ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="text-sm font-medium">
                   Profit:{" "}
-                  <span className={order.profitCad >= 0 ? "text-green-400" : "text-red-400"}>
-                    ${order.profitCad.toFixed(2)}
+                  <span className={(order.profitCad ?? 0) >= 0 ? "text-green-400" : "text-red-400"}>
+                    ${(order.profitCad ?? 0).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -651,7 +651,7 @@ function OrderDetail({
                   )}
                   {item.costCad !== undefined && item.costCad > 0 && (
                     <div>
-                      Cost: <span className="text-zinc-300">${item.costCad.toFixed(2)}/unit</span>
+                      Cost: <span className="text-zinc-300">${(item.costCad ?? 0).toFixed(2)}/unit</span>
                     </div>
                   )}
                 </div>
@@ -676,15 +676,15 @@ function OrderDetail({
                 </div>
                 <div className="text-zinc-400">
                   @{" "}
-                  <span className="text-white">${item.unitPriceCad.toFixed(2)}</span>
+                  <span className="text-white">${(item.unitPriceCad ?? 0).toFixed(2)}</span>
                   {item.isAddon && item.regularPrice && (
                     <span className="text-zinc-600 line-through ml-1">
-                      ${item.regularPrice.toFixed(2)}
+                      ${(item.regularPrice ?? 0).toFixed(2)}
                     </span>
                   )}
                 </div>
                 <div className="text-orange-400 font-medium whitespace-nowrap">
-                  ${(item.unitPriceCad * item.quantity).toFixed(2)}
+                  ${((item.unitPriceCad ?? 0) * item.quantity).toFixed(2)}
                 </div>
               </div>
             </div>
