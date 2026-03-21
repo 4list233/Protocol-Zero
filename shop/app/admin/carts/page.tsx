@@ -168,7 +168,7 @@ export default function AdminCartsPage() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-sm text-zinc-300">{cart.itemCount}</td>
-                    <td className="py-3 px-4 text-sm font-medium text-white">${Number(cart.totalCad).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-sm font-medium text-white">${(Number(cart.totalCad) || 0).toFixed(2)}</td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[cart.status] || "bg-zinc-800 text-zinc-400"}`}>
                         {cart.status}
@@ -263,12 +263,12 @@ export default function AdminCartsPage() {
                                       ${(
                                         (item.itemType === "addon" && item.addonPrice
                                           ? item.addonPrice
-                                          : item.regularPrice) * item.quantity
+                                          : (item.regularPrice ?? 0)) * item.quantity
                                       ).toFixed(2)}
                                     </div>
                                     {item.itemType === "addon" && item.addonPrice && (
                                       <div className="text-xs text-zinc-600 line-through">
-                                        ${(item.regularPrice * item.quantity).toFixed(2)}
+                                        ${((item.regularPrice ?? 0) * item.quantity).toFixed(2)}
                                       </div>
                                     )}
                                   </div>

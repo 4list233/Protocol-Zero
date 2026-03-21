@@ -110,25 +110,25 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Revenue (Paid)"
-          value={stats ? `$${stats.totalRevenue.toFixed(2)}` : "-"}
+          value={stats ? `$${(stats.totalRevenue ?? 0).toFixed(2)}` : "-"}
           icon={DollarSign}
           color="green"
         />
         <StatCard
           title="Cost of Goods"
-          value={stats ? `$${stats.totalCost.toFixed(2)}` : "-"}
+          value={stats ? `$${(stats.totalCost ?? 0).toFixed(2)}` : "-"}
           icon={DollarSign}
           color="orange"
         />
         <StatCard
           title="Profit"
-          value={stats ? `$${stats.totalProfit.toFixed(2)}` : "-"}
+          value={stats ? `$${(stats.totalProfit ?? 0).toFixed(2)}` : "-"}
           icon={DollarSign}
           color={stats && stats.totalProfit > 0 ? "green" : "yellow"}
         />
         <StatCard
           title="Promo Discounts"
-          value={stats ? `$${stats.totalPromoDiscount.toFixed(2)}` : "-"}
+          value={stats ? `$${(stats.totalPromoDiscount ?? 0).toFixed(2)}` : "-"}
           icon={AlertCircle}
           color="yellow"
         />
