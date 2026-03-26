@@ -149,24 +149,34 @@ def get_product_title(driver) -> tuple:
         return ('', 'failed')
 
 def download_image(url, save_path):
-    """Download image from URL to save_path"""
-    try:
-        # Handle protocol-relative URLs
-        if url.startswith('//'):
-            url = 'https:' + url
-        
-        response = requests.get(url, timeout=10, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
-        response.raise_for_status()
-        
-        with open(save_path, 'wb') as f:
-            f.write(response.content)
-        print(f"      -> Downloaded: {os.path.basename(save_path)}")
-        return True
-    except Exception as e:
-        print(f"      -> Failed to download {url}: {e}")
-        return False
+    """Download image from URL to save_path with retry on timeout"""
+    # Handle protocol-relative URLs
+    if url.startswith('//'):
+        url = 'https:' + url
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, timeout=10 + attempt * 10, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            response.raise_for_status()
+
+            with open(save_path, 'wb') as f:
+                f.write(response.content)
+            print(f"      -> Downloaded: {os.path.basename(save_path)}")
+            return True
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            if attempt < max_retries - 1:
+                wait = 2 ** (attempt + 1)
+                print(f"      -> Download timeout (attempt {attempt + 1}/{max_retries}), retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"      -> Failed to download after {max_retries} attempts: {url}: {e}")
+                return False
+        except Exception as e:
+            print(f"      -> Failed to download {url}: {e}")
+            return False
 
 def ensure_uniform_margin(image_path, margin_px: int = 20, background=(255, 255, 255)):
     """Add a uniform margin around the saved image to ensure consistent framing."""

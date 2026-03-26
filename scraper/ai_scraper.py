@@ -347,12 +347,8 @@ class AITranslator:
         self.failed_models = set()
         self.last_call_time = 0
         
-        if no_api:
-            print("⏭️  No API mode - using rule-based translation only")
-        elif self.deepseek_key:
+        if self.deepseek_key and not no_api:
             print(f"🤖 AI Translation: DeepSeek ({DEEPSEEK_MODEL})")
-        else:
-            print("⚠️  No DEEPSEEK_API_KEY - using rule-based translation")
         
     def reset_failed_models(self):
         """Reset failed models list - call at start of each product"""
@@ -472,7 +468,6 @@ English translation (no quotes, no explanation):"""
             List of English translations (same order)
         """
         if not self.client:
-            print("   ⚠️  No API key - using rule-based translation for titles")
             return [self._rule_based_translate(t) for t in titles_zh]
         
         if not titles_zh:
@@ -561,7 +556,6 @@ Translations (one per line with number):"""
             List of English translations (same order)
         """
         if not self.client:
-            print("   ⚠️  No API key - using rule-based translation for variants")
             return [self._rule_based_translate(t) for t in names_zh]
         
         if not names_zh:
@@ -680,7 +674,6 @@ Translations (one per line with number):"""
             List of English translations (same order as input)
         """
         if not self.client:
-            print("   ⚠️  No API key - using rule-based translation")
             return [self._rule_based_translate(t) for t in texts]
         
         if not texts:
@@ -1044,40 +1037,50 @@ class ImageDownloader:
         # Clean URL (remove size params to get full resolution)
         url = self._get_full_res_url(url)
         
-        try:
-            response = requests.get(url, timeout=15, headers={
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-                'Referer': 'https://www.taobao.com/'
-            })
-            response.raise_for_status()
-            
-            # Check content
-            if len(response.content) < 1000:
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(url, timeout=15 + attempt * 10, headers={
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                    'Referer': 'https://www.taobao.com/'
+                })
+                response.raise_for_status()
+
+                # Check content
+                if len(response.content) < 1000:
+                    return None
+
+                # Dedupe by hash
+                content_hash = hashlib.md5(response.content).hexdigest()
+                if content_hash in self.downloaded_hashes:
+                    return None
+                self.downloaded_hashes.add(content_hash)
+
+                # Save
+                folder = os.path.join(self.output_dir, subfolder)
+                os.makedirs(folder, exist_ok=True)
+
+                ext = '.jpg'
+                if 'png' in url.lower() or response.headers.get('content-type', '').endswith('png'):
+                    ext = '.png'
+
+                filepath = os.path.join(folder, f"{filename}{ext}")
+                with open(filepath, 'wb') as f:
+                    f.write(response.content)
+
+                return filepath
+
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                if attempt < max_retries - 1:
+                    wait = 2 ** (attempt + 1)  # 2s, 4s
+                    print(f"      ⚠️  Download timeout (attempt {attempt + 1}/{max_retries}), retrying in {wait}s...")
+                    time.sleep(wait)
+                else:
+                    print(f"      ⚠️  Download failed after {max_retries} attempts: {url[:50]}... - {e}")
+                    return None
+            except Exception as e:
+                print(f"      ⚠️  Download failed: {url[:50]}... - {e}")
                 return None
-            
-            # Dedupe by hash
-            content_hash = hashlib.md5(response.content).hexdigest()
-            if content_hash in self.downloaded_hashes:
-                return None
-            self.downloaded_hashes.add(content_hash)
-            
-            # Save
-            folder = os.path.join(self.output_dir, subfolder)
-            os.makedirs(folder, exist_ok=True)
-            
-            ext = '.jpg'
-            if 'png' in url.lower() or response.headers.get('content-type', '').endswith('png'):
-                ext = '.png'
-            
-            filepath = os.path.join(folder, f"{filename}{ext}")
-            with open(filepath, 'wb') as f:
-                f.write(response.content)
-            
-            return filepath
-            
-        except Exception as e:
-            print(f"      ⚠️  Download failed: {url[:50]}... - {e}")
-            return None
     
     def _get_full_res_url(self, url: str) -> str:
         """Remove size restrictions from Taobao CDN URLs"""
