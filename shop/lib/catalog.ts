@@ -40,6 +40,7 @@ export type ProductRuntime = {
   status?: 'Active' | 'Draft' | 'Discontinued' | 'Out of Stock'
   stock?: number
   url?: string
+  createdAt?: string
   variants?: ProductVariant[]
 }
 

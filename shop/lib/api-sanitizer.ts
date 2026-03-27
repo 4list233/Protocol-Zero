@@ -29,6 +29,7 @@ export type PublicProduct = Omit<ProductRuntime,
   | 'price_cad'      // Remove product-level price (always 0, only variant prices used)
   | 'variants'
 > & {
+  createdAt?: string // Kept for "new arrivals" feature
   variants?: PublicProductVariant[]
   variantImages?: Record<string, string>  // Already Record from knack-products
 }

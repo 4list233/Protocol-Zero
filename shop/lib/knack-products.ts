@@ -316,6 +316,9 @@ async function mapKnackRecordToProduct(record: Record<string, unknown>, variants
     // Stock is a yes/no (boolean) field in Knack - converted to number (1 = in stock, 0 = out of stock)
     stock: convertKnackStockToNumber(getFieldValue(record, PRODUCT_FIELDS.stock, 'Stock')),
     url: extractCleanUrl(getFieldValue(record, PRODUCT_FIELDS.url, 'URL')) || undefined,
+    createdAt: getFieldValue(record, PRODUCT_FIELDS.createdAt, 'Created At')
+      ? String(getFieldValue(record, PRODUCT_FIELDS.createdAt, 'Created At'))
+      : undefined,
     variants: variants.length > 0 ? variants : undefined,
   }
 }
