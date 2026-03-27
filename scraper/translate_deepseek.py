@@ -353,11 +353,21 @@ def translate_products_json(input_file='ai_scraper_output/products.json',
         for variant in product.get('variants', []):
             variant_zh = variant.get('variant_name_zh', '')
             variant_en = variant.get('variant_name_en', '')
-            
-            if force or not variant_en or contains_chinese(variant_en):
+
+            # Always re-translate from Chinese source if it has Chinese text,
+            # since rule-based scraper translations (e.g. "Red", "Green") are
+            # too simplistic and should be replaced by DeepSeek translations.
+            needs_translation = (
+                force
+                or not variant_en
+                or contains_chinese(variant_en)
+                or (variant_zh and contains_chinese(variant_zh))
+            )
+
+            if needs_translation:
                 cache_key = f"variant:{variant_zh}"
                 variant_counter += 1
-                
+
                 if cache_key not in cache:
                     variants_to_translate.append((variant_counter, variant_zh))
                 else:
