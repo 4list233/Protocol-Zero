@@ -14,6 +14,7 @@ import { CategoryRow } from "@/components/category-row"
 import { NewBadge } from "@/components/new-badge"
 import { isProductNew, slugifyCategory } from "@/lib/categories"
 import type { StorefrontSettings } from "@/lib/storefront-settings"
+import { CategoryBottomSheet } from "@/components/category-bottom-sheet"
 
 const PRODUCTS_CACHE_KEY = 'pz_products_v1'
 const PRODUCTS_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
@@ -129,6 +130,12 @@ export default function ShopPage() {
 
     return entries
   }, [products, settings.categoryDisplayOrder])
+
+  // Category items for mobile bottom sheet
+  const bottomSheetCategories = useMemo(() =>
+    categoryRows.map(([name, prods]) => ({ name, count: prods.length })),
+    [categoryRows]
+  )
 
   // Search mode: flat results grouped by category
   const searchResults = useMemo(() => {
@@ -320,6 +327,9 @@ export default function ShopPage() {
           </>
         )}
       </main>
+
+      {/* Mobile bottom sheet for category navigation */}
+      <CategoryBottomSheet categories={bottomSheetCategories} />
     </div>
   )
 }

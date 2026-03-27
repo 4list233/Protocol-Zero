@@ -1,7 +1,5 @@
 import { ImageResponse } from 'next/og'
 import { fetchProductById } from '@/lib/catalog'
-import { getStorefrontSettings } from '@/lib/storefront-settings'
-import { isProductNew } from '@/lib/categories'
 
 export const runtime = 'nodejs'
 
@@ -16,9 +14,6 @@ export async function GET(
     if (!product) {
       return new Response('Product not found', { status: 404 })
     }
-
-    const settings = getStorefrontSettings()
-    const isNew = isProductNew(product.createdAt, settings.newArrivalsWindowDays)
 
     // Get cheapest variant price
     const cheapestPrice = product.variants?.reduce((min, v) => {
@@ -69,59 +64,6 @@ export async function GET(
               display: 'flex',
             }}
           />
-
-          {/* Category Tag - top left */}
-          {product.category && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '24',
-                left: '24',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8',
-              }}
-            >
-              <div
-                style={{
-                  padding: '6px 16px',
-                  backgroundColor: 'rgba(61, 154, 108, 0.2)',
-                  border: '1px solid rgba(61, 154, 108, 0.4)',
-                  borderRadius: '20px',
-                  color: '#3D9A6C',
-                  fontSize: '14',
-                  fontWeight: '600',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  display: 'flex',
-                }}
-              >
-                {product.category}
-              </div>
-            </div>
-          )}
-
-          {/* NEW badge */}
-          {isNew && (
-            <div
-              style={{
-                position: 'absolute',
-                top: product.category ? '70' : '24',
-                left: '24',
-                padding: '4px 12px',
-                backgroundColor: '#3D9A6C',
-                color: '#000',
-                fontSize: '12',
-                fontWeight: '700',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                borderRadius: '6px',
-                display: 'flex',
-              }}
-            >
-              NEW
-            </div>
-          )}
 
           {/* Product Image - centered */}
           {imageData ? (

@@ -6,7 +6,7 @@ Three interconnected features to improve the storefront experience:
 
 1. **Category Management** — Reorganize /shop from a flat product grid into Netflix-style category rows with dedicated category pages
 2. **New Arrivals** — Dedicated /new-arrivals route with configurable "new" window for promotional sharing
-3. **OG Embed Previews** — Auto-generated Open Graph cards for product pages showing hero image, title, price, and category
+3. **OG Embed Previews** — Auto-generated Open Graph cards for product pages showing hero image, title, and price
 
 ---
 
@@ -38,11 +38,13 @@ Three interconnected features to improve the storefront experience:
 - Products within the "new" window display a small "NEW" badge/ribbon on the top-left corner of their product card
 - Badge appears globally — on `/shop` rows, category pages, `/new-arrivals`, and search results
 
-**Mobile behavior: Horizontal swipe rows**
+**Mobile behavior: Horizontal swipe rows + Bottom sheet navigation**
 
 - Each category row scrolls horizontally via touch/swipe gestures
 - Snap-to-card scroll behavior for clean UX
 - Left/right arrow buttons visible on desktop (hidden on mobile, replaced by swipe)
+- **Mobile category navigation:** Bottom sheet that slides up showing all categories as a grid with icons — thumb-friendly, modern mobile pattern
+- Triggered by a floating "Categories" button or menu icon on mobile
 
 **Search behavior: Global + per-category**
 
@@ -120,7 +122,7 @@ Custom admin-added categories: slugify using `toLowerCase().replace(/\s+/g, '-')
 | Category Display Order | Drag-and-drop list | By latest activity | Override automatic ordering of category rows on /shop |
 | Row Size | Number input | 6 | Max products shown per category row on desktop (tablet = floor(n * 0.66), mobile = 2) |
 
-**Storage:** These settings should be stored in Knack (new settings object) or as a lightweight API-backed config — NOT localStorage, since these are storefront-wide settings that apply to all visitors.
+**Storage:** Vercel Edge Config — lightweight, globally distributed key-value store. No Knack schema changes needed, instant reads from the edge, and admin settings persist across deploys without requiring redeployment.
 
 ---
 
@@ -162,9 +164,7 @@ twitter:image       → Same as og:image
 - **Bottom bar:** Semi-transparent overlay with:
   - Product title (left-aligned, white text, bold)
   - Price: `From $XX.XX CAD` (right-aligned)
-- **Top-left corner:** Category tag pill (e.g., "Helmets") with subtle background
-- **Top-left (below category):** "NEW" badge — only if product is within the new arrivals window
-- **Bottom-right or corner:** Protocol Zero logo watermark (subtle, small)
+- **No category tag, no logo** — minimalist, product-centric design with title + price only
 
 **Technical considerations:**
 
